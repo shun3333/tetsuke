@@ -1,0 +1,340 @@
+:root {
+  --text: #4a4552;
+  --text-h: #08060d;
+  --bg: #fdfcfb;
+  --panel-bg: #ffffff;
+  --border: #e5e4e7;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+
+  --kusari-line: #c9c6cf;
+  --track-guide: #e5e4e7;
+  --te-box-fill: rgba(170, 59, 255, 0.08);
+  --te-box-stroke: #aa3bff;
+  --hit-fill: #08060d;
+  --kakegoe-fill: #6b6375;
+
+  --sans: system-ui, "Hiragino Sans", "Yu Gothic", "Segoe UI", Roboto, sans-serif;
+
+  font: 16px/1.5 var(--sans);
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #b8b3c0;
+    --text-h: #f3f2f6;
+    --bg: #15131a;
+    --panel-bg: #1c1a22;
+    --border: #322f3a;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.15);
+
+    --kusari-line: #4a4655;
+    --track-guide: #322f3a;
+    --te-box-fill: rgba(192, 132, 252, 0.12);
+    --te-box-stroke: #c084fc;
+    --hit-fill: #f3f2f6;
+    --kakegoe-fill: #b8b3c0;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: 22px;
+}
+
+h2 {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 20px 60px;
+}
+
+.app-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.app-subtitle {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.app-main {
+  display: grid;
+  grid-template-columns: minmax(360px, 520px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .app-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.editor-pane > * + * {
+  margin-top: 20px;
+}
+
+section.editor-pane,
+.score-pane {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+/* クサリ編集 */
+.kusari-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.kusari-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 4px 2px 8px;
+  background: var(--bg);
+}
+
+.kusari-chip select {
+  border: none;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 14px;
+  padding: 4px 2px;
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.chip-remove:hover:not(:disabled) {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.chip-remove:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.kusari-add {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.kusari-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 手組パレット */
+.te-palette-hint {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.te-palette-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.te-palette-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text-h);
+}
+
+.te-palette-item .te-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.te-palette-item .te-length {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.te-palette-item.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+/* タイムライングリッド */
+.timeline-grid-wrap {
+  overflow-x: auto;
+}
+
+table.timeline-grid {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.timeline-grid th,
+.timeline-grid td {
+  border: 1px solid var(--border);
+  min-width: 30px;
+  height: 30px;
+  text-align: center;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+.timeline-grid .row-label {
+  position: sticky;
+  left: 0;
+  background: var(--panel-bg);
+  z-index: 1;
+  min-width: 60px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.timeline-grid .kusari-header {
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-size: 12px;
+}
+
+.timeline-grid .beat-header {
+  color: var(--text);
+  font-size: 11px;
+}
+
+.te-cell.empty {
+  cursor: default;
+}
+
+.te-cell.placeable {
+  cursor: pointer;
+}
+
+.te-cell.placeable:hover {
+  background: var(--accent-bg);
+}
+
+.te-cell.filled {
+  background: var(--te-box-fill);
+  color: var(--te-box-stroke);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.te-cell.filled:hover {
+  background: var(--accent-bg);
+}
+
+.utai-cell {
+  cursor: text;
+  color: var(--text-h);
+}
+
+.utai-cell:hover {
+  background: var(--accent-bg);
+}
+
+.utai-cell input {
+  width: 100%;
+  border: none;
+  outline: 1px solid var(--accent);
+  text-align: center;
+  font-size: 13px;
+  background: var(--panel-bg);
+  color: var(--text-h);
+}
+
+/* 描画ビュー */
+.score-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.score-view {
+  background: var(--panel-bg);
+}
+
+.score-view text {
+  fill: var(--text-h);
+  font-family: var(--sans);
+}
+
+.score-view .kusari-label {
+  fill: var(--text);
+}
+
+.score-view .utai-omote {
+  fill: var(--text-h);
+}
+
+.score-view .utai-ura {
+  fill: var(--accent);
+}
+
+.score-view .te-instance-box {
+  fill: var(--te-box-fill);
+  stroke: var(--te-box-stroke);
+  stroke-width: 1;
+}
+
+.score-view .te-instance-label {
+  fill: var(--te-box-stroke);
+}
+
+.score-view .kakegoe-text {
+  fill: var(--kakegoe-fill);
+}
+
+.score-view .hit-mark {
+  fill: var(--hit-fill);
+}
