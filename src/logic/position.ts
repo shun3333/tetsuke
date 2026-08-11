@@ -4,6 +4,8 @@ import {
   type BeatRef,
   type KusariEntry,
   type KusariType,
+  type TeInstance,
+  type TeMaster,
 } from "../types";
 
 /** 指定typeの拍数 */
@@ -92,4 +94,56 @@ export function teInstanceGlobalEnd(
   globalStarts: number[],
 ): number {
   return teInstanceGlobalStart(ref, globalStarts) + length;
+}
+
+/**
+ * 手組インスタンスの、あるクサリ内に収まる断片(フラグメント)。
+ * 実際の手付譜はクサリごとに横並びの独立したブロックとして描画するため、
+ * クサリをまたぐインスタンスはクサリの境界でフラグメントに分割して扱う。
+ */
+export interface TeFragment {
+  instanceIndex: number;
+  teId: string;
+  kusariIndex: number;
+  /** このクサリ内でのローカル開始拍(0-indexed) */
+  localStart: number;
+  /** このクサリ内でのローカル終了拍(exclusive) */
+  localEnd: number;
+  /** インスタンスの先頭(rel_beat 0)を含むフラグメントか(名前ラベルの表示に使う) */
+  isFirstFragment: boolean;
+  /** インスタンスのグローバル開始拍(kakegoe/hitsのローカル位置算出に使う) */
+  instanceGlobalStart: number;
+}
+
+export function computeTeFragments(
+  teInstances: TeInstance[],
+  teMaster: TeMaster,
+  kusariSequence: KusariEntry[],
+  globalStarts: number[],
+): TeFragment[] {
+  const fragments: TeFragment[] = [];
+  teInstances.forEach((ti, instanceIndex) => {
+    const def = teMaster[ti.te_id];
+    if (!def || !isBeatRefValid(ti.start_ref, kusariSequence)) return;
+    const instanceGlobalStart = teInstanceGlobalStart(ti.start_ref, globalStarts);
+    const instanceGlobalEnd = instanceGlobalStart + def.internal_pattern.length;
+    kusariSequence.forEach((k, kusariIndex) => {
+      const kusariGlobalStart = globalStarts[kusariIndex];
+      const kusariLen = beatCountOf(k.type);
+      const overlapStart = Math.max(instanceGlobalStart, kusariGlobalStart);
+      const overlapEnd = Math.min(instanceGlobalEnd, kusariGlobalStart + kusariLen);
+      if (overlapStart < overlapEnd) {
+        fragments.push({
+          instanceIndex,
+          teId: ti.te_id,
+          kusariIndex,
+          localStart: overlapStart - kusariGlobalStart,
+          localEnd: overlapEnd - kusariGlobalStart,
+          isFirstFragment: overlapStart === instanceGlobalStart,
+          instanceGlobalStart,
+        });
+      }
+    });
+  });
+  return fragments;
 }

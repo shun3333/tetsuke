@@ -1,5 +1,5 @@
 // 編集UI: 横方向タイムライングリッド(列=グローバル拍位置, 行=トラック)
-import { useState } from "react";
+import { useRef } from "react";
 import { KUSARI_LABEL, type SongData, type TeMaster, type UtaiSub } from "../types";
 import {
   computeGlobalStarts,
@@ -23,6 +23,8 @@ interface Occupancy {
   teId: string;
 }
 
+const UTAI_SUBS: UtaiSub[] = ["omote", "ura"];
+
 export function TimelineGrid({
   song,
   teMaster,
@@ -30,11 +32,7 @@ export function TimelineGrid({
   onPlaced,
   dispatch,
 }: Props) {
-  const [editingCell, setEditingCell] = useState<{
-    g: number;
-    sub: UtaiSub;
-  } | null>(null);
-  const [draftValue, setDraftValue] = useState("");
+  const utaiInputRefs = useRef(new Map<string, HTMLInputElement>());
 
   const globalStarts = computeGlobalStarts(song.kusari_sequence);
   const total = totalBeats(song.kusari_sequence);
@@ -94,24 +92,63 @@ export function TimelineGrid({
     onPlaced();
   }
 
-  function startEditUtai(g: number, sub: UtaiSub) {
-    setEditingCell({ g, sub });
-    setDraftValue(utaiMap.get(`${g}:${sub}`) ?? "");
+  function setUtaiValue(g: number, sub: UtaiSub, value: string) {
+    const beatRef = globalToBeatRef(g, song.kusari_sequence, globalStarts);
+    if (!beatRef) return;
+    dispatch({
+      type: "SET_UTAI_CHAR",
+      beatRef,
+      sub,
+      value: value === "" ? null : value,
+    });
   }
 
-  function commitEditUtai() {
-    if (!editingCell) return;
-    const beatRef = globalToBeatRef(editingCell.g, song.kusari_sequence, globalStarts);
-    if (beatRef) {
-      dispatch({
-        type: "SET_UTAI_CHAR",
-        beatRef,
-        sub: editingCell.sub,
-        value: draftValue.trim() === "" ? null : draftValue,
-      });
+  function focusUtaiInput(g: number, sub: UtaiSub, caret?: "start" | "end") {
+    const el = utaiInputRefs.current.get(`${g}:${sub}`);
+    if (!el) return;
+    el.focus();
+    if (caret === "start") el.setSelectionRange(0, 0);
+    else if (caret === "end") el.setSelectionRange(el.value.length, el.value.length);
+  }
+
+  function handleUtaiKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    g: number,
+    sub: UtaiSub,
+  ) {
+    const input = e.currentTarget;
+    switch (e.key) {
+      case "ArrowLeft":
+        if (input.selectionStart === 0 && input.selectionEnd === 0 && g > 0) {
+          e.preventDefault();
+          focusUtaiInput(g - 1, sub, "end");
+        }
+        break;
+      case "ArrowRight":
+        if (
+          input.selectionStart === input.value.length &&
+          input.selectionEnd === input.value.length &&
+          g < total - 1
+        ) {
+          e.preventDefault();
+          focusUtaiInput(g + 1, sub, "start");
+        }
+        break;
+      case "ArrowUp":
+        if (sub === "ura") {
+          e.preventDefault();
+          focusUtaiInput(g, "omote");
+        }
+        break;
+      case "ArrowDown":
+        if (sub === "omote") {
+          e.preventDefault();
+          focusUtaiInput(g, "ura");
+        }
+        break;
+      default:
+        break;
     }
-    setEditingCell(null);
-    setDraftValue("");
   }
 
   return (
@@ -183,38 +220,29 @@ export function TimelineGrid({
               return cells;
             })()}
           </tr>
-          {(["omote", "ura"] as UtaiSub[]).map((sub) => (
-            <tr key={sub}>
-              <th className="row-label">謡 {sub === "omote" ? "表" : "裏"}</th>
-              {beats.map((g) => {
-                const isEditing =
-                  editingCell?.g === g && editingCell.sub === sub;
-                const value = utaiMap.get(`${g}:${sub}`) ?? "";
-                return (
-                  <td
-                    key={g}
-                    className={"utai-cell" + (sub === "omote" ? " omote" : " ura")}
-                    onClick={() => !isEditing && startEditUtai(g, sub)}
-                  >
-                    {isEditing ? (
-                      <input
-                        autoFocus
-                        value={draftValue}
-                        onChange={(e) => setDraftValue(e.target.value)}
-                        onBlur={commitEditUtai}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") commitEditUtai();
-                          if (e.key === "Escape") setEditingCell(null);
-                        }}
-                      />
-                    ) : (
-                      value
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+          <tr>
+            <th className="row-label">謡</th>
+            {beats.map((g) => (
+              <td key={g} className="utai-cell">
+                <div className="utai-cell-inner">
+                  {UTAI_SUBS.map((sub) => (
+                    <input
+                      key={sub}
+                      ref={(el) => {
+                        const key = `${g}:${sub}`;
+                        if (el) utaiInputRefs.current.set(key, el);
+                        else utaiInputRefs.current.delete(key);
+                      }}
+                      className={`utai-input ${sub}`}
+                      value={utaiMap.get(`${g}:${sub}`) ?? ""}
+                      onChange={(e) => setUtaiValue(g, sub, e.target.value)}
+                      onKeyDown={(e) => handleUtaiKeyDown(e, g, sub)}
+                    />
+                  ))}
+                </div>
+              </td>
+            ))}
+          </tr>
         </tbody>
       </table>
     </div>

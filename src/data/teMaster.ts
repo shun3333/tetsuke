@@ -9,14 +9,16 @@ export const kotsuzumiTeMaster: TeMaster = {
     internal_pattern: {
       length: 8,
       kakegoe: [
+        // 手組の頭より前の「0拍裏」に置く掛け声(1拍目の線の上に出る)
+        { rel_beat: -1, text: "イヤ", sub: "ura" },
         { rel_beat: 0, text: "ヤ" },
         { rel_beat: 2, text: "ホ" },
-        { rel_beat: 5, text: "イヤ" },
+        { rel_beat: 5, text: "イヤ", sub: "ura" },
       ],
       hits: [
-        { rel_beat: 0, timing: "on" },
-        { rel_beat: 4, timing: "slightly_late" },
-        { rel_beat: 7, timing: "on" },
+        { rel_beat: 0, timing: "on", symbol: "filled_circle" },
+        { rel_beat: 4, timing: "slightly_late", symbol: "open_circle" },
+        { rel_beat: 7, timing: "on", symbol: "triangle", color: "red" },
       ],
     },
   },
@@ -30,8 +32,8 @@ export const kotsuzumiTeMaster: TeMaster = {
         { rel_beat: 1, text: "ハ" },
       ],
       hits: [
-        { rel_beat: 0, timing: "on" },
-        { rel_beat: 3, timing: "slightly_late" },
+        { rel_beat: 0, timing: "on", symbol: "filled_circle" },
+        { rel_beat: 3, timing: "slightly_late", symbol: "open_circle", color: "red" },
       ],
     },
   },
@@ -42,8 +44,8 @@ export const kotsuzumiTeMaster: TeMaster = {
       length: 4,
       kakegoe: [{ rel_beat: 0, text: "ヤ" }],
       hits: [
-        { rel_beat: 0, timing: "on" },
-        { rel_beat: 2, timing: "slightly_early" },
+        { rel_beat: 0, timing: "on", symbol: "triangle" },
+        { rel_beat: 2, timing: "slightly_early", symbol: "filled_circle", color: "red" },
       ],
     },
   },
@@ -54,8 +56,8 @@ export const kotsuzumiTeMaster: TeMaster = {
       length: 2,
       kakegoe: [{ rel_beat: 0, text: "イヤ" }],
       hits: [
-        { rel_beat: 0, timing: "on" },
-        { rel_beat: 1, timing: "on" },
+        { rel_beat: 0, timing: "on", symbol: "filled_circle" },
+        { rel_beat: 1, timing: "on", symbol: "open_circle" },
       ],
     },
   },

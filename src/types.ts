@@ -37,16 +37,31 @@ export const TIMING_LABEL: Record<Timing, string> = {
   slightly_late: "やや遅め",
 };
 
-/** 手組内の掛け声1つ */
+/** 手の記号の種類(●実線丸 / ○白丸 / △三角) */
+export type HitSymbol = "filled_circle" | "open_circle" | "triangle";
+
+/** 記号の色分け(省略時はblue) */
+export type HitColor = "blue" | "red";
+
+/**
+ * 手組内の掛け声1つ。
+ * rel_beat は拍(横線)の位置、sub は表(線の上) / 裏(線と線の間)。
+ * 手組の頭より前の「0拍の裏」を表す場合は rel_beat: -1, sub: "ura" とする。
+ */
 export interface KakegoeEntry {
   rel_beat: number;
   text: string;
+  sub?: UtaiSub;
+  color?: HitColor;
 }
 
-/** 手組内の手(打つタイミング)1つ */
+/** 手組内の手(打つタイミング)1つ。rel_beat/subの意味はKakegoeEntryと同じ。 */
 export interface HitEntry {
   rel_beat: number;
   timing: Timing;
+  symbol: HitSymbol;
+  sub?: UtaiSub;
+  color?: HitColor;
 }
 
 /** 手組の内部パターン(掛け声・手・長さ) */

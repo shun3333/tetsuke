@@ -21,6 +21,8 @@ export const sampleSong: SongData = {
     utai: {
       track_type: "utai",
       chars: [
+        // beat 0 の裏 = 1拍目の横線の半拍上に置かれる
+        { beat_ref: { kusari_index: 0, beat: 0 }, sub: "ura", content: { type: "text", value: "エ" } },
         { beat_ref: { kusari_index: 0, beat: 1 }, sub: "omote", content: { type: "text", value: "か" } },
         { beat_ref: { kusari_index: 0, beat: 1 }, sub: "ura", content: { type: "text", value: "の" } },
         { beat_ref: { kusari_index: 0, beat: 2 }, sub: "omote", content: { type: "text", value: "え" } },

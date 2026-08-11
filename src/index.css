@@ -274,23 +274,40 @@ table.timeline-grid {
   background: var(--accent-bg);
 }
 
-.utai-cell {
-  cursor: text;
-  color: var(--text-h);
+/* 表・裏の2つの入力欄が並ぶため、他の列より広く取る
+   (.timeline-grid td より詳細度を上げる必要がある) */
+.timeline-grid .utai-cell {
+  padding: 0;
+  min-width: 72px;
 }
 
-.utai-cell:hover {
-  background: var(--accent-bg);
+/* td自体をflexにするとテーブルのレイアウトから外れるため、内側のdivで横並びにする */
+.utai-cell-inner {
+  display: flex;
 }
 
-.utai-cell input {
-  width: 100%;
+.utai-input {
+  display: block;
+  width: 50%;
+  min-width: 0;
+  box-sizing: border-box;
   border: none;
-  outline: 1px solid var(--accent);
+  border-right: 1px solid var(--border);
+  outline: none;
   text-align: center;
-  font-size: 13px;
+  font-size: 15px;
+  height: 34px;
+  padding: 0 2px;
   background: var(--panel-bg);
   color: var(--text-h);
+}
+
+.utai-input:last-child {
+  border-right: none;
+}
+
+.utai-input:focus {
+  background: var(--accent-bg);
 }
 
 /* 描画ビュー */
@@ -300,8 +317,31 @@ table.timeline-grid {
   max-height: 80vh;
 }
 
+.score-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.score-page {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.score-page-label {
+  font-size: 12px;
+  color: var(--text);
+  background: var(--accent-bg);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
 .score-view {
   background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .score-view text {
@@ -309,22 +349,8 @@ table.timeline-grid {
   font-family: var(--sans);
 }
 
-.score-view .kusari-label {
-  fill: var(--text);
-}
-
-.score-view .utai-omote {
+.score-view .utai-text {
   fill: var(--text-h);
-}
-
-.score-view .utai-ura {
-  fill: var(--accent);
-}
-
-.score-view .te-instance-box {
-  fill: var(--te-box-fill);
-  stroke: var(--te-box-stroke);
-  stroke-width: 1;
 }
 
 .score-view .te-instance-label {
@@ -335,6 +361,16 @@ table.timeline-grid {
   fill: var(--kakegoe-fill);
 }
 
-.score-view .hit-mark {
-  fill: var(--hit-fill);
+.score-view .beat-axis-text {
+  fill: var(--text);
 }
+
+.score-view .skewer-line {
+  stroke: var(--kusari-line);
+}
+
+.score-view .skewer-line.thick {
+  stroke: var(--text-h);
+  stroke-width: 1.6;
+}
+
