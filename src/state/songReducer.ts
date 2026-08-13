@@ -138,43 +138,44 @@ export function songReducer(state: SongData, action: SongAction): SongData {
   }
 }
 
+/**
+ * beat_refを持つ要素の配列を作り直す。
+ * 参照が追従できたものだけを残し、消滅したものは取り除く。
+ */
+function shiftRefsOf<K extends string, T extends Record<K, BeatRef>>(
+  items: T[],
+  refKey: K,
+  shift: (ref: BeatRef) => BeatRef | null,
+): T[] {
+  const result: T[] = [];
+  for (const item of items) {
+    const nextRef = shift(item[refKey]);
+    if (nextRef) result.push({ ...item, [refKey]: nextRef });
+  }
+  return result;
+}
+
 /** クサリの挿入/削除後、各トラックのbeat_ref/start_refを追従させ、消滅した参照を除去する */
 function remapRefs(
   state: SongData,
   removedIndex: number | null,
   insertedAtIndex: number | null,
 ): SongData {
-  const kotsuzumi = state.tracks.kotsuzumi
-    ? {
-        ...state.tracks.kotsuzumi,
-        te_instances: state.tracks.kotsuzumi.te_instances
-          .map((ti) => {
-            const nextRef = shiftBeatRef(
-              ti.start_ref,
-              removedIndex,
-              insertedAtIndex,
-            );
-            return nextRef ? { ...ti, start_ref: nextRef } : null;
-          })
-          .filter((x): x is NonNullable<typeof x> => x !== null),
-      }
-    : undefined;
+  const shift = (ref: BeatRef) =>
+    shiftBeatRef(ref, removedIndex, insertedAtIndex);
+  const { kotsuzumi, utai } = state.tracks;
 
-  const utai = state.tracks.utai
-    ? {
-        ...state.tracks.utai,
-        chars: state.tracks.utai.chars
-          .map((c) => {
-            const nextRef = shiftBeatRef(
-              c.beat_ref,
-              removedIndex,
-              insertedAtIndex,
-            );
-            return nextRef ? { ...c, beat_ref: nextRef } : null;
-          })
-          .filter((x): x is NonNullable<typeof x> => x !== null),
-      }
-    : undefined;
-
-  return { ...state, tracks: { kotsuzumi, utai } };
+  return {
+    ...state,
+    tracks: {
+      kotsuzumi: kotsuzumi && {
+        ...kotsuzumi,
+        te_instances: shiftRefsOf(kotsuzumi.te_instances, "start_ref", shift),
+      },
+      utai: utai && {
+        ...utai,
+        chars: shiftRefsOf(utai.chars, "beat_ref", shift),
+      },
+    },
+  };
 }

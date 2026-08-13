@@ -31,12 +31,6 @@ export interface KusariEntry {
 /** hitsの微妙なタイミングを表す質的タグ */
 export type Timing = "on" | "slightly_early" | "slightly_late";
 
-export const TIMING_LABEL: Record<Timing, string> = {
-  on: "オン",
-  slightly_early: "やや早め",
-  slightly_late: "やや遅め",
-};
-
 /**
  * 手(打ち方)のID。楽器ごとに定義される。
  * 小鼓は プ / ポ / チ / タ の4種類。

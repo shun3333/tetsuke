@@ -4,7 +4,7 @@
 //   左 = 2b-1((b-1)拍の裏 / b=1なら0拍の裏)
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { KUSARI_LABEL, type SongData, type TeMaster } from "../types";
 import {
   computeGlobalStarts,
@@ -33,22 +33,43 @@ interface Occupancy {
 /** 1拍あたりの入力欄の数(裏・表) */
 const SLOTS_PER_BEAT = 2;
 
-export function TimelineGrid({
-  song,
-  teMaster,
-  selectedTeId,
-  onPlaced,
-  dispatch,
-}: Props) {
-  const utaiInputRefs = useRef(new Map<string, HTMLInputElement>());
+/** グローバル拍1つ分の謡入力欄。keyは `クサリindex:半拍枠番号` */
+interface BeatSlots {
+  kusariIndex: number;
+  localBeat: number;
+  slots: { key: string; beat: number }[];
+}
 
-  const globalStarts = computeGlobalStarts(song.kusari_sequence);
-  const total = totalBeats(song.kusari_sequence);
-  const beats = Array.from({ length: total }, (_, i) => i);
+/** 各グローバル拍の謡入力欄を先に割り出しておく(見つからない拍はnull) */
+function buildBeatSlots(
+  song: SongData,
+  globalStarts: number[],
+  total: number,
+): (BeatSlots | null)[] {
+  return Array.from({ length: total }, (_, g) => {
+    const local = globalBeatToKusariBeat(g, song.kusari_sequence, globalStarts);
+    if (!local) return null;
+    // 表(=横線の上)は 2b、その半拍前の裏は 2b-1
+    const omote = local.localBeat * SLOTS_PER_BEAT;
+    return {
+      kusariIndex: local.kusariIndex,
+      localBeat: local.localBeat,
+      slots: [omote - 1, omote].map((beat) => ({
+        key: `${local.kusariIndex}:${beat}`,
+        beat,
+      })),
+    };
+  });
+}
 
-  const teInstances = song.tracks.kotsuzumi?.te_instances ?? [];
+/** 配置済みの手組が占めるグローバル拍を引けるようにする */
+function buildOccupancy(
+  song: SongData,
+  teMaster: TeMaster,
+  globalStarts: number[],
+): Map<number, Occupancy> {
   const occupancy = new Map<number, Occupancy>();
-  teInstances.forEach((ti, idx) => {
+  (song.tracks.kotsuzumi?.te_instances ?? []).forEach((ti, idx) => {
     const def = teMaster[ti.te_id];
     if (!def) return;
     const start = teInstanceStartBeat(ti.start_ref, globalStarts);
@@ -62,24 +83,43 @@ export function TimelineGrid({
       });
     }
   });
+  return occupancy;
+}
 
-  /** グローバル拍 → その拍に対応する2つの半拍枠 [裏(=前の拍の裏), 表] */
-  function slotsOfGlobalBeat(g: number): { key: string; beat: number }[] | null {
-    const local = globalBeatToKusariBeat(g, song.kusari_sequence, globalStarts);
-    if (!local) return null;
-    const rightBeat = local.localBeat * 2;
-    return [
-      { key: `${local.kusariIndex}:${rightBeat - 1}`, beat: rightBeat - 1 },
-      { key: `${local.kusariIndex}:${rightBeat}`, beat: rightBeat },
-    ];
+/** 入力済みの謡の文字を、半拍枠のkeyで引けるようにする */
+function buildUtaiValues(song: SongData): Map<string, string> {
+  const values = new Map<string, string>();
+  for (const c of song.tracks.utai?.chars ?? []) {
+    if (!c.content) continue;
+    values.set(`${c.beat_ref.kusari_index}:${c.beat_ref.beat}`, c.content.value);
   }
+  return values;
+}
 
-  const utaiValues = new Map<string, string>();
-  (song.tracks.utai?.chars ?? []).forEach((c) => {
-    if (c.content) {
-      utaiValues.set(`${c.beat_ref.kusari_index}:${c.beat_ref.beat}`, c.content.value);
-    }
-  });
+export function TimelineGrid({
+  song,
+  teMaster,
+  selectedTeId,
+  onPlaced,
+  dispatch,
+}: Props) {
+  const utaiInputRefs = useRef(new Map<string, HTMLInputElement>());
+
+  const globalStarts = useMemo(
+    () => computeGlobalStarts(song.kusari_sequence),
+    [song.kusari_sequence],
+  );
+  const total = totalBeats(song.kusari_sequence);
+
+  const beatSlots = useMemo(
+    () => buildBeatSlots(song, globalStarts, total),
+    [song, globalStarts, total],
+  );
+  const occupancy = useMemo(
+    () => buildOccupancy(song, teMaster, globalStarts),
+    [song, teMaster, globalStarts],
+  );
+  const utaiValues = useMemo(() => buildUtaiValues(song), [song]);
 
   function handleKotsuzumiClick(g: number) {
     const occ = occupancy.get(g);
@@ -128,10 +168,9 @@ export function TimelineGrid({
   // 入力欄は左から右へ半拍枠の順に並ぶ。左右キーはこの並び順をそのまま辿る。
   function focusFlatIndex(index: number, caret: "start" | "end") {
     if (index < 0 || index >= total * SLOTS_PER_BEAT) return;
-    const g = Math.floor(index / SLOTS_PER_BEAT);
-    const slots = slotsOfGlobalBeat(g);
-    if (!slots) return;
-    focusInput(slots[index % SLOTS_PER_BEAT].key, caret);
+    const entry = beatSlots[Math.floor(index / SLOTS_PER_BEAT)];
+    if (!entry) return;
+    focusInput(entry.slots[index % SLOTS_PER_BEAT].key, caret);
   }
 
   function handleUtaiKeyDown(
@@ -191,18 +230,11 @@ export function TimelineGrid({
           <tr>
             <th className="row-label"></th>
             {/* 拍番号は通し番号ではなく、クサリごとに1から振り直す */}
-            {beats.map((g) => {
-              const local = globalBeatToKusariBeat(
-                g,
-                song.kusari_sequence,
-                globalStarts,
-              );
-              return (
-                <th key={g} className="beat-header">
-                  {local ? local.localBeat : ""}
-                </th>
-              );
-            })}
+            {beatSlots.map((entry, g) => (
+              <th key={g} className="beat-header">
+                {entry ? entry.localBeat : ""}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -247,14 +279,12 @@ export function TimelineGrid({
           </tr>
           <tr>
             <th className="row-label">謡</th>
-            {beats.map((g) => {
-              const slots = slotsOfGlobalBeat(g);
-              const local = globalBeatToKusariBeat(g, song.kusari_sequence, globalStarts);
-              if (!slots || !local) return <td key={g} className="utai-cell" />;
+            {beatSlots.map((entry, g) => {
+              if (!entry) return <td key={g} className="utai-cell" />;
               return (
                 <td key={g} className="utai-cell">
                   <div className="utai-cell-inner">
-                    {slots.map((slot, si) => (
+                    {entry.slots.map((slot, si) => (
                       <input
                         key={slot.key}
                         ref={(el) => {
@@ -262,10 +292,10 @@ export function TimelineGrid({
                           else utaiInputRefs.current.delete(slot.key);
                         }}
                         className="utai-input"
-                        title={`${local.kusariIndex + 1}つ目のクサリ / beat ${slot.beat}`}
+                        title={`${entry.kusariIndex + 1}つ目のクサリ / beat ${slot.beat}`}
                         value={utaiValues.get(slot.key) ?? ""}
                         onChange={(e) =>
-                          setUtaiValue(local.kusariIndex, slot.beat, e.target.value)
+                          setUtaiValue(entry.kusariIndex, slot.beat, e.target.value)
                         }
                         onKeyDown={(e) =>
                           handleUtaiKeyDown(e, g * SLOTS_PER_BEAT + si)
