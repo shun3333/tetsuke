@@ -13,8 +13,8 @@ export const sampleSong: SongData = {
     kotsuzumi: {
       instrument: "kotsuzumi",
       te_instances: [
-        { te_id: "sanchi", start_ref: { kusari_index: 0, beat: 2 } },
-        { te_id: "uchikudashi", start_ref: { kusari_index: 1, beat: 2 } },
+        { te_id: "mitsuji", start_ref: { kusari_index: 0, beat: 2 } },
+        { te_id: "uchioroshi", start_ref: { kusari_index: 1, beat: 2 } },
         { te_id: "tsuzuke", start_ref: { kusari_index: 2, beat: 6 } },
         { te_id: "uchikiri", start_ref: { kusari_index: 2, beat: 14 } },
       ],

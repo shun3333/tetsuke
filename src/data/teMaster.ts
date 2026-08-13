@@ -4,8 +4,8 @@
 import type { TeMaster } from "../types";
 
 export const kotsuzumiTeMaster: TeMaster = {
-  sanchi: {
-    te_id: "sanchi",
+  mitsuji: {
+    te_id: "mitsuji",
     instrument: "kotsuzumi",
     internal_pattern: {
       length: 4,

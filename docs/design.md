@@ -31,7 +31,7 @@
 
 ```json
 {
-  "te_id": "uchikudashi",
+  "te_id": "uchioroshi",
   "instrument": "kotsuzumi",
   "internal_pattern": {
     "length": 6,
@@ -60,8 +60,8 @@
     "kotsuzumi": {
       "instrument": "kotsuzumi",
       "te_instances": [
-        { "te_id": "sanchi", "start_ref": { "kusari_index": 0, "beat": 1 } },
-        { "te_id": "uchikudashi", "start_ref": { "kusari_index": 1, "beat": 2 } }
+        { "te_id": "mitsuji", "start_ref": { "kusari_index": 0, "beat": 1 } },
+        { "te_id": "uchioroshi", "start_ref": { "kusari_index": 1, "beat": 2 } }
       ]
     },
     "utai": {
