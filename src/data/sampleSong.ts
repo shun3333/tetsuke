@@ -32,6 +32,8 @@ export const sampleSong: SongData = {
         { beat_ref: { kusari_index: 0, beat: 5 }, sub: "omote", content: { type: "text", value: "み" } },
         { beat_ref: { kusari_index: 0, beat: 5 }, sub: "ura", content: { type: "text", value: "ち" } },
         { beat_ref: { kusari_index: 0, beat: 7 }, sub: "omote", content: { type: "text", value: "も" } },
+        // クサリ末尾(8拍)の裏 → 次のクサリの1拍目の半拍前に表示される
+        { beat_ref: { kusari_index: 0, beat: 8 }, sub: "ura", content: { type: "text", value: "ン" } },
         { beat_ref: { kusari_index: 2, beat: 1 }, sub: "omote", content: { type: "text", value: "な" } },
         { beat_ref: { kusari_index: 2, beat: 1 }, sub: "ura", content: { type: "text", value: "お" } },
         { beat_ref: { kusari_index: 2, beat: 3 }, sub: "omote", content: { type: "text", value: "いふ" } },

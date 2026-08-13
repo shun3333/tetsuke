@@ -37,31 +37,55 @@ export const TIMING_LABEL: Record<Timing, string> = {
   slightly_late: "やや遅め",
 };
 
-/** 手の記号の種類(●実線丸 / ○白丸 / △三角) */
-export type HitSymbol = "filled_circle" | "open_circle" | "triangle";
+/**
+ * 手(打ち方)のID。楽器ごとに定義される。
+ * 小鼓は プ / ポ / チ / タ の4種類。
+ */
+export type TeName = string;
 
-/** 記号の色分け(省略時はblue) */
-export type HitColor = "blue" | "red";
+/** 手を表す図形の種類 */
+export type TeShape =
+  /** 中抜きで横線を引いた丸 */
+  | "open_circle_barred"
+  /** 中抜きの丸 */
+  | "open_circle"
+  /** 中埋めの小さめの丸 */
+  | "filled_small_circle"
+  /** 中抜きの三角 */
+  | "open_triangle";
+
+/** 手マスタの1エントリ。手のIDと、その表示内容(図形)を対応づける。 */
+export interface TeGlyph {
+  te: TeName;
+  /** 表示名(プ / ポ / チ / タ など) */
+  label: string;
+  shape: TeShape;
+}
+
+/** 楽器ごとの手マスタ(te -> 図形定義) */
+export type TeGlyphMaster = Record<TeName, TeGlyph>;
 
 /**
  * 手組内の掛け声1つ。
  * rel_beat は拍(横線)の位置、sub は表(線の上) / 裏(線と線の間)。
  * 手組の頭より前の「0拍の裏」を表す場合は rel_beat: -1, sub: "ura" とする。
+ * 色は楽器ごとに決まるため、個々には持たない。
  */
 export interface KakegoeEntry {
   rel_beat: number;
   text: string;
   sub?: UtaiSub;
-  color?: HitColor;
 }
 
-/** 手組内の手(打つタイミング)1つ。rel_beat/subの意味はKakegoeEntryと同じ。 */
+/**
+ * 手組内の手(打つタイミング)1つ。rel_beat/subの意味はKakegoeEntryと同じ。
+ * どの図形で描くかは te から手マスタを引いて決まる。
+ */
 export interface HitEntry {
   rel_beat: number;
   timing: Timing;
-  symbol: HitSymbol;
+  te: TeName;
   sub?: UtaiSub;
-  color?: HitColor;
 }
 
 /** 手組の内部パターン(掛け声・手・長さ) */

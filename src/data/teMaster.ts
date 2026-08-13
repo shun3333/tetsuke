@@ -16,9 +16,9 @@ export const kotsuzumiTeMaster: TeMaster = {
         { rel_beat: 5, text: "イヤ", sub: "ura" },
       ],
       hits: [
-        { rel_beat: 0, timing: "on", symbol: "filled_circle" },
-        { rel_beat: 4, timing: "slightly_late", symbol: "open_circle" },
-        { rel_beat: 7, timing: "on", symbol: "triangle", color: "red" },
+        { rel_beat: 0, timing: "on", te: "chi" },
+        { rel_beat: 4, timing: "slightly_late", te: "po" },
+        { rel_beat: 7, timing: "on", te: "ta" },
       ],
     },
   },
@@ -32,8 +32,9 @@ export const kotsuzumiTeMaster: TeMaster = {
         { rel_beat: 1, text: "ハ" },
       ],
       hits: [
-        { rel_beat: 0, timing: "on", symbol: "filled_circle" },
-        { rel_beat: 3, timing: "slightly_late", symbol: "open_circle", color: "red" },
+        { rel_beat: 0, timing: "on", te: "chi" },
+        // トリ(4拍)の末尾の裏 → 次のクサリの1拍目の半拍前に表示される
+        { rel_beat: 3, timing: "on", te: "po", sub: "ura" },
       ],
     },
   },
@@ -44,8 +45,8 @@ export const kotsuzumiTeMaster: TeMaster = {
       length: 4,
       kakegoe: [{ rel_beat: 0, text: "ヤ" }],
       hits: [
-        { rel_beat: 0, timing: "on", symbol: "triangle" },
-        { rel_beat: 2, timing: "slightly_early", symbol: "filled_circle", color: "red" },
+        { rel_beat: 0, timing: "on", te: "ta" },
+        { rel_beat: 2, timing: "slightly_early", te: "pu" },
       ],
     },
   },
@@ -56,8 +57,8 @@ export const kotsuzumiTeMaster: TeMaster = {
       length: 2,
       kakegoe: [{ rel_beat: 0, text: "イヤ" }],
       hits: [
-        { rel_beat: 0, timing: "on", symbol: "filled_circle" },
-        { rel_beat: 1, timing: "on", symbol: "open_circle" },
+        { rel_beat: 0, timing: "on", te: "chi" },
+        { rel_beat: 1, timing: "on", te: "pu" },
       ],
     },
   },

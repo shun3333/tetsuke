@@ -357,10 +357,6 @@ table.timeline-grid {
   fill: var(--te-box-stroke);
 }
 
-.score-view .kakegoe-text {
-  fill: var(--kakegoe-fill);
-}
-
 .score-view .beat-axis-text {
   fill: var(--text);
 }

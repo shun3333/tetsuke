@@ -1,14 +1,17 @@
 // 描画ビュー: 手付をA4用紙相当のページ単位に分割して描画する。
 // 1ページ = 固定8クサリ枠(データが無い枠は空白)。クサリは右→左、
-// 各クサリ枠内は左に謡・右に小鼓の手組(専用の箱)を配置し、
+// 各クサリ枠内は左に謡・右に小鼓の手組を配置し、
 // 拍数の軸はページ右端に1つだけ表示する。
+// 表は拍の横線の上、裏は線と線の間(半拍下)に置く。
+// クサリ末尾の拍の裏は、次のクサリの1拍目の半拍前(=0拍裏)に送って描画する。
 import { useMemo } from "react";
 import {
   KUSARI_BEAT_COUNT,
-  type HitColor,
-  type HitSymbol,
+  type Instrument,
   type SongData,
   type TeMaster,
+  type TeName,
+  type TeShape,
   type Timing,
   type UtaiSub,
 } from "../types";
@@ -17,6 +20,7 @@ import {
   computeTeFragments,
   type TeFragment,
 } from "../logic/position";
+import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 
 interface Props {
   song: SongData;
@@ -27,20 +31,20 @@ const BEAT_HEIGHT = 32;
 const HEADER_ROW_HEIGHT = 80;
 const MARGIN_TOP = 16;
 const MARGIN_BOTTOM = 20;
-// 1拍目の横線の上に確保する余白(半拍分の「0拍裏」+ 半拍分の余白)
-const TOP_PAD = BEAT_HEIGHT;
-// 最終拍の横線の下に確保する余白(半拍分の裏 + 半拍分の余白)
-const BOTTOM_PAD = BEAT_HEIGHT;
 const MARGIN_LEFT = 16;
 const MARGIN_RIGHT = 16;
+// 1拍目の横線の上に確保する余白(半拍分の「0拍裏」+ 半拍分の余白)
+const TOP_PAD = BEAT_HEIGHT;
+// 最終拍の横線の下に確保する余白
+const BOTTOM_PAD = BEAT_HEIGHT;
 // 謡:小鼓の枠の横幅は概ね2:1
 const TE_COL_WIDTH = 22;
 const UTAI_COL_WIDTH = 44;
 const AXIS_COL_WIDTH = 22;
 const KUSARI_PER_PAGE = 8;
+const GRID_TOP = MARGIN_TOP + HEADER_ROW_HEIGHT;
 /** 見やすさのため太線にする拍(1始まり) */
 const THICK_BEATS = new Set([1, 3, 5, 8]);
-const GRID_TOP = MARGIN_TOP + HEADER_ROW_HEIGHT;
 
 const TIMING_Y_OFFSET: Record<Timing, number> = {
   slightly_early: -BEAT_HEIGHT * 0.18,
@@ -48,53 +52,75 @@ const TIMING_Y_OFFSET: Record<Timing, number> = {
   slightly_late: BEAT_HEIGHT * 0.18,
 };
 
-const HIT_COLOR: Record<HitColor, string> = {
-  blue: "#2266dd",
-  red: "#cc2222",
-};
-
-interface HitMarkProps {
+interface TeMarkProps {
   cx: number;
   cy: number;
-  symbol: HitSymbol;
-  color: HitColor;
+  shape: TeShape;
+  color: string;
+  label: string;
 }
 
-function HitMark({ cx, cy, symbol, color }: HitMarkProps) {
-  const stroke = HIT_COLOR[color];
-  if (symbol === "filled_circle") {
-    return <circle cx={cx} cy={cy} r={3.5} fill={stroke} />;
+/** 手マスタで指定された図形を描く */
+function TeMark({ cx, cy, shape, color, label }: TeMarkProps) {
+  const title = <title>{label}</title>;
+  switch (shape) {
+    case "filled_small_circle":
+      return (
+        <circle cx={cx} cy={cy} r={2.8} fill={color}>
+          {title}
+        </circle>
+      );
+    case "open_circle":
+      return (
+        <circle cx={cx} cy={cy} r={4} fill="none" stroke={color} strokeWidth={1.3}>
+          {title}
+        </circle>
+      );
+    case "open_circle_barred":
+      return (
+        <g>
+          {title}
+          <circle cx={cx} cy={cy} r={4} fill="none" stroke={color} strokeWidth={1.3} />
+          <line
+            x1={cx - 5.5}
+            x2={cx + 5.5}
+            y1={cy}
+            y2={cy}
+            stroke={color}
+            strokeWidth={1.3}
+          />
+        </g>
+      );
+    case "open_triangle": {
+      const r = 4.5;
+      const points = `${cx},${cy - r} ${cx + r},${cy + r * 0.8} ${cx - r},${cy + r * 0.8}`;
+      return (
+        <polygon points={points} fill="none" stroke={color} strokeWidth={1.3}>
+          {title}
+        </polygon>
+      );
+    }
   }
-  if (symbol === "open_circle") {
-    return <circle cx={cx} cy={cy} r={3.5} fill="none" stroke={stroke} strokeWidth={1.3} />;
-  }
-  const r = 4.5;
-  const points = `${cx},${cy - r} ${cx + r},${cy + r * 0.8} ${cx - r},${cy + r * 0.8}`;
-  return <polygon points={points} fill="none" stroke={stroke} strokeWidth={1.3} />;
 }
 
-/** 描画用に展開した謡の1枠。beatは1始まり(0は「0拍裏」を表す) */
+/** 描画用に展開した謡の1枠。beatIndexは0始まり(-1 は「0拍裏」= 1拍目の半拍前) */
 interface UtaiCell {
-  beat: number;
+  beatIndex: number;
   sub: UtaiSub;
   value: string;
 }
 
-/**
- * 掛け声/手がそのフラグメント(=クサリ内に収まる範囲)に描画されるべきかを判定する。
- * 裏は半拍下にずれるため、手組の頭より前の「0拍裏」(rel_beat: -1, sub: "ura")は
- * 手組の先頭フラグメントに限って1拍分手前まで許容する。
- */
-function isVisibleInFragment(
-  localBeat: number,
-  sub: UtaiSub,
-  frag: TeFragment,
-  kusariBeatCount: number,
-): boolean {
-  const lowerBound =
-    sub === "ura" && frag.isFirstFragment ? frag.localStart - 1 : frag.localStart;
-  if (localBeat < lowerBound || localBeat >= frag.localEnd) return false;
-  return localBeat >= -1 && localBeat < kusariBeatCount;
+/** 描画用に展開した掛け声/手の1つ。描画先のクサリと位置は解決済み。 */
+interface TeRenderItem {
+  key: string;
+  beatIndex: number;
+  sub: UtaiSub;
+  kind: "kakegoe" | "hit";
+  /** どの楽器の手組か(色の決定に使う) */
+  instrument: Instrument;
+  text?: string;
+  te?: TeName;
+  timing?: Timing;
 }
 
 /** 1クサリ枠 = 謡1列 + 小鼓1列(右)のセット。データが無い枠も同じ幅で確保する。 */
@@ -110,10 +136,9 @@ interface SlotLayout {
 
 interface ScorePageProps {
   song: SongData;
-  teMaster: TeMaster;
-  globalStarts: number[];
   allFragments: TeFragment[];
   utaiEntriesByKusari: Map<number, UtaiCell[]>;
+  teItemsByKusari: Map<number, TeRenderItem[]>;
   rowsPerPage: number;
   slotKusariIndices: (number | null)[];
   pageNumber: number;
@@ -121,10 +146,9 @@ interface ScorePageProps {
 
 function ScorePage({
   song,
-  teMaster,
-  globalStarts,
   allFragments,
   utaiEntriesByKusari,
+  teItemsByKusari,
   rowsPerPage,
   slotKusariIndices,
   pageNumber,
@@ -242,6 +266,7 @@ function ScorePage({
           const kusariIndex = slot.kusariIndex;
           const slotLeft = slot.utaiColX;
           const slotRight = slot.teColX + TE_COL_WIDTH;
+          const teColCenterX = slot.teColX + TE_COL_WIDTH / 2;
           // 8拍に満たないクサリ(トリ/オクリ/片地)は、使わない拍を
           // 「最終拍の裏の太い横線」+「そこから8拍目へ下る斜めの太線」で示す
           const hasUnusedBeats = slot.beatCount < rowsPerPage;
@@ -266,16 +291,15 @@ function ScorePage({
                   />
                 </>
               )}
-              {/* 謡(表は横線の上、裏は線と線の間。beat 0 の裏は1拍目の線の上に出る) */}
-              {(utaiEntriesByKusari.get(kusariIndex) ?? []).map((entry: UtaiCell, i: number) => {
-                // beatは1始まり、0は「0拍裏」(1拍目の線の半拍上)
-                const beatIndex = entry.beat - 1;
-                if (beatIndex >= slot.beatCount) return null;
+
+              {/* 謡(表は横線の上、裏は線と線の間。beatIndex -1 は1拍目の半拍前) */}
+              {(utaiEntriesByKusari.get(kusariIndex) ?? []).map((entry, i) => {
+                if (entry.beatIndex >= slot.beatCount) return null;
                 return (
                   <text
                     key={i}
                     x={slot.utaiColX + UTAI_COL_WIDTH / 2}
-                    y={posY(beatIndex, entry.sub)}
+                    y={posY(entry.beatIndex, entry.sub)}
                     dominantBaseline="middle"
                     fontSize={14}
                     textAnchor="middle"
@@ -286,13 +310,9 @@ function ScorePage({
                 );
               })}
 
-              {/* 小鼓 手組(クサリごとに1列、右側) */}
+              {/* 手組名(8拍の領域の上の専用の行に縦書きで並べる) */}
               {slot.fragments.map((frag, fi) => {
-                const def = teMaster[frag.teId];
-                if (!def) return null;
-                const colX = slot.teColX + TE_COL_WIDTH / 2;
-                // 手組名はヘッダー行を「名前を表示する手組の数」で分割して縦書きで並べる
-                // (前のクサリから続くフラグメントは名前を出さないので数に含めない)
+                if (!frag.isFirstFragment) return null;
                 const namedCount = slot.fragments.filter((f) => f.isFirstFragment).length;
                 const nameOrder = slot.fragments
                   .slice(0, fi)
@@ -303,59 +323,54 @@ function ScorePage({
                 const estimatedNameWidth = frag.teId.length * nameFontSize * 0.62;
                 const maxNameWidth = nameBand - 8;
                 return (
-                  <g key={`${frag.instanceIndex}-${frag.kusariIndex}`}>
-                    {frag.isFirstFragment && (
-                      <text
-                        x={colX}
-                        y={nameAnchorY}
-                        fontSize={nameFontSize}
-                        textAnchor="start"
-                        className="te-instance-label"
-                        transform={`rotate(-90 ${colX} ${nameAnchorY})`}
-                        textLength={
-                          estimatedNameWidth > maxNameWidth ? maxNameWidth : undefined
-                        }
-                        lengthAdjust="spacingAndGlyphs"
-                      >
-                        {frag.teId}
-                      </text>
-                    )}
-                    {def.internal_pattern.kakegoe.map((kg, ki) => {
-                      const sub = kg.sub ?? "omote";
-                      const localBeat =
-                        frag.instanceGlobalStart + kg.rel_beat - globalStarts[kusariIndex];
-                      if (!isVisibleInFragment(localBeat, sub, frag, slot.beatCount)) return null;
-                      return (
-                        <text
-                          key={`kg-${ki}`}
-                          x={colX}
-                          y={posY(localBeat, sub) - BEAT_HEIGHT * 0.2}
-                          dominantBaseline="middle"
-                          fontSize={10}
-                          textAnchor="middle"
-                          className="kakegoe-text"
-                          fill={kg.color ? HIT_COLOR[kg.color] : undefined}
-                        >
-                          {kg.text}
-                        </text>
-                      );
-                    })}
-                    {def.internal_pattern.hits.map((hit, hi) => {
-                      const sub = hit.sub ?? "omote";
-                      const localBeat =
-                        frag.instanceGlobalStart + hit.rel_beat - globalStarts[kusariIndex];
-                      if (!isVisibleInFragment(localBeat, sub, frag, slot.beatCount)) return null;
-                      return (
-                        <HitMark
-                          key={`hit-${hi}`}
-                          cx={colX}
-                          cy={posY(localBeat, sub) + TIMING_Y_OFFSET[hit.timing]}
-                          symbol={hit.symbol}
-                          color={hit.color ?? "blue"}
-                        />
-                      );
-                    })}
-                  </g>
+                  <text
+                    key={`name-${frag.instanceIndex}`}
+                    x={teColCenterX}
+                    y={nameAnchorY}
+                    fontSize={nameFontSize}
+                    textAnchor="start"
+                    className="te-instance-label"
+                    transform={`rotate(-90 ${teColCenterX} ${nameAnchorY})`}
+                    textLength={estimatedNameWidth > maxNameWidth ? maxNameWidth : undefined}
+                    lengthAdjust="spacingAndGlyphs"
+                  >
+                    {frag.teId}
+                  </text>
+                );
+              })}
+
+              {/* 小鼓の掛け声・手(色は楽器ごとに決まる) */}
+              {(teItemsByKusari.get(kusariIndex) ?? []).map((item) => {
+                if (item.beatIndex >= slot.beatCount) return null;
+                const color = INSTRUMENT_COLOR[item.instrument];
+                if (item.kind === "kakegoe") {
+                  return (
+                    <text
+                      key={item.key}
+                      x={teColCenterX}
+                      y={posY(item.beatIndex, item.sub) - BEAT_HEIGHT * 0.2}
+                      dominantBaseline="middle"
+                      fontSize={10}
+                      textAnchor="middle"
+                      fill={color}
+                    >
+                      {item.text}
+                    </text>
+                  );
+                }
+                const glyph = item.te
+                  ? TE_GLYPH_MASTER[item.instrument]?.[item.te]
+                  : undefined;
+                if (!glyph) return null;
+                return (
+                  <TeMark
+                    key={item.key}
+                    cx={teColCenterX}
+                    cy={posY(item.beatIndex, item.sub) + TIMING_Y_OFFSET[item.timing ?? "on"]}
+                    shape={glyph.shape}
+                    color={color}
+                    label={glyph.label}
+                  />
                 );
               })}
             </g>
@@ -383,21 +398,97 @@ export function ScoreView({ song, teMaster }: Props) {
     [song.tracks.kotsuzumi, teMaster, song.kusari_sequence, globalStarts],
   );
 
+  /**
+   * クサリ末尾の拍の裏は、次のクサリの1拍目の半拍前(beatIndex -1)に送る。
+   * 次のクサリが無い場合はその場に残す。
+   */
+  const resolvePosition = useMemo(() => {
+    return (kusariIndex: number, beatIndex: number, sub: UtaiSub) => {
+      const kusari = song.kusari_sequence[kusariIndex];
+      if (!kusari) return null;
+      const beatCount = KUSARI_BEAT_COUNT[kusari.type];
+      if (
+        sub === "ura" &&
+        beatIndex === beatCount - 1 &&
+        kusariIndex + 1 < song.kusari_sequence.length
+      ) {
+        return { kusariIndex: kusariIndex + 1, beatIndex: -1 };
+      }
+      return { kusariIndex, beatIndex };
+    };
+  }, [song.kusari_sequence]);
+
   const utaiEntriesByKusari = useMemo(() => {
     const map = new Map<number, UtaiCell[]>();
     (song.tracks.utai?.chars ?? []).forEach((c) => {
       if (!c.content) return;
-      const list = map.get(c.beat_ref.kusari_index) ?? [];
-      list.push({ beat: c.beat_ref.beat, sub: c.sub, value: c.content.value });
-      map.set(c.beat_ref.kusari_index, list);
+      // beatは1始まり(0は「0拍裏」)なので0始まりに直す
+      const pos = resolvePosition(c.beat_ref.kusari_index, c.beat_ref.beat - 1, c.sub);
+      if (!pos) return;
+      const list = map.get(pos.kusariIndex) ?? [];
+      list.push({ beatIndex: pos.beatIndex, sub: c.sub, value: c.content.value });
+      map.set(pos.kusariIndex, list);
     });
     return map;
-  }, [song.tracks.utai]);
+  }, [song.tracks.utai, resolvePosition]);
 
-  const rowsPerPage = useMemo(
-    () => Math.max(...Object.values(KUSARI_BEAT_COUNT)),
-    [],
-  );
+  const teItemsByKusari = useMemo(() => {
+    const map = new Map<number, TeRenderItem[]>();
+    const push = (kusariIndex: number, item: TeRenderItem) => {
+      const list = map.get(kusariIndex) ?? [];
+      list.push(item);
+      map.set(kusariIndex, list);
+    };
+    allFragments.forEach((frag) => {
+      const def = teMaster[frag.teId];
+      if (!def) return;
+      const kusari = song.kusari_sequence[frag.kusariIndex];
+      if (!kusari) return;
+      const beatCount = KUSARI_BEAT_COUNT[kusari.type];
+      /** 手組内の相対位置を、描画先のクサリ・拍に解決する(範囲外はnull) */
+      const place = (relBeat: number, sub: UtaiSub) => {
+        const beatIndex =
+          frag.instanceGlobalStart + relBeat - globalStarts[frag.kusariIndex];
+        // 手組の頭より前の「0拍裏」は先頭フラグメントに限って1拍分手前まで許容する
+        const lowerBound =
+          sub === "ura" && frag.isFirstFragment ? frag.localStart - 1 : frag.localStart;
+        if (beatIndex < lowerBound || beatIndex >= frag.localEnd) return null;
+        if (beatIndex < -1 || beatIndex >= beatCount) return null;
+        return resolvePosition(frag.kusariIndex, beatIndex, sub);
+      };
+      const fragKey = `${frag.instanceIndex}-${frag.kusariIndex}`;
+      def.internal_pattern.kakegoe.forEach((kg, ki) => {
+        const sub = kg.sub ?? "omote";
+        const pos = place(kg.rel_beat, sub);
+        if (!pos) return;
+        push(pos.kusariIndex, {
+          key: `kg-${fragKey}-${ki}`,
+          beatIndex: pos.beatIndex,
+          sub,
+          kind: "kakegoe",
+          instrument: def.instrument,
+          text: kg.text,
+        });
+      });
+      def.internal_pattern.hits.forEach((hit, hi) => {
+        const sub = hit.sub ?? "omote";
+        const pos = place(hit.rel_beat, sub);
+        if (!pos) return;
+        push(pos.kusariIndex, {
+          key: `hit-${fragKey}-${hi}`,
+          beatIndex: pos.beatIndex,
+          sub,
+          kind: "hit",
+          instrument: def.instrument,
+          te: hit.te,
+          timing: hit.timing,
+        });
+      });
+    });
+    return map;
+  }, [allFragments, teMaster, song.kusari_sequence, globalStarts, resolvePosition]);
+
+  const rowsPerPage = useMemo(() => Math.max(...Object.values(KUSARI_BEAT_COUNT)), []);
 
   const pages = useMemo(() => {
     const totalKusari = song.kusari_sequence.length;
@@ -416,10 +507,9 @@ export function ScoreView({ song, teMaster }: Props) {
         <ScorePage
           key={pageIndex}
           song={song}
-          teMaster={teMaster}
-          globalStarts={globalStarts}
           allFragments={allFragments}
           utaiEntriesByKusari={utaiEntriesByKusari}
+          teItemsByKusari={teItemsByKusari}
           rowsPerPage={rowsPerPage}
           slotKusariIndices={slotKusariIndices}
           pageNumber={pageIndex + 1}

@@ -111,27 +111,36 @@ export function TimelineGrid({
     else if (caret === "end") el.setSelectionRange(el.value.length, el.value.length);
   }
 
+  // 入力欄は「1拍表 → 1拍裏 → 2拍表 → …」の順に並ぶ。
+  // 左右キーはこの並び順をそのまま辿る。
+  function focusFlatIndex(index: number, caret: "start" | "end") {
+    if (index < 0 || index >= total * UTAI_SUBS.length) return;
+    const g = Math.floor(index / UTAI_SUBS.length);
+    const sub = UTAI_SUBS[index % UTAI_SUBS.length];
+    focusUtaiInput(g, sub, caret);
+  }
+
   function handleUtaiKeyDown(
     e: React.KeyboardEvent<HTMLInputElement>,
     g: number,
     sub: UtaiSub,
   ) {
     const input = e.currentTarget;
+    const flatIndex = g * UTAI_SUBS.length + UTAI_SUBS.indexOf(sub);
     switch (e.key) {
       case "ArrowLeft":
-        if (input.selectionStart === 0 && input.selectionEnd === 0 && g > 0) {
+        if (input.selectionStart === 0 && input.selectionEnd === 0) {
           e.preventDefault();
-          focusUtaiInput(g - 1, sub, "end");
+          focusFlatIndex(flatIndex - 1, "end");
         }
         break;
       case "ArrowRight":
         if (
           input.selectionStart === input.value.length &&
-          input.selectionEnd === input.value.length &&
-          g < total - 1
+          input.selectionEnd === input.value.length
         ) {
           e.preventDefault();
-          focusUtaiInput(g + 1, sub, "start");
+          focusFlatIndex(flatIndex + 1, "start");
         }
         break;
       case "ArrowUp":
