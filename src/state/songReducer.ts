@@ -1,5 +1,5 @@
 // 曲データ全体を1つのstateとして持つreducer。操作をactionとして定義し、undo/redoしやすくする。
-import type { BeatRef, KusariType, SongData, UtaiSub } from "../types";
+import type { BeatRef, KusariType, SongData } from "../types";
 
 export type SongAction =
   | { type: "LOAD_SONG"; song: SongData }
@@ -11,7 +11,6 @@ export type SongAction =
   | {
       type: "SET_UTAI_CHAR";
       beatRef: BeatRef;
-      sub: UtaiSub;
       value: string | null;
     };
 
@@ -115,19 +114,18 @@ export function songReducer(state: SongData, action: SongAction): SongData {
         track_type: "utai" as const,
         chars: [],
       };
-      const { beatRef, sub, value } = action;
+      const { beatRef, value } = action;
       const idx = track.chars.findIndex(
         (c) =>
           c.beat_ref.kusari_index === beatRef.kusari_index &&
-          c.beat_ref.beat === beatRef.beat &&
-          c.sub === sub,
+          c.beat_ref.beat === beatRef.beat,
       );
       const content = value === null || value === "" ? null : { type: "text" as const, value };
       const nextChars = [...track.chars];
       if (idx >= 0) {
         nextChars[idx] = { ...nextChars[idx], content };
       } else {
-        nextChars.push({ beat_ref: beatRef, sub, content });
+        nextChars.push({ beat_ref: beatRef, content });
       }
       return {
         ...state,

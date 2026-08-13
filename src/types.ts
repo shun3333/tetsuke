@@ -67,25 +67,23 @@ export type TeGlyphMaster = Record<TeName, TeGlyph>;
 
 /**
  * 手組内の掛け声1つ。
- * rel_beat は拍(横線)の位置、sub は表(線の上) / 裏(線と線の間)。
- * 手組の頭より前の「0拍の裏」を表す場合は rel_beat: -1, sub: "ura" とする。
+ * rel_pos は手組の頭からの相対位置を「半拍単位」で表す。
+ *   0 = 頭の拍の表 / 1 = その裏 / 2 = 次の拍の表 / -1 = 頭の半拍前(0拍の裏)
  * 色は楽器ごとに決まるため、個々には持たない。
  */
 export interface KakegoeEntry {
-  rel_beat: number;
+  rel_pos: number;
   text: string;
-  sub?: UtaiSub;
 }
 
 /**
- * 手組内の手(打つタイミング)1つ。rel_beat/subの意味はKakegoeEntryと同じ。
+ * 手組内の手(打つタイミング)1つ。rel_pos の意味はKakegoeEntryと同じ。
  * どの図形で描くかは te から手マスタを引いて決まる。
  */
 export interface HitEntry {
-  rel_beat: number;
+  rel_pos: number;
   timing: Timing;
   te: TeName;
-  sub?: UtaiSub;
 }
 
 /** 手組の内部パターン(掛け声・手・長さ) */
@@ -108,7 +106,13 @@ export interface TeMasterEntry {
 /** 楽器ごとの手組辞書(te_id -> 定義) */
 export type TeMaster = Record<string, TeMasterEntry>;
 
-/** クサリ内の位置を指す参照(1-indexed beat) */
+/**
+ * クサリ内の位置を指す参照。
+ * beat は「半拍単位の枠番号」(1始まり)で、表・裏を1つの連番で表す。
+ *   1 = 0拍の裏 / 2 = 1拍の表 / 3 = 1拍の裏 / 4 = 2拍の表 / … / 16 = 8拍の表
+ * 有効範囲は 1 〜 (クサリの拍数 × 2)。
+ * クサリ末尾の拍の裏は、次のクサリの beat: 1(0拍の裏)として表す。
+ */
 export interface BeatRef {
   kusari_index: number;
   beat: number;
@@ -126,21 +130,12 @@ export interface TeTrack {
   te_instances: TeInstance[];
 }
 
-/** 謡の表/裏 */
-export type UtaiSub = "omote" | "ura";
-
-export const UTAI_SUB_LABEL: Record<UtaiSub, string> = {
-  omote: "表",
-  ura: "裏",
-};
-
 /** 謡の1枠の内容。空欄はnullで表現。 */
 export type UtaiContent = { type: "text"; value: string } | null;
 
-/** 謡トラックの1文字枠 */
+/** 謡トラックの1文字枠。位置は beat_ref(半拍単位の枠番号)だけで表す。 */
 export interface UtaiChar {
   beat_ref: BeatRef;
-  sub: UtaiSub;
   content: UtaiContent;
 }
 

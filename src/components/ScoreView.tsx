@@ -2,8 +2,7 @@
 // 1ページ = 固定8クサリ枠(データが無い枠は空白)。クサリは右→左、
 // 各クサリ枠内は左に謡・右に小鼓の手組を配置し、
 // 拍数の軸はページ右端に1つだけ表示する。
-// 表は拍の横線の上、裏は線と線の間(半拍下)に置く。
-// クサリ末尾の拍の裏は、次のクサリの1拍目の半拍前(=0拍裏)に送って描画する。
+// 位置は beat_ref.beat(半拍単位の枠番号)を拍単位オフセットに直して求める。
 import { useMemo } from "react";
 import {
   KUSARI_BEAT_COUNT,
@@ -13,12 +12,13 @@ import {
   type TeName,
   type TeShape,
   type Timing,
-  type UtaiSub,
 } from "../types";
 import {
+  beatRefToGlobalPos,
   computeGlobalStarts,
-  computeTeFragments,
-  type TeFragment,
+  globalPosToBeatRef,
+  isBeatRefValid,
+  slotToLocalOffset,
 } from "../logic/position";
 import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 
@@ -103,24 +103,28 @@ function TeMark({ cx, cy, shape, color, label }: TeMarkProps) {
   }
 }
 
-/** 描画用に展開した謡の1枠。beatIndexは0始まり(-1 は「0拍裏」= 1拍目の半拍前) */
+/** 描画用に展開した謡の1枠。offsetは拍単位(0 = 1拍目の横線、-0.5 = 0拍の裏) */
 interface UtaiCell {
-  beatIndex: number;
-  sub: UtaiSub;
+  offset: number;
   value: string;
 }
 
 /** 描画用に展開した掛け声/手の1つ。描画先のクサリと位置は解決済み。 */
 interface TeRenderItem {
   key: string;
-  beatIndex: number;
-  sub: UtaiSub;
+  offset: number;
   kind: "kakegoe" | "hit";
   /** どの楽器の手組か(色の決定に使う) */
   instrument: Instrument;
   text?: string;
   te?: TeName;
   timing?: Timing;
+}
+
+/** クサリ枠内に表示する手組名 */
+interface TeLabel {
+  key: string;
+  teId: string;
 }
 
 /** 1クサリ枠 = 謡1列 + 小鼓1列(右)のセット。データが無い枠も同じ幅で確保する。 */
@@ -131,14 +135,13 @@ interface SlotLayout {
   utaiColX: number;
   /** 小鼓列の左端(= 謡列の右端) */
   teColX: number;
-  fragments: TeFragment[];
 }
 
 interface ScorePageProps {
   song: SongData;
-  allFragments: TeFragment[];
   utaiEntriesByKusari: Map<number, UtaiCell[]>;
   teItemsByKusari: Map<number, TeRenderItem[]>;
+  teLabelsByKusari: Map<number, TeLabel[]>;
   rowsPerPage: number;
   slotKusariIndices: (number | null)[];
   pageNumber: number;
@@ -146,9 +149,9 @@ interface ScorePageProps {
 
 function ScorePage({
   song,
-  allFragments,
   utaiEntriesByKusari,
   teItemsByKusari,
+  teLabelsByKusari,
   rowsPerPage,
   slotKusariIndices,
   pageNumber,
@@ -172,25 +175,16 @@ function ScorePage({
             : KUSARI_BEAT_COUNT[song.kusari_sequence[kusariIndex].type],
         utaiColX: teColX - UTAI_COL_WIDTH,
         teColX,
-        fragments:
-          kusariIndex === null
-            ? []
-            : allFragments
-                .filter((f) => f.kusariIndex === kusariIndex)
-                .sort((a, b) => a.localStart - b.localStart),
       };
     });
 
     return { slots, width: svgWidth, height: svgHeight, axisX };
-  }, [slotKusariIndices, allFragments, song.kusari_sequence, rowsPerPage]);
+  }, [slotKusariIndices, song.kusari_sequence, rowsPerPage]);
 
   const pageLeft = slots.length > 0 ? slots[slots.length - 1].utaiColX : MARGIN_LEFT;
-  /** 拍(表)の横線のy座標。beatIndexは0始まり(0 = 1拍目) */
-  const beatLineY = (beatIndex: number) => GRID_TOP + TOP_PAD + beatIndex * BEAT_HEIGHT;
-  /** 表は横線の上、裏は線と線の間(半拍下) */
-  const posY = (beatIndex: number, sub: UtaiSub) =>
-    beatLineY(beatIndex) + (sub === "ura" ? BEAT_HEIGHT / 2 : 0);
-  const gridBottom = beatLineY(rowsPerPage - 1) + BOTTOM_PAD;
+  /** 拍単位オフセット(0 = 1拍目の横線)→ y座標 */
+  const offsetY = (offset: number) => GRID_TOP + TOP_PAD + offset * BEAT_HEIGHT;
+  const gridBottom = offsetY(rowsPerPage - 1) + BOTTOM_PAD;
 
   return (
     <div className="score-page">
@@ -209,8 +203,8 @@ function ScorePage({
             key={r}
             x1={pageLeft}
             x2={axisX}
-            y1={beatLineY(r)}
-            y2={beatLineY(r)}
+            y1={offsetY(r)}
+            y2={offsetY(r)}
             className={THICK_BEATS.has(r + 1) ? "skewer-line thick" : "skewer-line"}
           />
         ))}
@@ -251,7 +245,7 @@ function ScorePage({
           <text
             key={r}
             x={axisX + AXIS_COL_WIDTH / 2}
-            y={beatLineY(r)}
+            y={offsetY(r)}
             dominantBaseline="middle"
             fontSize={11}
             textAnchor="middle"
@@ -267,10 +261,11 @@ function ScorePage({
           const slotLeft = slot.utaiColX;
           const slotRight = slot.teColX + TE_COL_WIDTH;
           const teColCenterX = slot.teColX + TE_COL_WIDTH / 2;
+          const labels = teLabelsByKusari.get(kusariIndex) ?? [];
           // 8拍に満たないクサリ(トリ/オクリ/片地)は、使わない拍を
           // 「最終拍の裏の太い横線」+「そこから8拍目へ下る斜めの太線」で示す
           const hasUnusedBeats = slot.beatCount < rowsPerPage;
-          const lastUraY = posY(slot.beatCount - 1, "ura");
+          const lastUraY = offsetY(slot.beatCount - 1 + 0.5);
           return (
             <g key={kusariIndex}>
               {hasUnusedBeats && (
@@ -286,45 +281,37 @@ function ScorePage({
                     x1={slotRight}
                     y1={lastUraY}
                     x2={slotLeft}
-                    y2={beatLineY(rowsPerPage - 1)}
+                    y2={offsetY(rowsPerPage - 1)}
                     className="skewer-line thick"
                   />
                 </>
               )}
 
-              {/* 謡(表は横線の上、裏は線と線の間。beatIndex -1 は1拍目の半拍前) */}
-              {(utaiEntriesByKusari.get(kusariIndex) ?? []).map((entry, i) => {
-                if (entry.beatIndex >= slot.beatCount) return null;
-                return (
-                  <text
-                    key={i}
-                    x={slot.utaiColX + UTAI_COL_WIDTH / 2}
-                    y={posY(entry.beatIndex, entry.sub)}
-                    dominantBaseline="middle"
-                    fontSize={14}
-                    textAnchor="middle"
-                    className="utai-text"
-                  >
-                    {entry.value}
-                  </text>
-                );
-              })}
+              {/* 謡(表は横線の上、裏は線と線の間) */}
+              {(utaiEntriesByKusari.get(kusariIndex) ?? []).map((entry, i) => (
+                <text
+                  key={i}
+                  x={slot.utaiColX + UTAI_COL_WIDTH / 2}
+                  y={offsetY(entry.offset)}
+                  dominantBaseline="middle"
+                  fontSize={14}
+                  textAnchor="middle"
+                  className="utai-text"
+                >
+                  {entry.value}
+                </text>
+              ))}
 
               {/* 手組名(8拍の領域の上の専用の行に縦書きで並べる) */}
-              {slot.fragments.map((frag, fi) => {
-                if (!frag.isFirstFragment) return null;
-                const namedCount = slot.fragments.filter((f) => f.isFirstFragment).length;
-                const nameOrder = slot.fragments
-                  .slice(0, fi)
-                  .filter((f) => f.isFirstFragment).length;
-                const nameBand = HEADER_ROW_HEIGHT / Math.max(1, namedCount);
-                const nameAnchorY = MARGIN_TOP + (nameOrder + 1) * nameBand - 4;
+              {labels.map((label, li) => {
+                const nameBand = HEADER_ROW_HEIGHT / Math.max(1, labels.length);
+                const nameAnchorY = MARGIN_TOP + (li + 1) * nameBand - 4;
                 const nameFontSize = 9;
-                const estimatedNameWidth = frag.teId.length * nameFontSize * 0.62;
+                const estimatedNameWidth = label.teId.length * nameFontSize * 0.62;
                 const maxNameWidth = nameBand - 8;
                 return (
                   <text
-                    key={`name-${frag.instanceIndex}`}
+                    key={label.key}
                     x={teColCenterX}
                     y={nameAnchorY}
                     fontSize={nameFontSize}
@@ -334,21 +321,20 @@ function ScorePage({
                     textLength={estimatedNameWidth > maxNameWidth ? maxNameWidth : undefined}
                     lengthAdjust="spacingAndGlyphs"
                   >
-                    {frag.teId}
+                    {label.teId}
                   </text>
                 );
               })}
 
               {/* 小鼓の掛け声・手(色は楽器ごとに決まる) */}
               {(teItemsByKusari.get(kusariIndex) ?? []).map((item) => {
-                if (item.beatIndex >= slot.beatCount) return null;
                 const color = INSTRUMENT_COLOR[item.instrument];
                 if (item.kind === "kakegoe") {
                   return (
                     <text
                       key={item.key}
                       x={teColCenterX}
-                      y={posY(item.beatIndex, item.sub) - BEAT_HEIGHT * 0.2}
+                      y={offsetY(item.offset) - BEAT_HEIGHT * 0.2}
                       dominantBaseline="middle"
                       fontSize={10}
                       textAnchor="middle"
@@ -366,7 +352,7 @@ function ScorePage({
                   <TeMark
                     key={item.key}
                     cx={teColCenterX}
-                    cy={posY(item.beatIndex, item.sub) + TIMING_Y_OFFSET[item.timing ?? "on"]}
+                    cy={offsetY(item.offset) + TIMING_Y_OFFSET[item.timing ?? "on"]}
                     shape={glyph.shape}
                     color={color}
                     label={glyph.label}
@@ -387,97 +373,70 @@ export function ScoreView({ song, teMaster }: Props) {
     [song.kusari_sequence],
   );
 
-  const allFragments = useMemo(
-    () =>
-      computeTeFragments(
-        song.tracks.kotsuzumi?.te_instances ?? [],
-        teMaster,
-        song.kusari_sequence,
-        globalStarts,
-      ),
-    [song.tracks.kotsuzumi, teMaster, song.kusari_sequence, globalStarts],
-  );
-
-  /**
-   * クサリ末尾の拍の裏は、次のクサリの1拍目の半拍前(beatIndex -1)に送る。
-   * 次のクサリが無い場合はその場に残す。
-   */
-  const resolvePosition = useMemo(() => {
-    return (kusariIndex: number, beatIndex: number, sub: UtaiSub) => {
-      const kusari = song.kusari_sequence[kusariIndex];
-      if (!kusari) return null;
-      const beatCount = KUSARI_BEAT_COUNT[kusari.type];
-      if (
-        sub === "ura" &&
-        beatIndex === beatCount - 1 &&
-        kusariIndex + 1 < song.kusari_sequence.length
-      ) {
-        return { kusariIndex: kusariIndex + 1, beatIndex: -1 };
-      }
-      return { kusariIndex, beatIndex };
-    };
-  }, [song.kusari_sequence]);
-
   const utaiEntriesByKusari = useMemo(() => {
     const map = new Map<number, UtaiCell[]>();
     (song.tracks.utai?.chars ?? []).forEach((c) => {
       if (!c.content) return;
-      // beatは1始まり(0は「0拍裏」)なので0始まりに直す
-      const pos = resolvePosition(c.beat_ref.kusari_index, c.beat_ref.beat - 1, c.sub);
-      if (!pos) return;
-      const list = map.get(pos.kusariIndex) ?? [];
-      list.push({ beatIndex: pos.beatIndex, sub: c.sub, value: c.content.value });
-      map.set(pos.kusariIndex, list);
+      if (!isBeatRefValid(c.beat_ref, song.kusari_sequence)) return;
+      const list = map.get(c.beat_ref.kusari_index) ?? [];
+      list.push({ offset: slotToLocalOffset(c.beat_ref.beat), value: c.content.value });
+      map.set(c.beat_ref.kusari_index, list);
     });
     return map;
-  }, [song.tracks.utai, resolvePosition]);
+  }, [song.tracks.utai, song.kusari_sequence]);
 
-  const teItemsByKusari = useMemo(() => {
-    const map = new Map<number, TeRenderItem[]>();
-    const push = (kusariIndex: number, item: TeRenderItem) => {
-      const list = map.get(kusariIndex) ?? [];
-      list.push(item);
-      map.set(kusariIndex, list);
-    };
-    allFragments.forEach((frag) => {
-      const def = teMaster[frag.teId];
-      if (!def) return;
-      const kusari = song.kusari_sequence[frag.kusariIndex];
-      if (!kusari) return;
-      const beatCount = KUSARI_BEAT_COUNT[kusari.type];
-      /** 手組内の相対位置を、描画先のクサリ・拍に解決する(範囲外はnull) */
-      const place = (relBeat: number, sub: UtaiSub) => {
-        const beatIndex =
-          frag.instanceGlobalStart + relBeat - globalStarts[frag.kusariIndex];
-        // 手組の頭より前の「0拍裏」は先頭フラグメントに限って1拍分手前まで許容する
-        const lowerBound =
-          sub === "ura" && frag.isFirstFragment ? frag.localStart - 1 : frag.localStart;
-        if (beatIndex < lowerBound || beatIndex >= frag.localEnd) return null;
-        if (beatIndex < -1 || beatIndex >= beatCount) return null;
-        return resolvePosition(frag.kusariIndex, beatIndex, sub);
+  const { teItemsByKusari, teLabelsByKusari } = useMemo(() => {
+    const items = new Map<number, TeRenderItem[]>();
+    const labels = new Map<number, TeLabel[]>();
+    (song.tracks.kotsuzumi?.te_instances ?? []).forEach((ti, instanceIndex) => {
+      const def = teMaster[ti.te_id];
+      if (!def || !isBeatRefValid(ti.start_ref, song.kusari_sequence)) return;
+      const startGlobalPos = beatRefToGlobalPos(ti.start_ref, globalStarts);
+
+      // 手組名は、その手組が始まるクサリの枠に表示する
+      const labelList = labels.get(ti.start_ref.kusari_index) ?? [];
+      labelList.push({ key: `label-${instanceIndex}`, teId: ti.te_id });
+      labels.set(ti.start_ref.kusari_index, labelList);
+
+      /**
+       * 手組内の相対位置(半拍単位)を、描画先のクサリと拍単位オフセットに解決する。
+       * クサリをまたぐ場合は自動的に次のクサリの枠に振り分けられる。
+       */
+      const place = (relPos: number) => {
+        const ref = globalPosToBeatRef(
+          startGlobalPos + relPos / 2,
+          song.kusari_sequence,
+          globalStarts,
+        );
+        if (!ref) return null;
+        return {
+          kusariIndex: ref.kusari_index,
+          offset: slotToLocalOffset(ref.beat),
+        };
       };
-      const fragKey = `${frag.instanceIndex}-${frag.kusariIndex}`;
+      const push = (kusariIndex: number, item: TeRenderItem) => {
+        const list = items.get(kusariIndex) ?? [];
+        list.push(item);
+        items.set(kusariIndex, list);
+      };
+
       def.internal_pattern.kakegoe.forEach((kg, ki) => {
-        const sub = kg.sub ?? "omote";
-        const pos = place(kg.rel_beat, sub);
+        const pos = place(kg.rel_pos);
         if (!pos) return;
         push(pos.kusariIndex, {
-          key: `kg-${fragKey}-${ki}`,
-          beatIndex: pos.beatIndex,
-          sub,
+          key: `kg-${instanceIndex}-${ki}`,
+          offset: pos.offset,
           kind: "kakegoe",
           instrument: def.instrument,
           text: kg.text,
         });
       });
       def.internal_pattern.hits.forEach((hit, hi) => {
-        const sub = hit.sub ?? "omote";
-        const pos = place(hit.rel_beat, sub);
+        const pos = place(hit.rel_pos);
         if (!pos) return;
         push(pos.kusariIndex, {
-          key: `hit-${fragKey}-${hi}`,
-          beatIndex: pos.beatIndex,
-          sub,
+          key: `hit-${instanceIndex}-${hi}`,
+          offset: pos.offset,
           kind: "hit",
           instrument: def.instrument,
           te: hit.te,
@@ -485,8 +444,8 @@ export function ScoreView({ song, teMaster }: Props) {
         });
       });
     });
-    return map;
-  }, [allFragments, teMaster, song.kusari_sequence, globalStarts, resolvePosition]);
+    return { teItemsByKusari: items, teLabelsByKusari: labels };
+  }, [song.tracks.kotsuzumi, teMaster, song.kusari_sequence, globalStarts]);
 
   const rowsPerPage = useMemo(() => Math.max(...Object.values(KUSARI_BEAT_COUNT)), []);
 
@@ -507,9 +466,9 @@ export function ScoreView({ song, teMaster }: Props) {
         <ScorePage
           key={pageIndex}
           song={song}
-          allFragments={allFragments}
           utaiEntriesByKusari={utaiEntriesByKusari}
           teItemsByKusari={teItemsByKusari}
+          teLabelsByKusari={teLabelsByKusari}
           rowsPerPage={rowsPerPage}
           slotKusariIndices={slotKusariIndices}
           pageNumber={pageIndex + 1}

@@ -1,16 +1,26 @@
-// クサリ列 → グローバル拍位置への変換ロジック(全体の土台)
+// クサリ列 → グローバル位置への変換ロジック(全体の土台)
+//
+// 位置の表し方:
+//  - beat_ref.beat は「半拍単位の枠番号」(1始まり)。
+//    1 = 0拍の裏 / 2 = 1拍の表 / 3 = 1拍の裏 / … / 2N = N拍の表
+//  - 描画では「拍(表)の横線からの距離」で扱いたいので、
+//    クサリ内オフセット(拍単位、0 = 1拍目の横線)に直して使う。
+//      offset = beat / 2 - 1    (1 → -0.5, 2 → 0, 3 → 0.5, 16 → 7)
 import {
   KUSARI_BEAT_COUNT,
   type BeatRef,
   type KusariEntry,
   type KusariType,
-  type TeInstance,
-  type TeMaster,
 } from "../types";
 
 /** 指定typeの拍数 */
 export function beatCountOf(type: KusariType): number {
   return KUSARI_BEAT_COUNT[type];
+}
+
+/** 指定typeのクサリが持つ半拍枠の数(= 拍数 × 2) */
+export function slotCountOf(type: KusariType): number {
+  return beatCountOf(type) * 2;
 }
 
 /**
@@ -34,43 +44,14 @@ export function totalBeats(kusariSequence: KusariEntry[]): number {
   return kusariSequence.reduce((sum, k) => sum + beatCountOf(k.type), 0);
 }
 
-/**
- * beat_ref(クサリindex + クサリ内1-indexed拍)をグローバル拍位置(0-indexed)に変換する。
- * globalStartsは computeGlobalStarts の結果を渡す(呼び出し側でキャッシュ可能)。
- */
-export function beatRefToGlobal(ref: BeatRef, globalStarts: number[]): number {
-  const start = globalStarts[ref.kusari_index];
-  if (start === undefined) {
-    throw new Error(`invalid kusari_index: ${ref.kusari_index}`);
-  }
-  return start + (ref.beat - 1);
+/** 半拍枠番号 → クサリ内オフセット(拍単位、0 = 1拍目の横線、-0.5 = 0拍の裏) */
+export function slotToLocalOffset(beat: number): number {
+  return beat / 2 - 1;
 }
 
-/** グローバル拍位置(0-indexed)を beat_ref に変換する(グリッドUIでのクリック位置特定などに使用) */
-export function globalToBeatRef(
-  globalBeat: number,
-  kusariSequence: KusariEntry[],
-  globalStarts: number[],
-): BeatRef | null {
-  for (let i = kusariSequence.length - 1; i >= 0; i--) {
-    const start = globalStarts[i];
-    if (globalBeat >= start) {
-      const len = beatCountOf(kusariSequence[i].type);
-      if (globalBeat < start + len) {
-        return { kusari_index: i, beat: globalBeat - start + 1 };
-      }
-      return null;
-    }
-  }
-  return null;
-}
-
-/** 手組インスタンスが開始するグローバル拍位置 */
-export function teInstanceGlobalStart(
-  ref: BeatRef,
-  globalStarts: number[],
-): number {
-  return beatRefToGlobal(ref, globalStarts);
+/** クサリ内オフセット(拍単位) → 半拍枠番号 */
+export function localOffsetToSlot(offset: number): number {
+  return (offset + 1) * 2;
 }
 
 /** beat_refがそのクサリ列の中で有効な範囲か(型変更・クサリ削除後の不整合チェック用) */
@@ -80,70 +61,75 @@ export function isBeatRefValid(
 ): boolean {
   const k = kusariSequence[ref.kusari_index];
   if (!k) return false;
-  return ref.beat >= 1 && ref.beat <= beatCountOf(k.type);
+  return ref.beat >= 1 && ref.beat <= slotCountOf(k.type);
 }
 
 /**
- * 手組インスタンスの終了位置(自動算出、end_refは保存しない)。
- * クサリをまたいでも、開始グローバル位置 + internal_pattern.length からそのまま求まる。
- * 戻り値は「最後の拍のグローバル位置 + 1」(exclusive end)。
+ * beat_ref をグローバル位置(拍単位、小数可)に変換する。
+ * globalStartsは computeGlobalStarts の結果を渡す(呼び出し側でキャッシュ可能)。
  */
-export function teInstanceGlobalEnd(
-  ref: BeatRef,
-  length: number,
-  globalStarts: number[],
-): number {
-  return teInstanceGlobalStart(ref, globalStarts) + length;
+export function beatRefToGlobalPos(ref: BeatRef, globalStarts: number[]): number {
+  const start = globalStarts[ref.kusari_index];
+  if (start === undefined) {
+    throw new Error(`invalid kusari_index: ${ref.kusari_index}`);
+  }
+  return start + slotToLocalOffset(ref.beat);
 }
 
 /**
- * 手組インスタンスの、あるクサリ内に収まる断片(フラグメント)。
- * 実際の手付譜はクサリごとに横並びの独立したブロックとして描画するため、
- * クサリをまたぐインスタンスはクサリの境界でフラグメントに分割して扱う。
+ * グローバル位置(拍単位、小数可)を beat_ref に変換する。
+ * 各クサリは [global_start - 0.5, global_start + 拍数 - 1] の範囲を受け持つ。
+ * (クサリ末尾の拍の裏は次のクサリの beat: 1 になる)
  */
-export interface TeFragment {
-  instanceIndex: number;
-  teId: string;
-  kusariIndex: number;
-  /** このクサリ内でのローカル開始拍(0-indexed) */
-  localStart: number;
-  /** このクサリ内でのローカル終了拍(exclusive) */
-  localEnd: number;
-  /** インスタンスの先頭(rel_beat 0)を含むフラグメントか(名前ラベルの表示に使う) */
-  isFirstFragment: boolean;
-  /** インスタンスのグローバル開始拍(kakegoe/hitsのローカル位置算出に使う) */
-  instanceGlobalStart: number;
-}
-
-export function computeTeFragments(
-  teInstances: TeInstance[],
-  teMaster: TeMaster,
+export function globalPosToBeatRef(
+  globalPos: number,
   kusariSequence: KusariEntry[],
   globalStarts: number[],
-): TeFragment[] {
-  const fragments: TeFragment[] = [];
-  teInstances.forEach((ti, instanceIndex) => {
-    const def = teMaster[ti.te_id];
-    if (!def || !isBeatRefValid(ti.start_ref, kusariSequence)) return;
-    const instanceGlobalStart = teInstanceGlobalStart(ti.start_ref, globalStarts);
-    const instanceGlobalEnd = instanceGlobalStart + def.internal_pattern.length;
-    kusariSequence.forEach((k, kusariIndex) => {
-      const kusariGlobalStart = globalStarts[kusariIndex];
-      const kusariLen = beatCountOf(k.type);
-      const overlapStart = Math.max(instanceGlobalStart, kusariGlobalStart);
-      const overlapEnd = Math.min(instanceGlobalEnd, kusariGlobalStart + kusariLen);
-      if (overlapStart < overlapEnd) {
-        fragments.push({
-          instanceIndex,
-          teId: ti.te_id,
-          kusariIndex,
-          localStart: overlapStart - kusariGlobalStart,
-          localEnd: overlapEnd - kusariGlobalStart,
-          isFirstFragment: overlapStart === instanceGlobalStart,
-          instanceGlobalStart,
-        });
-      }
-    });
-  });
-  return fragments;
+): BeatRef | null {
+  for (let i = 0; i < kusariSequence.length; i++) {
+    const start = globalStarts[i];
+    const len = beatCountOf(kusariSequence[i].type);
+    if (globalPos >= start - 0.5 && globalPos <= start + len - 1) {
+      return { kusari_index: i, beat: localOffsetToSlot(globalPos - start) };
+    }
+  }
+  return null;
+}
+
+/**
+ * グローバル拍番号(0-indexed の整数拍)を、その拍の表を指す beat_ref に変換する。
+ * 編集グリッドのように「拍」単位で扱うUIから使う。
+ */
+export function globalBeatToBeatRef(
+  globalBeat: number,
+  kusariSequence: KusariEntry[],
+  globalStarts: number[],
+): BeatRef | null {
+  const local = globalBeatToKusariBeat(globalBeat, kusariSequence, globalStarts);
+  if (!local) return null;
+  return { kusari_index: local.kusariIndex, beat: local.localBeat * 2 };
+}
+
+/** グローバル拍番号(0-indexed) → クサリindexとクサリ内の拍番号(1始まり) */
+export function globalBeatToKusariBeat(
+  globalBeat: number,
+  kusariSequence: KusariEntry[],
+  globalStarts: number[],
+): { kusariIndex: number; localBeat: number } | null {
+  for (let i = 0; i < kusariSequence.length; i++) {
+    const start = globalStarts[i];
+    const len = beatCountOf(kusariSequence[i].type);
+    if (globalBeat >= start && globalBeat < start + len) {
+      return { kusariIndex: i, localBeat: globalBeat - start + 1 };
+    }
+  }
+  return null;
+}
+
+/**
+ * 手組インスタンスが占める最初の拍のグローバル拍番号(0-indexed)。
+ * 手組は拍(表)から始まる想定なので整数に丸めて返す。
+ */
+export function teInstanceStartBeat(ref: BeatRef, globalStarts: number[]): number {
+  return Math.max(0, Math.floor(ref.beat / 2) - 1) + globalStarts[ref.kusari_index];
 }
