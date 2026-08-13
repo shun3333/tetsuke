@@ -73,16 +73,16 @@ const SMALL_KANA = new Set([
 ]);
 
 /** 小書き文字の大きさ・位置(親文字のサイズに対する比) */
-const SMALL_KANA_SCALE = 0.62;
-const SMALL_KANA_DX = 0.34;
-const SMALL_KANA_DY = 0.3;
+const SMALL_KANA_SCALE = 0.68;
+const SMALL_KANA_DX = 0.51;
+const SMALL_KANA_DY = 0.28;
 
 /**
  * 「ン」を前の音にくっつけて発音する節の表示。
  * 親文字と「ン」を半分ほどの大きさにして、1音の枠の中に縦に並べる。
  */
-const N_PAIR_SCALE = 0.58;
-const N_PAIR_DY = 0.25;
+const N_PAIR_SCALE = 0.80;
+const N_PAIR_DY = 0.30;
 
 /** 縦書き1マス分の単位(= 1音) */
 interface CharUnit {
