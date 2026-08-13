@@ -5,7 +5,7 @@
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。
 import { useMemo, useRef } from "react";
-import { KUSARI_LABEL, type SongData, type TeMaster } from "../types";
+import type { SongData, TeMaster } from "../types";
 import {
   computeGlobalStarts,
   globalBeatToBeatRef,
@@ -85,6 +85,48 @@ function buildOccupancy(
     }
   });
   return occupancy;
+}
+
+/** 小鼓の行に並べる1セル分 */
+interface TeCell {
+  /** セルの先頭のグローバル拍 */
+  g: number;
+  span: number;
+  occ: Occupancy | null;
+  /** 前のクサリから続いている手組か */
+  continued: boolean;
+}
+
+/**
+ * 1クサリ分(startG以上endG未満)の小鼓の行を組み立てる。
+ * 手組はクサリをまたぐことがあるため、はみ出す分はクサリの境目で切る。
+ */
+function buildTeCells(
+  startG: number,
+  endG: number,
+  occupancy: Map<number, Occupancy>,
+): TeCell[] {
+  const cells: TeCell[] = [];
+  let g = startG;
+  while (g < endG) {
+    const occ = occupancy.get(g);
+    if (!occ) {
+      cells.push({ g, span: 1, occ: null, continued: false });
+      g += 1;
+      continue;
+    }
+    // 同じ手組が続く範囲を、このクサリの中だけでまとめる
+    let span = 1;
+    while (
+      g + span < endG &&
+      occupancy.get(g + span)?.instanceIndex === occ.instanceIndex
+    ) {
+      span += 1;
+    }
+    cells.push({ g, span, occ, continued: !occ.isStart });
+    g += span;
+  }
+  return cells;
 }
 
 /** 入力済みの謡の文字を、半拍枠のkeyで引けるようにする */
@@ -208,31 +250,23 @@ export function TimelineGrid({
     }
   }
 
-  return (
-    <div className="timeline-grid-wrap">
-      <h2>タイムライン</h2>
-      <table className="timeline-grid">
+  /** クサリ1つ分の表。クサリを増やすと、この表が下に積まれていく */
+  function renderKusari(kusariIndex: number) {
+    const startG = globalStarts[kusariIndex];
+    const endG =
+      kusariIndex + 1 < globalStarts.length
+        ? globalStarts[kusariIndex + 1]
+        : total;
+    const beats = beatSlots.slice(startG, endG);
+
+    return (
+      <table key={kusariIndex} className="timeline-grid">
         <thead>
           <tr>
             <th className="row-label"></th>
-            {song.kusari_sequence.map((k, i) => {
-              const start = globalStarts[i];
-              const len =
-                i + 1 < globalStarts.length
-                  ? globalStarts[i + 1] - start
-                  : total - start;
-              return (
-                <th key={i} colSpan={len} className="kusari-header">
-                  {KUSARI_LABEL[k.type]}
-                </th>
-              );
-            })}
-          </tr>
-          <tr>
-            <th className="row-label"></th>
             {/* 拍番号は通し番号ではなく、クサリごとに1から振り直す */}
-            {beatSlots.map((entry, g) => (
-              <th key={g} className="beat-header">
+            {beats.map((entry, i) => (
+              <th key={i} className="beat-header">
                 {entry ? entry.localBeat : ""}
               </th>
             ))}
@@ -241,46 +275,31 @@ export function TimelineGrid({
         <tbody>
           <tr>
             <th className="row-label">小鼓</th>
-            {(() => {
-              const cells: React.ReactNode[] = [];
-              let g = 0;
-              while (g < total) {
-                const cellG = g;
-                const occ = occupancy.get(cellG);
-                if (occ && occ.isStart) {
-                  cells.push(
-                    <td
-                      key={cellG}
-                      colSpan={occ.length}
-                      className="te-cell filled"
-                      onClick={() => handleKotsuzumiClick(cellG)}
-                      title="クリックで削除"
-                    >
-                      {occ.label}
-                    </td>,
-                  );
-                  g += occ.length;
-                } else if (occ) {
-                  g += 1;
-                } else {
-                  cells.push(
-                    <td
-                      key={cellG}
-                      className={
-                        "te-cell empty" + (selectedTeId ? " placeable" : "")
-                      }
-                      onClick={() => handleKotsuzumiClick(cellG)}
-                    />,
-                  );
-                  g += 1;
-                }
-              }
-              return cells;
-            })()}
+            {buildTeCells(startG, endG, occupancy).map((cell) =>
+              cell.occ ? (
+                <td
+                  key={cell.g}
+                  colSpan={cell.span}
+                  className={"te-cell filled" + (cell.continued ? " continued" : "")}
+                  onClick={() => handleKotsuzumiClick(cell.g)}
+                  title={cell.continued ? undefined : "クリックで削除"}
+                >
+                  {/* 前のクサリから続いている分には名前を出さない */}
+                  {cell.continued ? "" : cell.occ.label}
+                </td>
+              ) : (
+                <td
+                  key={cell.g}
+                  className={"te-cell empty" + (selectedTeId ? " placeable" : "")}
+                  onClick={() => handleKotsuzumiClick(cell.g)}
+                />
+              ),
+            )}
           </tr>
           <tr>
             <th className="row-label">謡</th>
-            {beatSlots.map((entry, g) => {
+            {beats.map((entry, i) => {
+              const g = startG + i;
               if (!entry) return <td key={g} className="utai-cell" />;
               return (
                 <td key={g} className="utai-cell">
@@ -310,6 +329,13 @@ export function TimelineGrid({
           </tr>
         </tbody>
       </table>
+    );
+  }
+
+  return (
+    <div className="timeline-grid-wrap">
+      <h2>タイムライン</h2>
+      {song.kusari_sequence.map((_, i) => renderKusari(i))}
     </div>
   );
 }
