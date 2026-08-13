@@ -47,7 +47,7 @@ export const kotsuzumiTeMaster: TeMaster = {
     internal_pattern: {
       length: 5,
       kakegoe: [
-        { rel_pos: 0, text: "イヤ" },
+        { rel_pos: 1, text: "イヤ" },
         { rel_pos: 9, text: "ハ" },
       ],
       hits: [
