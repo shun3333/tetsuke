@@ -364,13 +364,10 @@ table.timeline-grid {
   border-radius: 0;
 }
 
+/* 文字色は楽器ごとに描画側でfill属性として指定するため、ここでは色を決めない
+   (ここでfillを指定すると属性より優先され、楽器の色が効かなくなる) */
 .score-view text {
-  fill: #000000;
   font-family: var(--serif-ja);
-}
-
-.score-view .utai-text {
-  fill: #000000;
 }
 
 .score-view .beat-axis-text {

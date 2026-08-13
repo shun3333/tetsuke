@@ -29,7 +29,8 @@ export interface TeRenderItem {
 /** クサリ枠のヘッダー行に表示する手組名 */
 export interface TeLabel {
   key: string;
-  teId: string;
+  /** 表示する名前(手組マスタのlabel) */
+  text: string;
   instrument: Instrument;
 }
 
@@ -83,7 +84,7 @@ function buildTeItems(
     // 手組名は、その手組が始まるクサリの枠に表示する
     pushTo(labelsByKusari, ti.start_ref.kusari_index, {
       key: `label-${instanceIndex}`,
-      teId: ti.te_id,
+      text: def.label,
       instrument: def.instrument,
     });
 

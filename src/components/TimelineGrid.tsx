@@ -27,7 +27,8 @@ interface Occupancy {
   instanceIndex: number;
   isStart: boolean;
   length: number;
-  teId: string;
+  /** セルに表示する手組名(手組マスタのlabel) */
+  label: string;
 }
 
 /** 1拍あたりの入力欄の数(裏・表) */
@@ -79,7 +80,7 @@ function buildOccupancy(
         instanceIndex: idx,
         isStart: g === start,
         length: len,
-        teId: ti.te_id,
+        label: def.label,
       });
     }
   });
@@ -255,7 +256,7 @@ export function TimelineGrid({
                       onClick={() => handleKotsuzumiClick(cellG)}
                       title="クリックで削除"
                     >
-                      {occ.teId}
+                      {occ.label}
                     </td>,
                   );
                   g += occ.length;

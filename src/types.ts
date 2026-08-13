@@ -92,7 +92,10 @@ export type Instrument = "kotsuzumi";
 
 /** 手組マスタの1エントリ */
 export interface TeMasterEntry {
+  /** 曲データから参照するためのID。表示には使わない */
   te_id: string;
+  /** 画面・手付に表示する名前(日本語) */
+  label: string;
   instrument: Instrument;
   internal_pattern: InternalPattern;
 }

@@ -61,8 +61,10 @@ const UTAI_FONT_SIZE = 14;
 const UTAI_CHAR_HEIGHT = 15;
 const AXIS_FONT_SIZE = 11;
 const TE_LABEL_FONT_SIZE = 9;
-/** 手組名を縦書きにしたときの、1文字あたりのおおよその高さの比 */
-const TE_LABEL_CHAR_RATIO = 0.62;
+/** 手組名を縦書きにしたときの1文字あたりの高さ */
+const TE_LABEL_CHAR_HEIGHT = 10;
+/** 手組名の上下に空ける余白 */
+const TE_LABEL_BAND_PAD = 6;
 
 const TIMING_Y_OFFSET: Record<Timing, number> = {
   slightly_early: -BEAT_HEIGHT * 0.18,
@@ -204,30 +206,39 @@ function UnusedBeatsMark({ slot }: { slot: SlotLayout }) {
   );
 }
 
-/** 手組名(8拍の領域の上の専用の行に縦書きで並べる) */
+/**
+ * 手組名(8拍の領域の上の専用の行)。
+ * 日本語なので文字を回転させず、1文字ずつ上から縦に積む。
+ */
 function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
   const band = HEADER_ROW_HEIGHT / Math.max(1, labels.length);
-  const maxWidth = band - 8;
   return (
     <>
       {labels.map((label, i) => {
-        const anchorY = MARGIN_TOP + (i + 1) * band - 4;
-        const estimatedWidth =
-          label.teId.length * TE_LABEL_FONT_SIZE * TE_LABEL_CHAR_RATIO;
+        const chars = Array.from(label.text);
+        // 帯に収まらない長い名前は行間を詰める
+        const charHeight = Math.min(
+          TE_LABEL_CHAR_HEIGHT,
+          (band - TE_LABEL_BAND_PAD) / chars.length,
+        );
+        const centerY = MARGIN_TOP + (i + 0.5) * band;
+        const firstY = centerY - ((chars.length - 1) * charHeight) / 2;
         return (
-          <text
-            key={label.key}
-            x={cx}
-            y={anchorY}
-            fontSize={TE_LABEL_FONT_SIZE}
-            textAnchor="start"
-            fill={INSTRUMENT_COLOR[label.instrument]}
-            transform={`rotate(-90 ${cx} ${anchorY})`}
-            textLength={estimatedWidth > maxWidth ? maxWidth : undefined}
-            lengthAdjust="spacingAndGlyphs"
-          >
-            {label.teId}
-          </text>
+          <g key={label.key}>
+            {chars.map((ch, c) => (
+              <text
+                key={c}
+                x={cx}
+                y={firstY + c * charHeight}
+                fontSize={TE_LABEL_FONT_SIZE}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill={INSTRUMENT_COLOR[label.instrument]}
+              >
+                {ch}
+              </text>
+            ))}
+          </g>
         );
       })}
     </>

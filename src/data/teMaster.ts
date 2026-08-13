@@ -6,6 +6,7 @@ import type { TeMaster } from "../types";
 export const kotsuzumiTeMaster: TeMaster = {
   mitsuji: {
     te_id: "mitsuji",
+    label: "三地",
     instrument: "kotsuzumi",
     internal_pattern: {
       length: 4,
@@ -23,6 +24,7 @@ export const kotsuzumiTeMaster: TeMaster = {
   },
   tsuzuke: {
     te_id: "tsuzuke",
+    label: "ツヅケ",
     instrument: "kotsuzumi",
     internal_pattern: {
       length: 8,
@@ -43,6 +45,7 @@ export const kotsuzumiTeMaster: TeMaster = {
   },
   uchioroshi: {
     te_id: "uchioroshi",
+    label: "打下",
     instrument: "kotsuzumi",
     internal_pattern: {
       length: 5,
@@ -62,6 +65,7 @@ export const kotsuzumiTeMaster: TeMaster = {
   },
   uchikiri: {
     te_id: "uchikiri",
+    label: "打切",
     instrument: "kotsuzumi",
     internal_pattern: {
       length: 2,

@@ -27,7 +27,7 @@ export function TePalette({ teMaster, selectedTeId, onSelect }: Props) {
               onSelect(selectedTeId === te.te_id ? null : te.te_id)
             }
           >
-            <span className="te-name">{te.te_id}</span>
+            <span className="te-name">{te.label}</span>
             <span className="te-length">{te.internal_pattern.length}拍</span>
           </button>
         ))}
