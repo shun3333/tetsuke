@@ -1,3 +1,14 @@
+/* 手付の描画に使う筆書き風フォント(佑字 肅)。
+   印刷時に環境差が出ないよう、ファイルを同梱して読み込む。
+   SIL Open Font License 1.1 / public/fonts/OFL.txt を参照。 */
+@font-face {
+  font-family: "Yuji Syuku";
+  src: url("/fonts/YujiSyuku-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --text: #4a4552;
   --text-h: #08060d;
@@ -15,6 +26,13 @@
   --kakegoe-fill: #6b6375;
 
   --sans: system-ui, "Hiragino Sans", "Yu Gothic", "Segoe UI", Roboto, sans-serif;
+  /* 手付の描画用。同梱した筆書き風フォントを使い、
+     読み込めなかった場合に備えて明朝体を後ろに並べる */
+  --serif-ja:
+    "Yuji Syuku",
+    "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", YuMincho,
+    "游明朝", "Noto Serif JP", "Noto Serif CJK JP", "Source Han Serif JP",
+    "IPAmjMincho", "IPAMincho", "MS PMincho", "ＭＳ Ｐ明朝", serif;
 
   font: 16px/1.5 var(--sans);
   color-scheme: light dark;
@@ -338,35 +356,33 @@ table.timeline-grid {
   padding: 2px 8px;
 }
 
+/* 手付は印刷物なので、画面のテーマ(ダークモード)に関わらず
+   常に「白地に黒線」で描く。ここでは意図的にテーマ変数を使わない。 */
 .score-view {
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
 }
 
 .score-view text {
-  fill: var(--text-h);
-  font-family: var(--sans);
+  fill: #000000;
+  font-family: var(--serif-ja);
 }
 
 .score-view .utai-text {
-  fill: var(--text-h);
-}
-
-.score-view .te-instance-label {
-  fill: var(--te-box-stroke);
+  fill: #000000;
 }
 
 .score-view .beat-axis-text {
-  fill: var(--text);
+  fill: #000000;
 }
 
 .score-view .skewer-line {
-  stroke: var(--kusari-line);
+  stroke: #888888;
 }
 
 .score-view .skewer-line.thick {
-  stroke: var(--text-h);
+  stroke: #000000;
   stroke-width: 1.6;
 }
 

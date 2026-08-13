@@ -190,11 +190,19 @@ export function TimelineGrid({
           </tr>
           <tr>
             <th className="row-label"></th>
-            {beats.map((g) => (
-              <th key={g} className="beat-header">
-                {g + 1}
-              </th>
-            ))}
+            {/* 拍番号は通し番号ではなく、クサリごとに1から振り直す */}
+            {beats.map((g) => {
+              const local = globalBeatToKusariBeat(
+                g,
+                song.kusari_sequence,
+                globalStarts,
+              );
+              return (
+                <th key={g} className="beat-header">
+                  {local ? local.localBeat : ""}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
