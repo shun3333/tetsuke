@@ -1,4 +1,4 @@
-// 手付のファイル入出力(JSONの読み込み・保存、PDF出力)。
+// 手付の操作(新規作成・サンプルに戻す・JSONの読み込み/保存・PDF出力)。
 //
 // PDFはブラウザの印刷機能に任せる。手付は縦書き・筆書き風フォント・
 // 図形が混ざるため、ブラウザにそのまま組ませたほうが画面と同じものが出る。
@@ -10,6 +10,8 @@
 import { useRef } from "react";
 import type { SongData } from "../types";
 import type { SongAction } from "../state/songReducer";
+import { createEmptySong } from "../data/newSong";
+import { sampleSong } from "../data/sampleSong";
 import { saveSongAsJson } from "../logic/exportSong";
 import { parseSongJson } from "../logic/importSong";
 
@@ -20,6 +22,12 @@ interface Props {
 
 export function ScoreToolbar({ song, dispatch }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+
+  /** 今の内容を捨てて別の曲データに差し替える。戻せないので確認してから */
+  function replaceSong(next: SongData, what: string) {
+    if (!window.confirm(`いま編集している内容は失われます。${what}`)) return;
+    dispatch({ type: "LOAD_SONG", song: next });
+  }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -32,11 +40,7 @@ export function ScoreToolbar({ song, dispatch }: Props) {
       window.alert(`読み込めませんでした。\n${result.error}`);
       return;
     }
-    // 読み込むと今の内容は消えるので、戻せないことを断ってから差し替える
-    if (!window.confirm("いま編集している内容は失われます。読み込みますか？")) {
-      return;
-    }
-    dispatch({ type: "LOAD_SONG", song: result.song });
+    replaceSong(result.song, "読み込みますか？");
   }
 
   return (
@@ -48,6 +52,22 @@ export function ScoreToolbar({ song, dispatch }: Props) {
         onChange={handleFileChange}
         hidden
       />
+      <button
+        type="button"
+        className="toolbar-button"
+        onClick={() => replaceSong(createEmptySong(), "新規作成しますか？")}
+        title="クサリ1つだけの、何も置いていない手付から始めます"
+      >
+        新規作成
+      </button>
+      <button
+        type="button"
+        className="toolbar-button"
+        onClick={() => replaceSong(sampleSong, "サンプルに戻しますか？")}
+        title="最初に入っているサンプルの手付に戻します"
+      >
+        サンプルに戻す
+      </button>
       <button
         type="button"
         className="toolbar-button"
