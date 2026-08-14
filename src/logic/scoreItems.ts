@@ -1,8 +1,16 @@
 // 曲データを「クサリごとの描画アイテム」に展開する。
 // 座標は持たず、クサリ内の拍単位オフセット(0 = 1拍目の横線、-0.5 = 0拍の裏)
 // までを解決する。実際のx/y座標への変換は描画側(ScoreView)が行う。
-import type { Instrument, SongData, TeMaster, TeName, Timing } from "../types";
+import type {
+  GuideShape,
+  Instrument,
+  SongData,
+  TeMaster,
+  TeName,
+  Timing,
+} from "../types";
 import {
+  beatCountOf,
   beatRefToGlobalPos,
   globalPosToBeatRef,
   isBeatRefValid,
@@ -24,6 +32,17 @@ export interface TeRenderItem {
   text?: string;
   te?: TeName;
   timing?: Timing;
+  /** 補助線と重なるため、少し右にずらして描く掛け声 */
+  avoidsGuide?: boolean;
+}
+
+/** 手と手の間の補助線1本。描画先のクサリと位置は解決済み */
+export interface GuideRenderItem {
+  key: string;
+  fromOffset: number;
+  toOffset: number;
+  shape: GuideShape;
+  instrument: Instrument;
 }
 
 /** クサリ枠のヘッダー行に表示する手組名 */
@@ -38,6 +57,7 @@ export interface ScoreItems {
   utaiByKusari: Map<number, UtaiCell[]>;
   kakegoeByKusari: Map<number, TeRenderItem[]>;
   hitsByKusari: Map<number, TeRenderItem[]>;
+  guidesByKusari: Map<number, GuideRenderItem[]>;
   labelsByKusari: Map<number, TeLabel[]>;
 }
 
@@ -71,9 +91,13 @@ function buildTeItems(
   song: SongData,
   teMaster: TeMaster,
   globalStarts: number[],
-): Pick<ScoreItems, "kakegoeByKusari" | "hitsByKusari" | "labelsByKusari"> {
+): Pick<
+  ScoreItems,
+  "kakegoeByKusari" | "hitsByKusari" | "guidesByKusari" | "labelsByKusari"
+> {
   const kakegoeByKusari = new Map<number, TeRenderItem[]>();
   const hitsByKusari = new Map<number, TeRenderItem[]>();
+  const guidesByKusari = new Map<number, GuideRenderItem[]>();
   const labelsByKusari = new Map<number, TeLabel[]>();
 
   (song.tracks.kotsuzumi?.te_instances ?? []).forEach((ti, instanceIndex) => {
@@ -124,9 +148,91 @@ function buildTeItems(
         timing: hit.timing,
       });
     });
+
+    (def.internal_pattern.guides ?? []).forEach((guide, i) => {
+      const from = place(guide.from_pos);
+      const to = place(guide.to_pos);
+      if (!from || !to) return;
+      const key = `guide-${instanceIndex}-${i}`;
+      for (const seg of splitAcrossKusari(from, to, song)) {
+        pushTo(guidesByKusari, seg.kusariIndex, {
+          key: `${key}-${seg.kusariIndex}`,
+          fromOffset: seg.fromOffset,
+          toOffset: seg.toOffset,
+          shape: guide.shape,
+          instrument: def.instrument,
+        });
+      }
+    });
   });
 
-  return { kakegoeByKusari, hitsByKusari, labelsByKusari };
+  markKakegoeOnGuides(kakegoeByKusari, guidesByKusari);
+  return { kakegoeByKusari, hitsByKusari, guidesByKusari, labelsByKusari };
+}
+
+/** 補助線1本分の、1つのクサリの枠に収まる区間 */
+interface GuideSegment {
+  kusariIndex: number;
+  fromOffset: number;
+  toOffset: number;
+}
+
+/** クサリ枠の一番上(0拍の裏)の拍単位オフセット */
+const FRAME_TOP_OFFSET = -0.5;
+
+/**
+ * 補助線をクサリの枠ごとの区間に分ける。
+ * 手組はクサリをまたぐことがあり、その場合は補助線も境目で切って
+ * それぞれの枠に引く(枠をはみ出して描かないようにする)。
+ */
+function splitAcrossKusari(
+  from: { kusariIndex: number; offset: number },
+  to: { kusariIndex: number; offset: number },
+  song: SongData,
+): GuideSegment[] {
+  if (from.kusariIndex === to.kusariIndex) {
+    return [
+      {
+        kusariIndex: from.kusariIndex,
+        fromOffset: from.offset,
+        toOffset: to.offset,
+      },
+    ];
+  }
+
+  const segments: GuideSegment[] = [];
+  // 始まりのクサリは、その最終拍まで引く
+  for (let k = from.kusariIndex; k <= to.kusariIndex; k++) {
+    const entry = song.kusari_sequence[k];
+    if (!entry) continue;
+    segments.push({
+      kusariIndex: k,
+      fromOffset: k === from.kusariIndex ? from.offset : FRAME_TOP_OFFSET,
+      toOffset: k === to.kusariIndex ? to.offset : beatCountOf(entry.type) - 1,
+    });
+  }
+  return segments;
+}
+
+/**
+ * 補助線と重なる掛け声に印をつける。
+ * 掛け声は補助線と同じ列の中央に描かれるため、そのままだと重なってしまう。
+ */
+function markKakegoeOnGuides(
+  kakegoeByKusari: Map<number, TeRenderItem[]>,
+  guidesByKusari: Map<number, GuideRenderItem[]>,
+): void {
+  for (const [kusariIndex, list] of kakegoeByKusari) {
+    const guides = guidesByKusari.get(kusariIndex);
+    if (!guides) continue;
+    for (const kakegoe of list) {
+      kakegoe.avoidsGuide = guides.some(
+        (g) =>
+          kakegoe.offset >= Math.min(g.fromOffset, g.toOffset) &&
+          kakegoe.offset <= Math.max(g.fromOffset, g.toOffset),
+      );
+    }
+  }
 }
 
 /** 曲データ全体を、クサリごとの描画アイテムに展開する */

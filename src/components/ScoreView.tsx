@@ -16,6 +16,7 @@ import {
 import { computeGlobalStarts } from "../logic/position";
 import {
   buildScoreItems,
+  type GuideRenderItem,
   type ScoreItems,
   type TeLabel,
   type TeRenderItem,
@@ -65,6 +66,12 @@ const TE_LABEL_FONT_SIZE = 9;
 const TE_LABEL_CHAR_HEIGHT = 10;
 /** 手組名の上下に空ける余白 */
 const TE_LABEL_BAND_PAD = 6;
+
+/** 補助線の太さと、くの字の折れ幅(列の中心からの左へのずれ) */
+const GUIDE_WIDTH = 1.2;
+const GUIDE_BEND = 5;
+/** 補助線と重なる掛け声を、右にずらす量 */
+const KAKEGOE_GUIDE_DX = 6;
 
 const TIMING_Y_OFFSET: Record<Timing, number> = {
   slightly_early: -BEAT_HEIGHT * 0.18,
@@ -245,18 +252,63 @@ function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
   );
 }
 
-/** 1クサリ枠の中身(謡・手組名・掛け声・手) */
+/**
+ * 手と手の間の補助線。まっすぐな線と、途中で折れる「くの字」の2種類。
+ * 手より先に描くことで、手と重なる部分は手の下に隠れる。
+ */
+function Guides({ guides, cx }: { guides: GuideRenderItem[]; cx: number }) {
+  return (
+    <>
+      {guides.map((guide) => {
+        const y1 = offsetY(guide.fromOffset);
+        const y2 = offsetY(guide.toOffset);
+        const color = INSTRUMENT_COLOR[guide.instrument];
+
+        if (guide.shape === "straight") {
+          return (
+            <line
+              key={guide.key}
+              x1={cx}
+              x2={cx}
+              y1={y1}
+              y2={y2}
+              stroke={color}
+              strokeWidth={GUIDE_WIDTH}
+            />
+          );
+        }
+
+        // くの字。中ほどで左に折れる
+        const midY = (y1 + y2) / 2;
+        return (
+          <polyline
+            key={guide.key}
+            points={`${cx},${y1} ${cx - GUIDE_BEND},${midY} ${cx},${y2}`}
+            fill="none"
+            stroke={color}
+            strokeWidth={GUIDE_WIDTH}
+            strokeLinejoin="round"
+          />
+        );
+      })}
+    </>
+  );
+}
+
+/** 1クサリ枠の中身(謡・手組名・補助線・掛け声・手) */
 function KusariSlot({
   slot,
   utai,
   kakegoe,
   hits,
+  guides,
   labels,
 }: {
   slot: SlotLayout;
   utai: UtaiCell[];
   kakegoe: TeRenderItem[];
   hits: TeRenderItem[];
+  guides: GuideRenderItem[];
   labels: TeLabel[];
 }) {
   const utaiCx = slot.utaiColX + UTAI_COL_WIDTH / 2;
@@ -280,11 +332,15 @@ function KusariSlot({
 
       <TeLabels labels={labels} cx={teCx} />
 
+      {/* 補助線は手より先に描き、手と重なる部分は手の下に隠す */}
+      <Guides guides={guides} cx={teCx} />
+
       {/* 掛け声・手(色は楽器ごとに決まる) */}
       {kakegoe.map((item) => (
         <VerticalText
           key={item.key}
-          cx={teCx}
+          // 補助線と重なる掛け声は、少し右にずらして避ける
+          cx={teCx + (item.avoidsGuide ? KAKEGOE_GUIDE_DX : 0)}
           cy={offsetY(item.offset)}
           text={item.text ?? ""}
           color={INSTRUMENT_COLOR[item.instrument]}
@@ -349,6 +405,7 @@ function ScorePage({
               utai={items.utaiByKusari.get(slot.kusariIndex) ?? []}
               kakegoe={items.kakegoeByKusari.get(slot.kusariIndex) ?? []}
               hits={items.hitsByKusari.get(slot.kusariIndex) ?? []}
+              guides={items.guidesByKusari.get(slot.kusariIndex) ?? []}
               labels={items.labelsByKusari.get(slot.kusariIndex) ?? []}
             />
           ),

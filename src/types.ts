@@ -80,11 +80,30 @@ export interface HitEntry {
   te: TeName;
 }
 
-/** 手組の内部パターン(掛け声・手・長さ) */
+/** 補助線の形 */
+export type GuideShape =
+  /** まっすぐな線 */
+  | "straight"
+  /** 途中で折れる「くの字」の線 */
+  | "bent";
+
+/**
+ * 手と手の間に引く補助線。位置の意味はKakegoeEntryと同じ(半拍単位)。
+ * 半拍だけの短いものから、2拍にわたる長いものまである。
+ */
+export interface GuideEntry {
+  from_pos: number;
+  to_pos: number;
+  shape: GuideShape;
+}
+
+/** 手組の内部パターン(掛け声・手・補助線・長さ) */
 export interface InternalPattern {
   length: number;
   kakegoe: KakegoeEntry[];
   hits: HitEntry[];
+  /** 手と手の間の補助線。無い手組では省略できる */
+  guides?: GuideEntry[];
 }
 
 /** 対応楽器(今回は小鼓のみ) */

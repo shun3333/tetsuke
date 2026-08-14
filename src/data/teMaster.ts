@@ -20,6 +20,10 @@ export const kotsuzumiTeMaster: TeMaster = {
         { rel_pos: 6, timing: "on", te: "chi" },
         { rel_pos: 8, timing: "on", te: "po" },
       ],
+      guides: [
+        { from_pos: 2, to_pos: 6, shape: "bent" },
+        { from_pos: 6, to_pos: 8, shape: "straight" },
+      ],
     },
   },
   tsuzuke: {
@@ -41,6 +45,7 @@ export const kotsuzumiTeMaster: TeMaster = {
         { rel_pos: 14, timing: "on", te: "po" },
         { rel_pos: 16, timing: "on", te: "po" },
       ],
+      guides: [{ from_pos: 12, to_pos: 16, shape: "bent" }],
     },
   },
   uchioroshi: {
@@ -61,6 +66,10 @@ export const kotsuzumiTeMaster: TeMaster = {
         { rel_pos: 8, timing: "on", te: "po" },
         { rel_pos: 10, timing: "on", te: "po" },
       ],
+      guides: [
+        { from_pos: 0, to_pos: 2, shape: "straight" },
+        { from_pos: 5, to_pos: 6, shape: "straight" },
+      ],
     },
   },
   uchikiri: {
@@ -74,6 +83,7 @@ export const kotsuzumiTeMaster: TeMaster = {
         { rel_pos: 0, timing: "on", te: "chi" },
         { rel_pos: 2, timing: "on", te: "pu" },
       ],
+      guides: [{ from_pos: 0, to_pos: 2, shape: "bent" }],
     },
   },
 };
