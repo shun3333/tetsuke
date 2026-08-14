@@ -414,23 +414,6 @@ export function TimelineGrid({
                   拍の表の位置に点を並べ、手組は点から点までのバーで表す */}
               <td className="te-lane" colSpan={beats.length}>
                 <div className="te-lane-inner">
-                  {bars.map((bar) => (
-                    <div
-                      key={bar.key}
-                      className="te-bar"
-                      style={{
-                        left: `calc(var(--beat-width) * ${bar.from})`,
-                        width: `calc(var(--beat-width) * ${bar.to - bar.from})`,
-                      }}
-                      title="クリックで削除"
-                      onClick={() =>
-                        dispatch({
-                          type: "REMOVE_TE_INSTANCE",
-                          instanceIndex: bar.instanceIndex,
-                        })
-                      }
-                    />
-                  ))}
                   {beats.map((_, i) => {
                     const g = startG + i;
                     const occupied = occupancy.has(g);
@@ -449,8 +432,26 @@ export function TimelineGrid({
                       />
                     );
                   })}
-                  {/* 手組名は点より後に描いて、点に隠されないようにする。
-                      前のクサリから続いている分には名前を出さない */}
+                  {/* バーは点より後に描いて、範囲内の点を覆い隠す。
+                      端は点の中心ではなく点の外側(半径の分だけ外)まで伸ばす */}
+                  {bars.map((bar) => (
+                    <div
+                      key={bar.key}
+                      className="te-bar"
+                      style={{
+                        left: `calc(var(--beat-width) * ${bar.from} - var(--te-dot-size) / 2)`,
+                        width: `calc(var(--beat-width) * ${bar.to - bar.from} + var(--te-dot-size))`,
+                      }}
+                      title="クリックで削除"
+                      onClick={() =>
+                        dispatch({
+                          type: "REMOVE_TE_INSTANCE",
+                          instanceIndex: bar.instanceIndex,
+                        })
+                      }
+                    />
+                  ))}
+                  {/* 手組名はバーより後に。前のクサリから続く分には名前を出さない */}
                   {bars.map((bar) =>
                     bar.continued ? null : (
                       <span
