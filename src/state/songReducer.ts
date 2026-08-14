@@ -1,11 +1,24 @@
 // 曲データ全体を1つのstateとして持つreducer。操作をactionとして定義し、undo/redoしやすくする。
-import type { BeatRef, KusariType, SongData } from "../types";
+import type { BeatRef, KusariType, SongData, TeMaster } from "../types";
+import {
+  computeGlobalStarts,
+  isBeatRefValid,
+  teInstanceStartBeat,
+  totalBeats,
+} from "../logic/position";
 
+// クサリが短くなると、配置済みの手組が収まらなくなることがある。
+// 収まらなくなった手組を落とすために、手組の長さ(手組マスタ)を受け取る。
 export type SongAction =
   | { type: "LOAD_SONG"; song: SongData }
   | { type: "INSERT_KUSARI"; atIndex: number; kusariType: KusariType }
-  | { type: "REMOVE_KUSARI"; index: number }
-  | { type: "SET_KUSARI_TYPE"; index: number; kusariType: KusariType }
+  | { type: "REMOVE_KUSARI"; index: number; teMaster: TeMaster }
+  | {
+      type: "SET_KUSARI_TYPE";
+      index: number;
+      kusariType: KusariType;
+      teMaster: TeMaster;
+    }
   | { type: "ADD_TE_INSTANCE"; teId: string; startRef: BeatRef }
   | { type: "REMOVE_TE_INSTANCE"; instanceIndex: number }
   | {
@@ -62,14 +75,21 @@ export function songReducer(state: SongData, action: SongAction): SongData {
       const nextSeq = reindexKusari(
         state.kusari_sequence.filter((_, i) => i !== index),
       );
-      return remapRefs({ ...state, kusari_sequence: nextSeq }, index, null);
+      return dropUnfittableTe(
+        remapRefs({ ...state, kusari_sequence: nextSeq }, index, null),
+        action.teMaster,
+      );
     }
 
     case "SET_KUSARI_TYPE": {
       const nextSeq = state.kusari_sequence.map((k, i) =>
         i === action.index ? { ...k, type: action.kusariType } : k,
       );
-      return { ...state, kusari_sequence: nextSeq };
+      // 拍数が減った場合、収まらなくなった手組はここで取り除かれる
+      return dropUnfittableTe(
+        { ...state, kusari_sequence: nextSeq },
+        action.teMaster,
+      );
     }
 
     case "ADD_TE_INSTANCE": {
@@ -136,6 +156,32 @@ export function songReducer(state: SongData, action: SongAction): SongData {
     default:
       return state;
   }
+}
+
+/**
+ * クサリが短くなった結果、収まらなくなった手組を取り除く。
+ * 「開始位置がクサリの拍数を超えた」「末尾が曲の終わりをはみ出した」の2つを見る。
+ */
+function dropUnfittableTe(state: SongData, teMaster: TeMaster): SongData {
+  const track = state.tracks.kotsuzumi;
+  if (!track) return state;
+
+  const globalStarts = computeGlobalStarts(state.kusari_sequence);
+  const total = totalBeats(state.kusari_sequence);
+  const kept = track.te_instances.filter((ti) => {
+    if (!isBeatRefValid(ti.start_ref, state.kusari_sequence)) return false;
+    const def = teMaster[ti.te_id];
+    // マスタに無い手組は長さが分からないので、判断せずそのまま残す
+    if (!def) return true;
+    const start = teInstanceStartBeat(ti.start_ref, globalStarts);
+    return start + def.internal_pattern.length <= total;
+  });
+
+  if (kept.length === track.te_instances.length) return state;
+  return {
+    ...state,
+    tracks: { ...state.tracks, kotsuzumi: { ...track, te_instances: kept } },
+  };
 }
 
 /**

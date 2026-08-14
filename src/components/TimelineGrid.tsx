@@ -4,7 +4,7 @@
 //   左 = 2b-1((b-1)拍の裏 / b=1なら0拍の裏)
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   KUSARI_LABEL,
   KUSARI_TYPES,
@@ -39,6 +39,18 @@ interface Occupancy {
 
 /** 1拍あたりの入力欄の数(裏・表) */
 const SLOTS_PER_BEAT = 2;
+
+/** 手組の一覧(ポップアップ)の表示状態 */
+interface PickerState {
+  /** どのグローバル拍に置こうとしているか */
+  g: number;
+  x: number;
+  y: number;
+}
+
+/** 一覧が画面からはみ出さないように、表示位置を画面内に収める */
+const PICKER_WIDTH = 160;
+const PICKER_MAX_HEIGHT = 240;
 
 /** グローバル拍1つ分の謡入力欄。keyは `クサリindex:半拍枠番号` */
 interface BeatSlots {
@@ -156,6 +168,18 @@ export function TimelineGrid({
   dispatch,
 }: Props) {
   const utaiInputRefs = useRef(new Map<string, HTMLInputElement>());
+  /** 手組の一覧を出す位置(クリックしたグローバル拍と画面座標) */
+  const [picker, setPicker] = useState<PickerState | null>(null);
+
+  // 一覧はEscでも閉じられるようにする
+  useEffect(() => {
+    if (!picker) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPicker(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [picker]);
 
   const globalStarts = useMemo(
     () => computeGlobalStarts(song.kusari_sequence),
@@ -173,7 +197,31 @@ export function TimelineGrid({
   );
   const utaiValues = useMemo(() => buildUtaiValues(song), [song]);
 
-  function handleKotsuzumiClick(g: number) {
+  /** その位置に置けない理由。置けるならnull */
+  function placementError(teId: string, g: number): string | null {
+    const def = teMaster[teId];
+    if (!def) return "手組が見つかりません";
+    const len = def.internal_pattern.length;
+    if (g + len > total) return "長さが収まりません";
+    for (let i = g; i < g + len; i++) {
+      if (occupancy.has(i)) return "他の手組と重なります";
+    }
+    return null;
+  }
+
+  function placeTe(teId: string, g: number) {
+    const error = placementError(teId, g);
+    if (error) {
+      window.alert(error);
+      return;
+    }
+    const startRef = globalBeatToBeatRef(g, song.kusari_sequence, globalStarts);
+    if (!startRef) return;
+    dispatch({ type: "ADD_TE_INSTANCE", teId, startRef });
+    onPlaced();
+  }
+
+  function handleKotsuzumiClick(g: number, e: React.MouseEvent) {
     const occ = occupancy.get(g);
     if (occ) {
       if (occ.isStart) {
@@ -184,24 +232,9 @@ export function TimelineGrid({
       }
       return;
     }
-    if (!selectedTeId) return;
-    const def = teMaster[selectedTeId];
-    if (!def) return;
-    const len = def.internal_pattern.length;
-    if (g + len > total) {
-      window.alert("この位置には長さが収まりません。");
-      return;
-    }
-    for (let i = g; i < g + len; i++) {
-      if (occupancy.has(i)) {
-        window.alert("既に配置されている手組と重なります。");
-        return;
-      }
-    }
-    const startRef = globalBeatToBeatRef(g, song.kusari_sequence, globalStarts);
-    if (!startRef) return;
-    dispatch({ type: "ADD_TE_INSTANCE", teId: selectedTeId, startRef });
-    onPlaced();
+    // パレットで選んである場合はそのまま置く。選んでいなければ一覧を出す
+    if (selectedTeId) placeTe(selectedTeId, g);
+    else setPicker({ g, x: e.clientX, y: e.clientY });
   }
 
   function setUtaiValue(kusariIndex: number, beat: number, value: string) {
@@ -274,6 +307,7 @@ export function TimelineGrid({
               type: "SET_KUSARI_TYPE",
               index: kusariIndex,
               kusariType: e.target.value as KusariType,
+              teMaster,
             })
           }
         >
@@ -303,7 +337,7 @@ export function TimelineGrid({
           title="このクサリを削除"
           disabled={song.kusari_sequence.length <= 1}
           onClick={() =>
-            dispatch({ type: "REMOVE_KUSARI", index: kusariIndex })
+            dispatch({ type: "REMOVE_KUSARI", index: kusariIndex, teMaster })
           }
         >
           ×
@@ -347,7 +381,7 @@ export function TimelineGrid({
                     className={
                       "te-cell filled" + (cell.continued ? " continued" : "")
                     }
-                    onClick={() => handleKotsuzumiClick(cell.g)}
+                    onClick={(e) => handleKotsuzumiClick(cell.g, e)}
                     title={cell.continued ? undefined : "クリックで削除"}
                   >
                     {/* 前のクサリから続いている分には名前を出さない */}
@@ -359,7 +393,7 @@ export function TimelineGrid({
                     className={
                       "te-cell empty" + (selectedTeId ? " placeable" : "")
                     }
-                    onClick={() => handleKotsuzumiClick(cell.g)}
+                    onClick={(e) => handleKotsuzumiClick(cell.g, e)}
                   />
                 ),
               )}
@@ -422,6 +456,45 @@ export function TimelineGrid({
       >
         + クサリ追加
       </button>
+
+      {picker && (
+        <>
+          {/* 外側をクリックしたら閉じる */}
+          <div className="te-picker-backdrop" onClick={() => setPicker(null)} />
+          <div
+            className="te-picker"
+            style={{
+              left: Math.min(picker.x, window.innerWidth - PICKER_WIDTH - 8),
+              top: Math.min(picker.y, window.innerHeight - PICKER_MAX_HEIGHT - 8),
+              width: PICKER_WIDTH,
+              maxHeight: PICKER_MAX_HEIGHT,
+            }}
+          >
+            <div className="te-picker-title">手組を選ぶ</div>
+            {Object.values(teMaster).map((def) => {
+              const error = placementError(def.te_id, picker.g);
+              return (
+                <button
+                  key={def.te_id}
+                  type="button"
+                  className="te-picker-item"
+                  disabled={error !== null}
+                  title={error ?? undefined}
+                  onClick={() => {
+                    placeTe(def.te_id, picker.g);
+                    setPicker(null);
+                  }}
+                >
+                  <span className="te-name">{def.label}</span>
+                  <span className="te-length">
+                    {error ?? `${def.internal_pattern.length}拍`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

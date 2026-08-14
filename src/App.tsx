@@ -22,7 +22,11 @@ function App() {
       <SplitPane
         left={
           <section className="editor-pane">
-            <KusariEditor song={song} dispatch={dispatch} />
+            <KusariEditor
+              song={song}
+              teMaster={kotsuzumiTeMaster}
+              dispatch={dispatch}
+            />
             <TePalette
               teMaster={kotsuzumiTeMaster}
               selectedTeId={selectedTeId}

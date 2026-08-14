@@ -395,6 +395,66 @@ table.timeline-grid {
   background: var(--accent-bg);
 }
 
+/* 手組の一覧(セルをクリックしたときに出す) */
+.te-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.te-picker {
+  position: fixed;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+}
+
+.te-picker-title {
+  font-size: 11px;
+  color: var(--text);
+  padding: 4px 8px;
+}
+
+.te-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--text-h);
+  text-align: left;
+}
+
+.te-picker-item:hover:not(:disabled) {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.te-picker-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.te-picker-item .te-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.te-picker-item .te-length {
+  font-size: 11px;
+  color: var(--text);
+}
+
 /* 描画ビュー */
 .score-scroll {
   overflow-x: auto;
