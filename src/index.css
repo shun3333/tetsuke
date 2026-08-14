@@ -323,12 +323,16 @@ table.timeline-grid {
   color: var(--text);
 }
 
-/* 列幅は先頭行(この拍番号の行)の指定で決まる */
+/* 列幅は先頭行(この拍番号の行)の指定で決まる。
+   謡の入力欄と同じく、半拍(裏と表の境目)にも区切り線を入れる。
+   数字の位置がずれないよう、線は背景として描く */
 .timeline-grid .beat-header {
   width: var(--beat-width);
   color: var(--text);
   font-size: 11px;
   padding: 0;
+  background: linear-gradient(var(--border), var(--border)) 50% 0 / 1px 100%
+    no-repeat;
 }
 
 /* 1拍の枠は「裏(左)・表(右)」の2つに分かれている。
@@ -344,66 +348,67 @@ table.timeline-grid {
    手組は点から点までのバーで表す */
 .timeline-grid .te-lane {
   padding: 0;
-  height: 42px;
+  height: 34px;
 }
 
 .te-lane-inner {
   position: relative;
-  height: 42px;
+  height: 34px;
 }
 
+/* 拍の点。バーに重なっても見えるよう、塗りつぶしで手前に出す */
 .te-dot {
   position: absolute;
-  top: 26px;
-  width: 11px;
-  height: 11px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
   /* 中心を left/top に合わせる(幅・高さの半分だけ戻す) */
-  margin: -5.5px 0 0 -5.5px;
+  margin: -4.5px 0 0 -4.5px;
   padding: 0;
-  border: 1px solid var(--text);
+  border: none;
   border-radius: 50%;
-  background: var(--panel-bg);
+  background: var(--text-h);
   cursor: pointer;
-  /* バーより手前に出して、点が隠れないようにする */
   z-index: 1;
 }
 
 .te-dot:hover {
-  border-color: var(--accent);
   background: var(--accent);
 }
 
-/* 手組が乗っている点。バーと同色にし、白い縁で粒として見せる */
-.te-dot.occupied {
-  border: 2px solid var(--panel-bg);
-  background: var(--te-box-stroke);
-}
-
+/* 手組の範囲。手組名はこのバーの中に入れる */
 .te-bar {
   position: absolute;
-  top: 26px;
-  height: 10px;
-  margin-top: -5px;
-  border-radius: 5px;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  margin-top: -12px;
+  border-radius: 12px;
   background: var(--te-box-stroke);
   cursor: pointer;
+  overflow: hidden;
 }
 
 .te-bar:hover {
   opacity: 0.7;
 }
 
-/* 手組名はバーのすぐ上に置く */
+/* バーの中央に重ねて置く。クリックはバー・点に通す。
+   文字の隙間から点が透けないよう、バーと同じ色の下地を敷く */
 .te-bar-label {
   position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 4px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 0 5px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  color: var(--te-box-stroke);
+  color: var(--panel-bg);
+  background: var(--te-box-stroke);
+  pointer-events: none;
 }
 
 /* 表・裏の2つの入力欄をセルいっぱいに並べる(列幅は--beat-widthで決まる) */

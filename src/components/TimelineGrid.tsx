@@ -379,6 +379,15 @@ export function TimelineGrid({
         ? globalStarts[kusariIndex + 1]
         : total;
     const beats = beatSlots.slice(startG, endG);
+    // バーの左右端(拍の枠を単位とした位置)。
+    // 前のクサリから続く分は、0拍の裏から引き始めて繋がりを示す
+    const bars = (teBars.get(kusariIndex) ?? []).map((bar) => ({
+      ...bar,
+      from: bar.continued
+        ? bar.fromBeat + BEAT_URA_RATIO
+        : bar.fromBeat + BEAT_DOT_RATIO,
+      to: bar.toBeat + BEAT_DOT_RATIO,
+    }));
 
     return (
       <div key={kusariIndex} className="kusari-block">
@@ -405,34 +414,23 @@ export function TimelineGrid({
                   拍の表の位置に点を並べ、手組は点から点までのバーで表す */}
               <td className="te-lane" colSpan={beats.length}>
                 <div className="te-lane-inner">
-                  {(teBars.get(kusariIndex) ?? []).map((bar) => {
-                    // 前のクサリから続く分は、0拍の裏から引き始めて繋がりを示す
-                    const from = bar.continued
-                      ? bar.fromBeat + BEAT_URA_RATIO
-                      : bar.fromBeat + BEAT_DOT_RATIO;
-                    return (
-                      <div
-                        key={bar.key}
-                        className="te-bar"
-                        style={{
-                          left: `calc(var(--beat-width) * ${from})`,
-                          width: `calc(var(--beat-width) * ${bar.toBeat + BEAT_DOT_RATIO - from})`,
-                        }}
-                        title="クリックで削除"
-                        onClick={() =>
-                          dispatch({
-                            type: "REMOVE_TE_INSTANCE",
-                            instanceIndex: bar.instanceIndex,
-                          })
-                        }
-                      >
-                        {/* 前のクサリから続いている分には名前を出さない */}
-                        {!bar.continued && (
-                          <span className="te-bar-label">{bar.label}</span>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {bars.map((bar) => (
+                    <div
+                      key={bar.key}
+                      className="te-bar"
+                      style={{
+                        left: `calc(var(--beat-width) * ${bar.from})`,
+                        width: `calc(var(--beat-width) * ${bar.to - bar.from})`,
+                      }}
+                      title="クリックで削除"
+                      onClick={() =>
+                        dispatch({
+                          type: "REMOVE_TE_INSTANCE",
+                          instanceIndex: bar.instanceIndex,
+                        })
+                      }
+                    />
+                  ))}
                   {beats.map((_, i) => {
                     const g = startG + i;
                     const occupied = occupancy.has(g);
@@ -440,7 +438,7 @@ export function TimelineGrid({
                       <button
                         key={g}
                         type="button"
-                        className={"te-dot" + (occupied ? " occupied" : "")}
+                        className="te-dot"
                         style={{
                           left: `calc(var(--beat-width) * ${i + BEAT_DOT_RATIO})`,
                         }}
@@ -451,6 +449,21 @@ export function TimelineGrid({
                       />
                     );
                   })}
+                  {/* 手組名は点より後に描いて、点に隠されないようにする。
+                      前のクサリから続いている分には名前を出さない */}
+                  {bars.map((bar) =>
+                    bar.continued ? null : (
+                      <span
+                        key={`${bar.key}-label`}
+                        className="te-bar-label"
+                        style={{
+                          left: `calc(var(--beat-width) * ${(bar.from + bar.to) / 2})`,
+                        }}
+                      >
+                        {bar.label}
+                      </span>
+                    ),
+                  )}
                 </div>
               </td>
             </tr>
