@@ -8,15 +8,15 @@ export const sampleSong: SongData = {
     { index: 0, type: "honji" },
     { index: 1, type: "tori" },
     { index: 2, type: "honji" },
+    { index: 3, type: "honji" },
   ],
   tracks: {
     kotsuzumi: {
       instrument: "kotsuzumi",
       te_instances: [
-        { te_id: "mitsuji", start_ref: { kusari_index: 0, beat: 2 } },
-        { te_id: "uchioroshi", start_ref: { kusari_index: 1, beat: 2 } },
-        { te_id: "tsuzuke", start_ref: { kusari_index: 2, beat: 6 } },
-        { te_id: "uchikiri", start_ref: { kusari_index: 2, beat: 14 } },
+        { te_id: "mitsuji", start_ref: { kusari_index: 0, beat: 8 } },
+        { te_id: "uchioroshi", start_ref: { kusari_index: 1, beat: 4 } },
+        { te_id: "tsuzuke", start_ref: { kusari_index: 3, beat: 4 } }
       ],
     },
     utai: {
@@ -39,7 +39,7 @@ export const sampleSong: SongData = {
         { beat_ref: { kusari_index: 1, beat: 1 }, content: { type: "text", value: "ン" } },
         { beat_ref: { kusari_index: 2, beat: 2 }, content: { type: "text", value: "な" } },
         { beat_ref: { kusari_index: 2, beat: 3 }, content: { type: "text", value: "お" } },
-        { beat_ref: { kusari_index: 2, beat: 6 }, content: { type: "text", value: "いふ" } },
+        { beat_ref: { kusari_index: 2, beat: 6 }, content: { type: "text", value: "い" } },
       ],
     },
   },
