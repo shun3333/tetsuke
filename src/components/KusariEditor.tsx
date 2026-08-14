@@ -2,6 +2,7 @@
 import {
   KUSARI_LABEL,
   KUSARI_TYPES,
+  type Instrument,
   type KusariType,
   type SongData,
   type TeMaster,
@@ -11,7 +12,7 @@ import type { SongAction } from "../state/songReducer";
 interface Props {
   song: SongData;
   /** クサリが短くなったとき、収まらない手組を落とすために必要 */
-  teMaster: TeMaster;
+  teMaster: Record<Instrument, TeMaster>;
   dispatch: React.Dispatch<SongAction>;
 }
 

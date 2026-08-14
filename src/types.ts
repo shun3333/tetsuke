@@ -106,8 +106,20 @@ export interface InternalPattern {
   guides?: GuideEntry[];
 }
 
-/** 対応楽器(今回は小鼓のみ) */
-export type Instrument = "kotsuzumi";
+/** 対応楽器。手組の仕組みは同じで、手マスタと色だけが楽器ごとに違う */
+export type Instrument = "kotsuzumi" | "otsuzumi";
+
+/** 楽器の表示名 */
+export const INSTRUMENT_LABEL: Record<Instrument, string> = {
+  otsuzumi: "大鼓",
+  kotsuzumi: "小鼓",
+};
+
+/**
+ * 楽器を並べる順。タイムラインではこの順に上から行を置く。
+ * 手付の列は謡の右から「小鼓 → 大鼓」なので、この逆順になる。
+ */
+export const INSTRUMENTS: Instrument[] = ["otsuzumi", "kotsuzumi"];
 
 /** 手組マスタの1エントリ */
 export interface TeMasterEntry {
@@ -175,6 +187,8 @@ export interface SongData {
   song_id: string;
   kusari_sequence: KusariEntry[];
   tracks: {
+    /** 楽器ごとの手組トラック */
+    otsuzumi?: TeTrack;
     kotsuzumi?: TeTrack;
     utai?: UtaiTrack;
   };

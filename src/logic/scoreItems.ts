@@ -1,13 +1,14 @@
 // 曲データを「クサリごとの描画アイテム」に展開する。
 // 座標は持たず、クサリ内の拍単位オフセット(0 = 1拍目の横線、-0.5 = 0拍の裏)
 // までを解決する。実際のx/y座標への変換は描画側(ScoreView)が行う。
-import type {
-  GuideShape,
-  Instrument,
-  SongData,
-  TeMaster,
-  TeName,
-  Timing,
+import {
+  INSTRUMENTS,
+  type GuideShape,
+  type Instrument,
+  type SongData,
+  type TeMaster,
+  type TeName,
+  type Timing,
 } from "../types";
 import {
   beatCountOf,
@@ -53,12 +54,28 @@ export interface TeLabel {
   instrument: Instrument;
 }
 
-export interface ScoreItems {
-  utaiByKusari: Map<number, UtaiCell[]>;
+/** 1つの楽器の列に描くもの(クサリごと) */
+export interface InstrumentItems {
   kakegoeByKusari: Map<number, TeRenderItem[]>;
   hitsByKusari: Map<number, TeRenderItem[]>;
   guidesByKusari: Map<number, GuideRenderItem[]>;
   labelsByKusari: Map<number, TeLabel[]>;
+}
+
+export interface ScoreItems {
+  utaiByKusari: Map<number, UtaiCell[]>;
+  /** 楽器ごとの列の中身 */
+  byInstrument: Record<Instrument, InstrumentItems>;
+}
+
+/** 中身が空の状態 */
+export function emptyInstrumentItems(): InstrumentItems {
+  return {
+    kakegoeByKusari: new Map(),
+    hitsByKusari: new Map(),
+    guidesByKusari: new Map(),
+    labelsByKusari: new Map(),
+  };
 }
 
 /** Mapの配列にひとつ追加する */
@@ -83,24 +100,20 @@ function buildUtaiItems(song: SongData): Map<number, UtaiCell[]> {
 }
 
 /**
- * 小鼓トラックをクサリごとの描画アイテムに展開する。
+ * 1つの楽器の手組トラックを、クサリごとの描画アイテムに展開する。
  * 手組がクサリをまたぐ場合、掛け声・手は位置に応じて自動的に
  * 次のクサリの枠へ振り分けられる。
  */
 function buildTeItems(
   song: SongData,
+  instrument: Instrument,
   teMaster: TeMaster,
   globalStarts: number[],
-): Pick<
-  ScoreItems,
-  "kakegoeByKusari" | "hitsByKusari" | "guidesByKusari" | "labelsByKusari"
-> {
-  const kakegoeByKusari = new Map<number, TeRenderItem[]>();
-  const hitsByKusari = new Map<number, TeRenderItem[]>();
-  const guidesByKusari = new Map<number, GuideRenderItem[]>();
-  const labelsByKusari = new Map<number, TeLabel[]>();
+): InstrumentItems {
+  const { kakegoeByKusari, hitsByKusari, guidesByKusari, labelsByKusari } =
+    emptyInstrumentItems();
 
-  (song.tracks.kotsuzumi?.te_instances ?? []).forEach((ti, instanceIndex) => {
+  (song.tracks[instrument]?.te_instances ?? []).forEach((ti, instanceIndex) => {
     const def = teMaster[ti.te_id];
     if (!def || !isBeatRefValid(ti.start_ref, song.kusari_sequence)) return;
     const startGlobalPos = beatRefToGlobalPos(ti.start_ref, globalStarts);
@@ -238,11 +251,17 @@ function markKakegoeOnGuides(
 /** 曲データ全体を、クサリごとの描画アイテムに展開する */
 export function buildScoreItems(
   song: SongData,
-  teMaster: TeMaster,
+  teMaster: Record<Instrument, TeMaster>,
   globalStarts: number[],
 ): ScoreItems {
-  return {
-    utaiByKusari: buildUtaiItems(song),
-    ...buildTeItems(song, teMaster, globalStarts),
-  };
+  const byInstrument = {} as Record<Instrument, InstrumentItems>;
+  for (const instrument of INSTRUMENTS) {
+    byInstrument[instrument] = buildTeItems(
+      song,
+      instrument,
+      teMaster[instrument],
+      globalStarts,
+    );
+  }
+  return { utaiByKusari: buildUtaiItems(song), byInstrument };
 }

@@ -11,6 +11,14 @@ export const sampleSong: SongData = {
     { index: 3, type: "honji" },
   ],
   tracks: {
+    otsuzumi: {
+      instrument: "otsuzumi",
+      te_instances: [
+        { te_id: "o_mitsuji", start_ref: { kusari_index: 0, beat: 2 } },
+        { te_id: "o_tsuzuke", start_ref: { kusari_index: 2, beat: 2 } },
+        { te_id: "o_uchikiri", start_ref: { kusari_index: 2, beat: 14 } },
+      ],
+    },
     kotsuzumi: {
       instrument: "kotsuzumi",
       te_instances: [

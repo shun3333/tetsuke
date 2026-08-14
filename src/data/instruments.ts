@@ -2,9 +2,10 @@
 // 色は文字・記号ごとではなく楽器ごとに決める。
 import type { Instrument, TeGlyphMaster } from "../types";
 
-/** 楽器ごとの表示色。小鼓の手組は掛け声も手もすべて青。 */
+/** 楽器ごとの表示色。掛け声も手も手組名も、その楽器の色で描く。 */
 export const INSTRUMENT_COLOR: Record<Instrument, string> = {
   kotsuzumi: "#2266dd",
+  otsuzumi: "#cc2222",
 };
 
 /** 小鼓の手マスタ。小鼓の手はこの4種類のみ。 */
@@ -15,7 +16,14 @@ export const kotsuzumiTeGlyphs: TeGlyphMaster = {
   ta: { te: "ta", label: "タ", shape: "open_triangle" },
 };
 
+/** 大鼓の手マスタ。大鼓の手はこの2種類のみ。 */
+export const otsuzumiTeGlyphs: TeGlyphMaster = {
+  chon: { te: "chon", label: "チョン", shape: "open_triangle" },
+  don: { te: "don", label: "ドン", shape: "filled_small_circle" },
+};
+
 /** 楽器ごとの手マスタ */
 export const TE_GLYPH_MASTER: Record<Instrument, TeGlyphMaster> = {
   kotsuzumi: kotsuzumiTeGlyphs,
+  otsuzumi: otsuzumiTeGlyphs,
 };

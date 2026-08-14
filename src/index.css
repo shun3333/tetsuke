@@ -225,6 +225,17 @@ section.editor-pane,
   margin-bottom: 10px;
 }
 
+.te-palette-group + .te-palette-group {
+  margin-top: 10px;
+}
+
+.te-palette-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
 .te-palette-list {
   display: flex;
   flex-wrap: wrap;
@@ -344,8 +355,8 @@ table.timeline-grid {
   text-align: center;
 }
 
-/* 小鼓の行。1クサリで1つの枠にし、拍の表の位置に点を並べる。
-   手組は点から点までのバーで表す */
+/* 楽器の行。1クサリで1つの枠にし、拍の表の位置に点を並べる。
+   手組は点から点までのバーで表す。色は --te-color(楽器ごと)で決まる */
 .timeline-grid .te-lane {
   padding: 0;
   height: 34px;
@@ -374,8 +385,8 @@ table.timeline-grid {
 }
 
 .te-dot:hover {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--te-color, var(--accent));
+  background: var(--te-color, var(--accent));
 }
 
 /* 手組の範囲。点より後に描いて、範囲内の点を覆い隠す。
@@ -386,7 +397,7 @@ table.timeline-grid {
   height: 24px;
   margin-top: -12px;
   border-radius: 12px;
-  background: var(--te-box-stroke);
+  background: var(--te-color, var(--te-box-stroke));
   cursor: pointer;
 }
 

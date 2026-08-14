@@ -1,13 +1,15 @@
 // 描画ビュー: 手付をA4用紙相当のページ単位に分割して描画する。
 // 1ページ = 固定8クサリ枠(データが無い枠は空白)。クサリは右→左、
-// 各クサリ枠内は左に謡・右に小鼓の手組を配置し、
+// 各クサリ枠内は左に謡・右に楽器ごとの手組の列(小鼓 → 大鼓)を配置し、
 // 拍数の軸はページ右端に1つだけ表示する。
 //
 // 曲データ → クサリごとの描画アイテムへの展開は logic/scoreItems.ts が担い、
 // ここではそれを座標に落として組み立てるだけにしている。
 import { useMemo } from "react";
 import {
+  INSTRUMENTS,
   KUSARI_BEAT_COUNT,
+  type Instrument,
   type KusariEntry,
   type SongData,
   type TeMaster,
@@ -16,10 +18,11 @@ import {
 import { computeGlobalStarts } from "../logic/position";
 import {
   buildScoreItems,
+  emptyInstrumentItems,
   type GuideRenderItem,
+  type InstrumentItems,
   type ScoreItems,
   type TeLabel,
-  type TeRenderItem,
   type UtaiCell,
 } from "../logic/scoreItems";
 import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
@@ -28,7 +31,7 @@ import { TeMark } from "./score/TeMark";
 
 interface Props {
   song: SongData;
-  teMaster: TeMaster;
+  teMaster: Record<Instrument, TeMaster>;
 }
 
 // --- レイアウト定数 ---
@@ -42,11 +45,13 @@ const MARGIN_RIGHT = 16;
 const TOP_PAD = BEAT_HEIGHT;
 /** 最終拍の横線の下に確保する余白 */
 const BOTTOM_PAD = BEAT_HEIGHT;
-/** 謡:小鼓の枠の横幅は概ね2:1 */
+/** 謡:楽器1つの枠の横幅は概ね2:1 */
 const TE_COL_WIDTH = 22;
 const UTAI_COL_WIDTH = 44;
 const AXIS_COL_WIDTH = 22;
-const SLOT_WIDTH = UTAI_COL_WIDTH + TE_COL_WIDTH;
+/** 手付の列は謡の右から「小鼓 → 大鼓」の順に置く */
+const SCORE_INSTRUMENTS = [...INSTRUMENTS].reverse();
+const SLOT_WIDTH = UTAI_COL_WIDTH + TE_COL_WIDTH * SCORE_INSTRUMENTS.length;
 const KUSARI_PER_PAGE = 8;
 const GRID_TOP = MARGIN_TOP + HEADER_ROW_HEIGHT;
 /** 1ページに引く拍の横線の数(一番拍数の多いクサリに合わせる) */
@@ -83,14 +88,16 @@ const TIMING_Y_OFFSET: Record<Timing, number> = {
 const offsetY = (offset: number) => GRID_TOP + TOP_PAD + offset * BEAT_HEIGHT;
 const GRID_BOTTOM = offsetY(ROWS_PER_PAGE - 1) + BOTTOM_PAD;
 
-/** 1クサリ枠 = 謡1列 + 小鼓1列(右)のセット。データが無い枠も同じ幅で確保する。 */
+/** 1クサリ枠 = 謡1列 + 楽器の列(右)のセット。データが無い枠も同じ幅で確保する。 */
 interface SlotLayout {
   kusariIndex: number | null;
   beatCount: number;
-  /** 謡列の左端 */
+  /** 謡列の左端(= 枠の左端) */
   utaiColX: number;
-  /** 小鼓列の左端(= 謡列の右端) */
-  teColX: number;
+  /** 楽器の列の左端。SCORE_INSTRUMENTS と同じ並び */
+  teColX: number[];
+  /** 枠の右端 */
+  rightX: number;
 }
 
 /** 1ページ分のレイアウトを計算する */
@@ -104,13 +111,17 @@ function computePageLayout(
   const axisX = width - MARGIN_RIGHT - AXIS_COL_WIDTH;
 
   const slots: SlotLayout[] = slotKusariIndices.map((kusariIndex, i) => {
-    const teColX = axisX - (i + 1) * SLOT_WIDTH + UTAI_COL_WIDTH;
+    // クサリは右から左へ並ぶ
+    const utaiColX = axisX - (i + 1) * SLOT_WIDTH;
     return {
       kusariIndex,
       beatCount:
         kusariIndex === null ? 0 : KUSARI_BEAT_COUNT[kusariSequence[kusariIndex].type],
-      utaiColX: teColX - UTAI_COL_WIDTH,
-      teColX,
+      utaiColX,
+      teColX: SCORE_INSTRUMENTS.map(
+        (_, j) => utaiColX + UTAI_COL_WIDTH + j * TE_COL_WIDTH,
+      ),
+      rightX: utaiColX + SLOT_WIDTH,
     };
   });
 
@@ -144,20 +155,16 @@ function PageGrid({
       {/* 列の縦罫線(謡列の左端・謡と小鼓の境目)。手組名の行も含めて通す */}
       {slots.map((slot, i) => (
         <g key={i}>
-          <line
-            x1={slot.utaiColX}
-            x2={slot.utaiColX}
-            y1={MARGIN_TOP}
-            y2={GRID_BOTTOM}
-            className="skewer-line"
-          />
-          <line
-            x1={slot.teColX}
-            x2={slot.teColX}
-            y1={MARGIN_TOP}
-            y2={GRID_BOTTOM}
-            className="skewer-line"
-          />
+          {[slot.utaiColX, ...slot.teColX].map((x, j) => (
+            <line
+              key={j}
+              x1={x}
+              x2={x}
+              y1={MARGIN_TOP}
+              y2={GRID_BOTTOM}
+              className="skewer-line"
+            />
+          ))}
         </g>
       ))}
       <line x1={axisX} x2={axisX} y1={MARGIN_TOP} y2={GRID_BOTTOM} className="skewer-line" />
@@ -198,7 +205,7 @@ function BeatAxis({ axisX }: { axisX: number }) {
 function UnusedBeatsMark({ slot }: { slot: SlotLayout }) {
   const y = offsetY(slot.beatCount - 1 + 0.5);
   const left = slot.utaiColX;
-  const right = slot.teColX + TE_COL_WIDTH;
+  const right = slot.rightX;
   return (
     <>
       <line x1={left} x2={right} y1={y} y2={y} className="skewer-line thick" />
@@ -295,24 +302,69 @@ function Guides({ guides, cx }: { guides: GuideRenderItem[]; cx: number }) {
   );
 }
 
-/** 1クサリ枠の中身(謡・手組名・補助線・掛け声・手) */
+/** 1つの楽器の列の中身(手組名・補助線・掛け声・手) */
+function InstrumentColumn({
+  items,
+  kusariIndex,
+  cx,
+}: {
+  items: InstrumentItems;
+  kusariIndex: number;
+  cx: number;
+}) {
+  const kakegoe = items.kakegoeByKusari.get(kusariIndex) ?? [];
+  const hits = items.hitsByKusari.get(kusariIndex) ?? [];
+  return (
+    <g>
+      <TeLabels labels={items.labelsByKusari.get(kusariIndex) ?? []} cx={cx} />
+
+      {/* 補助線は手より先に描き、手と重なる部分は手の下に隠す */}
+      <Guides guides={items.guidesByKusari.get(kusariIndex) ?? []} cx={cx} />
+
+      {/* 掛け声・手(色は楽器ごとに決まる) */}
+      {kakegoe.map((item) => (
+        <VerticalText
+          key={item.key}
+          // 補助線と重なる掛け声は、少し右にずらして避ける
+          cx={cx + (item.avoidsGuide ? KAKEGOE_GUIDE_DX : 0)}
+          cy={offsetY(item.offset)}
+          text={item.text ?? ""}
+          color={INSTRUMENT_COLOR[item.instrument]}
+          fontSize={KAKEGOE_FONT_SIZE}
+          charHeight={KAKEGOE_CHAR_HEIGHT}
+        />
+      ))}
+      {hits.map((item) => {
+        const glyph = item.te ? TE_GLYPH_MASTER[item.instrument]?.[item.te] : undefined;
+        if (!glyph) return null;
+        return (
+          <TeMark
+            key={item.key}
+            cx={cx}
+            cy={offsetY(item.offset) + TIMING_Y_OFFSET[item.timing ?? "on"]}
+            shape={glyph.shape}
+            color={INSTRUMENT_COLOR[item.instrument]}
+            label={glyph.label}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+/** 1クサリ枠の中身(謡 + 楽器ごとの列) */
 function KusariSlot({
   slot,
+  kusariIndex,
   utai,
-  kakegoe,
-  hits,
-  guides,
-  labels,
+  byInstrument,
 }: {
   slot: SlotLayout;
+  kusariIndex: number;
   utai: UtaiCell[];
-  kakegoe: TeRenderItem[];
-  hits: TeRenderItem[];
-  guides: GuideRenderItem[];
-  labels: TeLabel[];
+  byInstrument: Record<Instrument, InstrumentItems>;
 }) {
   const utaiCx = slot.utaiColX + UTAI_COL_WIDTH / 2;
-  const teCx = slot.teColX + TE_COL_WIDTH / 2;
   return (
     <g>
       {slot.beatCount < ROWS_PER_PAGE && <UnusedBeatsMark slot={slot} />}
@@ -330,38 +382,14 @@ function KusariSlot({
         />
       ))}
 
-      <TeLabels labels={labels} cx={teCx} />
-
-      {/* 補助線は手より先に描き、手と重なる部分は手の下に隠す */}
-      <Guides guides={guides} cx={teCx} />
-
-      {/* 掛け声・手(色は楽器ごとに決まる) */}
-      {kakegoe.map((item) => (
-        <VerticalText
-          key={item.key}
-          // 補助線と重なる掛け声は、少し右にずらして避ける
-          cx={teCx + (item.avoidsGuide ? KAKEGOE_GUIDE_DX : 0)}
-          cy={offsetY(item.offset)}
-          text={item.text ?? ""}
-          color={INSTRUMENT_COLOR[item.instrument]}
-          fontSize={KAKEGOE_FONT_SIZE}
-          charHeight={KAKEGOE_CHAR_HEIGHT}
+      {SCORE_INSTRUMENTS.map((instrument, j) => (
+        <InstrumentColumn
+          key={instrument}
+          items={byInstrument[instrument] ?? emptyInstrumentItems()}
+          kusariIndex={kusariIndex}
+          cx={slot.teColX[j] + TE_COL_WIDTH / 2}
         />
       ))}
-      {hits.map((item) => {
-        const glyph = item.te ? TE_GLYPH_MASTER[item.instrument]?.[item.te] : undefined;
-        if (!glyph) return null;
-        return (
-          <TeMark
-            key={item.key}
-            cx={teCx}
-            cy={offsetY(item.offset) + TIMING_Y_OFFSET[item.timing ?? "on"]}
-            shape={glyph.shape}
-            color={INSTRUMENT_COLOR[item.instrument]}
-            label={glyph.label}
-          />
-        );
-      })}
     </g>
   );
 }
@@ -402,11 +430,9 @@ function ScorePage({
             <KusariSlot
               key={slot.kusariIndex}
               slot={slot}
+              kusariIndex={slot.kusariIndex}
               utai={items.utaiByKusari.get(slot.kusariIndex) ?? []}
-              kakegoe={items.kakegoeByKusari.get(slot.kusariIndex) ?? []}
-              hits={items.hitsByKusari.get(slot.kusariIndex) ?? []}
-              guides={items.guidesByKusari.get(slot.kusariIndex) ?? []}
-              labels={items.labelsByKusari.get(slot.kusariIndex) ?? []}
+              byInstrument={items.byInstrument}
             />
           ),
         )}

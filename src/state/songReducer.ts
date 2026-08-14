@@ -1,5 +1,12 @@
 // 曲データ全体を1つのstateとして持つreducer。操作をactionとして定義し、undo/redoしやすくする。
-import type { BeatRef, KusariType, SongData, TeMaster } from "../types";
+import {
+  INSTRUMENTS,
+  type BeatRef,
+  type Instrument,
+  type KusariType,
+  type SongData,
+  type TeMaster,
+} from "../types";
 import {
   computeGlobalStarts,
   isBeatRefValid,
@@ -12,15 +19,15 @@ import {
 export type SongAction =
   | { type: "LOAD_SONG"; song: SongData }
   | { type: "INSERT_KUSARI"; atIndex: number; kusariType: KusariType }
-  | { type: "REMOVE_KUSARI"; index: number; teMaster: TeMaster }
+  | { type: "REMOVE_KUSARI"; index: number; teMaster: Record<Instrument, TeMaster> }
   | {
       type: "SET_KUSARI_TYPE";
       index: number;
       kusariType: KusariType;
-      teMaster: TeMaster;
+      teMaster: Record<Instrument, TeMaster>;
     }
-  | { type: "ADD_TE_INSTANCE"; teId: string; startRef: BeatRef }
-  | { type: "REMOVE_TE_INSTANCE"; instanceIndex: number }
+  | { type: "ADD_TE_INSTANCE"; instrument: Instrument; teId: string; startRef: BeatRef }
+  | { type: "REMOVE_TE_INSTANCE"; instrument: Instrument; instanceIndex: number }
   | {
       type: "SET_UTAI_CHAR";
       beatRef: BeatRef;
@@ -93,15 +100,15 @@ export function songReducer(state: SongData, action: SongAction): SongData {
     }
 
     case "ADD_TE_INSTANCE": {
-      const track = state.tracks.kotsuzumi ?? {
-        instrument: "kotsuzumi" as const,
+      const track = state.tracks[action.instrument] ?? {
+        instrument: action.instrument,
         te_instances: [],
       };
       return {
         ...state,
         tracks: {
           ...state.tracks,
-          kotsuzumi: {
+          [action.instrument]: {
             ...track,
             te_instances: [
               ...track.te_instances,
@@ -113,13 +120,13 @@ export function songReducer(state: SongData, action: SongAction): SongData {
     }
 
     case "REMOVE_TE_INSTANCE": {
-      const track = state.tracks.kotsuzumi;
+      const track = state.tracks[action.instrument];
       if (!track) return state;
       return {
         ...state,
         tracks: {
           ...state.tracks,
-          kotsuzumi: {
+          [action.instrument]: {
             ...track,
             te_instances: track.te_instances.filter(
               (_, i) => i !== action.instanceIndex,
@@ -162,26 +169,32 @@ export function songReducer(state: SongData, action: SongAction): SongData {
  * クサリが短くなった結果、収まらなくなった手組を取り除く。
  * 「開始位置がクサリの拍数を超えた」「末尾が曲の終わりをはみ出した」の2つを見る。
  */
-function dropUnfittableTe(state: SongData, teMaster: TeMaster): SongData {
-  const track = state.tracks.kotsuzumi;
-  if (!track) return state;
-
+function dropUnfittableTe(
+  state: SongData,
+  teMaster: Record<Instrument, TeMaster>,
+): SongData {
   const globalStarts = computeGlobalStarts(state.kusari_sequence);
   const total = totalBeats(state.kusari_sequence);
-  const kept = track.te_instances.filter((ti) => {
-    if (!isBeatRefValid(ti.start_ref, state.kusari_sequence)) return false;
-    const def = teMaster[ti.te_id];
-    // マスタに無い手組は長さが分からないので、判断せずそのまま残す
-    if (!def) return true;
-    const start = teInstanceStartBeat(ti.start_ref, globalStarts);
-    return start + def.internal_pattern.length <= total;
-  });
+  const tracks = { ...state.tracks };
+  let changed = false;
 
-  if (kept.length === track.te_instances.length) return state;
-  return {
-    ...state,
-    tracks: { ...state.tracks, kotsuzumi: { ...track, te_instances: kept } },
-  };
+  for (const instrument of INSTRUMENTS) {
+    const track = tracks[instrument];
+    if (!track) continue;
+    const kept = track.te_instances.filter((ti) => {
+      if (!isBeatRefValid(ti.start_ref, state.kusari_sequence)) return false;
+      const def = teMaster[instrument][ti.te_id];
+      // マスタに無い手組は長さが分からないので、判断せずそのまま残す
+      if (!def) return true;
+      const start = teInstanceStartBeat(ti.start_ref, globalStarts);
+      return start + def.internal_pattern.length <= total;
+    });
+    if (kept.length === track.te_instances.length) continue;
+    tracks[instrument] = { ...track, te_instances: kept };
+    changed = true;
+  }
+
+  return changed ? { ...state, tracks } : state;
 }
 
 /**
@@ -209,19 +222,22 @@ function remapRefs(
 ): SongData {
   const shift = (ref: BeatRef) =>
     shiftBeatRef(ref, removedIndex, insertedAtIndex);
-  const { kotsuzumi, utai } = state.tracks;
-
-  return {
-    ...state,
-    tracks: {
-      kotsuzumi: kotsuzumi && {
-        ...kotsuzumi,
-        te_instances: shiftRefsOf(kotsuzumi.te_instances, "start_ref", shift),
-      },
-      utai: utai && {
-        ...utai,
-        chars: shiftRefsOf(utai.chars, "beat_ref", shift),
-      },
+  const utai = state.tracks.utai;
+  const tracks: SongData["tracks"] = {
+    utai: utai && {
+      ...utai,
+      chars: shiftRefsOf(utai.chars, "beat_ref", shift),
     },
   };
+
+  for (const instrument of INSTRUMENTS) {
+    const track = state.tracks[instrument];
+    if (!track) continue;
+    tracks[instrument] = {
+      ...track,
+      te_instances: shiftRefsOf(track.te_instances, "start_ref", shift),
+    };
+  }
+
+  return { ...state, tracks };
 }

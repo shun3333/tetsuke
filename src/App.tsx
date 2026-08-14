@@ -1,43 +1,39 @@
 import { useReducer, useState } from "react";
 import { songReducer } from "./state/songReducer";
 import { sampleSong } from "./data/sampleSong";
-import { kotsuzumiTeMaster } from "./data/teMaster";
+import { TE_MASTER } from "./data/teMaster";
 import { KusariEditor } from "./components/KusariEditor";
 import { TePalette } from "./components/TePalette";
-import { TimelineGrid } from "./components/TimelineGrid";
+import { TimelineGrid, type SelectedTe } from "./components/TimelineGrid";
 import { ScoreView } from "./components/ScoreView";
 import { SplitPane } from "./components/SplitPane";
 import { ScoreToolbar } from "./components/ScoreToolbar";
 
 function App() {
   const [song, dispatch] = useReducer(songReducer, sampleSong);
-  const [selectedTeId, setSelectedTeId] = useState<string | null>(null);
+  const [selectedTe, setSelectedTe] = useState<SelectedTe | null>(null);
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>能楽 手付アプリ</h1>
-        <p className="app-subtitle">小鼓 × 謡 — {song.song_id}</p>
+        <p className="app-subtitle">大鼓 × 小鼓 × 謡 — {song.song_id}</p>
       </header>
 
       <SplitPane
         left={
           <section className="editor-pane">
-            <KusariEditor
-              song={song}
-              teMaster={kotsuzumiTeMaster}
-              dispatch={dispatch}
-            />
+            <KusariEditor song={song} teMaster={TE_MASTER} dispatch={dispatch} />
             <TePalette
-              teMaster={kotsuzumiTeMaster}
-              selectedTeId={selectedTeId}
-              onSelect={setSelectedTeId}
+              teMaster={TE_MASTER}
+              selectedTe={selectedTe}
+              onSelect={setSelectedTe}
             />
             <TimelineGrid
               song={song}
-              teMaster={kotsuzumiTeMaster}
-              selectedTeId={selectedTeId}
-              onPlaced={() => setSelectedTeId(null)}
+              teMaster={TE_MASTER}
+              selectedTe={selectedTe}
+              onPlaced={() => setSelectedTe(null)}
               dispatch={dispatch}
             />
           </section>
@@ -49,7 +45,7 @@ function App() {
               <ScoreToolbar song={song} dispatch={dispatch} />
             </div>
             <div className="score-scroll">
-              <ScoreView song={song} teMaster={kotsuzumiTeMaster} />
+              <ScoreView song={song} teMaster={TE_MASTER} />
             </div>
           </section>
         }
