@@ -13,6 +13,7 @@ import {
   type TeMaster,
 } from "../types";
 import {
+  beatCountOf,
   computeGlobalStarts,
   globalBeatToTeStartRef,
   globalBeatToKusariBeat,
@@ -39,6 +40,13 @@ interface Occupancy {
 
 /** 1拍あたりの入力欄の数(裏・表) */
 const SLOTS_PER_BEAT = 2;
+
+/**
+ * 1拍の枠の中で「表」が来る位置(枠の幅に対する比)。
+ * 謡の入力欄は左が裏・右が表なので、右半分の中央が表にあたる。
+ * 小鼓の点も拍番号もこの位置に合わせる。
+ */
+const BEAT_DOT_RATIO = 0.75;
 
 /** 手組の一覧(ポップアップ)の表示状態 */
 interface PickerState {
@@ -105,46 +113,52 @@ function buildOccupancy(
   return occupancy;
 }
 
-/** 小鼓の行に並べる1セル分 */
-interface TeCell {
-  /** セルの先頭のグローバル拍 */
-  g: number;
-  span: number;
-  occ: Occupancy | null;
-  /** 前のクサリから続いている手組か */
+/** 小鼓の行に引く、手組1つ分のバー(点から点まで) */
+interface TeBar {
+  key: string;
+  instanceIndex: number;
+  label: string;
+  /** このクサリ内での開始・終了拍(0始まり) */
+  fromBeat: number;
+  toBeat: number;
+  /** 前のクサリから続いているか */
   continued: boolean;
 }
 
 /**
- * 1クサリ分(startG以上endG未満)の小鼓の行を組み立てる。
+ * 配置済みの手組を、クサリごとのバーに割り当てる。
  * 手組はクサリをまたぐことがあるため、はみ出す分はクサリの境目で切る。
  */
-function buildTeCells(
-  startG: number,
-  endG: number,
-  occupancy: Map<number, Occupancy>,
-): TeCell[] {
-  const cells: TeCell[] = [];
-  let g = startG;
-  while (g < endG) {
-    const occ = occupancy.get(g);
-    if (!occ) {
-      cells.push({ g, span: 1, occ: null, continued: false });
-      g += 1;
-      continue;
-    }
-    // 同じ手組が続く範囲を、このクサリの中だけでまとめる
-    let span = 1;
-    while (
-      g + span < endG &&
-      occupancy.get(g + span)?.instanceIndex === occ.instanceIndex
-    ) {
-      span += 1;
-    }
-    cells.push({ g, span, occ, continued: !occ.isStart });
-    g += span;
-  }
-  return cells;
+function buildTeBars(
+  song: SongData,
+  teMaster: TeMaster,
+  globalStarts: number[],
+): Map<number, TeBar[]> {
+  const bars = new Map<number, TeBar[]>();
+  (song.tracks.kotsuzumi?.te_instances ?? []).forEach((ti, idx) => {
+    const def = teMaster[ti.te_id];
+    if (!def) return;
+    const startG = teInstanceStartBeat(ti.start_ref, globalStarts);
+    const endG = startG + def.internal_pattern.length - 1;
+
+    song.kusari_sequence.forEach((k, kusariIndex) => {
+      const kStart = globalStarts[kusariIndex];
+      const kEnd = kStart + beatCountOf(k.type) - 1;
+      if (endG < kStart || startG > kEnd) return;
+      const bar: TeBar = {
+        key: `bar-${idx}-${kusariIndex}`,
+        instanceIndex: idx,
+        label: def.label,
+        fromBeat: Math.max(startG, kStart) - kStart,
+        toBeat: Math.min(endG, kEnd) - kStart,
+        continued: startG < kStart,
+      };
+      const list = bars.get(kusariIndex);
+      if (list) list.push(bar);
+      else bars.set(kusariIndex, [bar]);
+    });
+  });
+  return bars;
 }
 
 /** 入力済みの謡の文字を、半拍枠のkeyで引けるようにする */
@@ -195,6 +209,10 @@ export function TimelineGrid({
     () => buildOccupancy(song, teMaster, globalStarts),
     [song, teMaster, globalStarts],
   );
+  const teBars = useMemo(
+    () => buildTeBars(song, teMaster, globalStarts),
+    [song, teMaster, globalStarts],
+  );
   const utaiValues = useMemo(() => buildUtaiValues(song), [song]);
 
   /** その位置に置けない理由。置けるならnull */
@@ -228,12 +246,8 @@ export function TimelineGrid({
   function handleKotsuzumiClick(g: number, e: React.MouseEvent) {
     const occ = occupancy.get(g);
     if (occ) {
-      if (occ.isStart) {
-        dispatch({
-          type: "REMOVE_TE_INSTANCE",
-          instanceIndex: occ.instanceIndex,
-        });
-      }
+      // 手組が乗っている点はどこを押しても、その手組を外す
+      dispatch({ type: "REMOVE_TE_INSTANCE", instanceIndex: occ.instanceIndex });
       return;
     }
     // パレットで選んである場合はそのまま置く。選んでいなければ一覧を出す
@@ -380,30 +394,52 @@ export function TimelineGrid({
           <tbody>
             <tr>
               <th className="row-label">小鼓</th>
-              {buildTeCells(startG, endG, occupancy).map((cell) =>
-                cell.occ ? (
-                  <td
-                    key={cell.g}
-                    colSpan={cell.span}
-                    className={
-                      "te-cell filled" + (cell.continued ? " continued" : "")
-                    }
-                    onClick={(e) => handleKotsuzumiClick(cell.g, e)}
-                    title={cell.continued ? undefined : "クリックで削除"}
-                  >
-                    {/* 前のクサリから続いている分には名前を出さない */}
-                    {cell.continued ? "" : cell.occ.label}
-                  </td>
-                ) : (
-                  <td
-                    key={cell.g}
-                    className={
-                      "te-cell empty" + (selectedTeId ? " placeable" : "")
-                    }
-                    onClick={(e) => handleKotsuzumiClick(cell.g, e)}
-                  />
-                ),
-              )}
+              {/* 拍ごとに枠を切らず、1クサリで1つの枠にする。
+                  拍の表の位置に点を並べ、手組は点から点までのバーで表す */}
+              <td className="te-lane" colSpan={beats.length}>
+                <div className="te-lane-inner">
+                  {(teBars.get(kusariIndex) ?? []).map((bar) => (
+                    <div
+                      key={bar.key}
+                      className="te-bar"
+                      style={{
+                        left: `calc(var(--beat-width) * ${bar.fromBeat + BEAT_DOT_RATIO})`,
+                        width: `calc(var(--beat-width) * ${bar.toBeat - bar.fromBeat})`,
+                      }}
+                      title="クリックで削除"
+                      onClick={() =>
+                        dispatch({
+                          type: "REMOVE_TE_INSTANCE",
+                          instanceIndex: bar.instanceIndex,
+                        })
+                      }
+                    >
+                      {/* 前のクサリから続いている分には名前を出さない */}
+                      {!bar.continued && (
+                        <span className="te-bar-label">{bar.label}</span>
+                      )}
+                    </div>
+                  ))}
+                  {beats.map((_, i) => {
+                    const g = startG + i;
+                    const occupied = occupancy.has(g);
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        className={"te-dot" + (occupied ? " occupied" : "")}
+                        style={{
+                          left: `calc(var(--beat-width) * ${i + BEAT_DOT_RATIO})`,
+                        }}
+                        title={
+                          occupied ? "クリックで削除" : "クリックで手組を選ぶ"
+                        }
+                        onClick={(e) => handleKotsuzumiClick(g, e)}
+                      />
+                    );
+                  })}
+                </div>
+              </td>
             </tr>
             <tr>
               <th className="row-label">謡</th>

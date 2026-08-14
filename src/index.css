@@ -340,35 +340,70 @@ table.timeline-grid {
   text-align: center;
 }
 
-.te-cell.empty {
-  cursor: default;
+/* 小鼓の行。1クサリで1つの枠にし、拍の表の位置に点を並べる。
+   手組は点から点までのバーで表す */
+.timeline-grid .te-lane {
+  padding: 0;
+  height: 42px;
 }
 
-.te-cell.placeable {
+.te-lane-inner {
+  position: relative;
+  height: 42px;
+}
+
+.te-dot {
+  position: absolute;
+  top: 26px;
+  width: 9px;
+  height: 9px;
+  /* 中心を left/top に合わせる(幅・高さの半分だけ戻す) */
+  margin: -4.5px 0 0 -4.5px;
+  padding: 0;
+  border: 1px solid var(--text);
+  border-radius: 50%;
+  background: var(--panel-bg);
+  cursor: pointer;
+  /* バーより手前に出して、点が隠れないようにする */
+  z-index: 1;
+}
+
+.te-dot:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.te-dot.occupied {
+  border-color: var(--te-box-stroke);
+  background: var(--te-box-stroke);
+}
+
+.te-bar {
+  position: absolute;
+  top: 26px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: var(--te-box-fill);
+  border: 1px solid var(--te-box-stroke);
   cursor: pointer;
 }
 
-.te-cell.placeable:hover {
+.te-bar:hover {
   background: var(--accent-bg);
 }
 
-.te-cell.filled {
-  background: var(--te-box-fill);
-  color: var(--te-box-stroke);
+/* 手組名はバーのすぐ上に置く */
+.te-bar-label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 4px;
+  font-size: 12px;
   font-weight: 600;
-  cursor: pointer;
-}
-
-.te-cell.filled:hover {
-  background: var(--accent-bg);
-}
-
-/* 前のクサリから続いている手組。ここをクリックしても削除はしない */
-.te-cell.filled.continued,
-.te-cell.filled.continued:hover {
-  background: var(--te-box-fill);
-  opacity: 0.55;
-  cursor: default;
+  white-space: nowrap;
+  color: var(--te-box-stroke);
 }
 
 /* 表・裏の2つの入力欄をセルいっぱいに並べる(列幅は--beat-widthで決まる) */
