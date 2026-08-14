@@ -592,9 +592,12 @@ table.timeline-grid {
 
 /* 印刷(PDF出力)。手付だけを紙に載せ、編集UIは出さない。
    1クサリ枠 = 1ページ分の紙になるよう、ページごとに改ページする */
+/* 余白を0にすると、ブラウザが余白領域に描くヘッダー・フッター
+   (ページ番号・日付・アプリ名・URL)が出なくなる。
+   紙の余白はこの下の .score-page の padding で取る */
 @page {
   size: A4 landscape;
-  margin: 10mm;
+  margin: 0;
 }
 
 @media print {
@@ -640,6 +643,8 @@ table.timeline-grid {
 
   .score-page {
     display: block;
+    /* @pageの余白を0にしたぶん、こちらで紙の余白を取る */
+    padding: 10mm;
     break-after: page;
     page-break-after: always;
   }
@@ -650,11 +655,13 @@ table.timeline-grid {
   }
 
   /* 紙いっぱいまで拡大する。ただし縦がはみ出すと次の紙に送られてしまうので、
-     A4横(余白10mm)の高さに収まるところで止める。
-     viewBoxがあるので、高さで止まれば幅も比率を保って縮む */
+     A4横(210mm) から上下の余白20mmを引いた高さで止める。
+     viewBoxがあるので、高さで止まれば幅も比率を保って縮む。
+     手付の外枠は罫線と重なって二重に見えるため、印刷では出さない */
   .score-view {
     width: 100%;
     height: auto;
     max-height: 185mm;
+    border: none;
   }
 }
