@@ -269,31 +269,41 @@ section.editor-pane,
 }
 
 table.timeline-grid {
+  /* 1拍の幅はここだけで決める。どの表でも同じ幅になるようにするため、
+     列幅は内容から自動計算させず指定値で固定する
+     (自動計算だと、拍数の少ないクサリの列だけ広がってしまう) */
+  --beat-width: 72px;
+  --row-label-width: 60px;
+
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: fixed;
+  width: min-content;
 }
 
 .timeline-grid th,
 .timeline-grid td {
   border: 1px solid var(--border);
-  min-width: 30px;
   height: 30px;
   text-align: center;
   padding: 0 2px;
   white-space: nowrap;
 }
 
+
 .timeline-grid .row-label {
   position: sticky;
   left: 0;
   background: var(--panel-bg);
   z-index: 1;
-  min-width: 60px;
+  width: var(--row-label-width);
   font-size: 12px;
   color: var(--text);
 }
 
+/* 列幅は先頭行(この拍番号の行)の指定で決まる */
 .timeline-grid .beat-header {
+  width: var(--beat-width);
   color: var(--text);
   font-size: 11px;
 }
@@ -329,11 +339,9 @@ table.timeline-grid {
   cursor: default;
 }
 
-/* 表・裏の2つの入力欄が並ぶため、他の列より広く取る
-   (.timeline-grid td より詳細度を上げる必要がある) */
+/* 表・裏の2つの入力欄をセルいっぱいに並べる(列幅は--beat-widthで決まる) */
 .timeline-grid .utai-cell {
   padding: 0;
-  min-width: 72px;
 }
 
 /* td自体をflexにするとテーブルのレイアウトから外れるため、内側のdivで横並びにする */
