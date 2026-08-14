@@ -5,7 +5,13 @@
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。
 import { useMemo, useRef } from "react";
-import type { SongData, TeMaster } from "../types";
+import {
+  KUSARI_LABEL,
+  KUSARI_TYPES,
+  type KusariType,
+  type SongData,
+  type TeMaster,
+} from "../types";
 import {
   computeGlobalStarts,
   globalBeatToBeatRef,
@@ -134,7 +140,10 @@ function buildUtaiValues(song: SongData): Map<string, string> {
   const values = new Map<string, string>();
   for (const c of song.tracks.utai?.chars ?? []) {
     if (!c.content) continue;
-    values.set(`${c.beat_ref.kusari_index}:${c.beat_ref.beat}`, c.content.value);
+    values.set(
+      `${c.beat_ref.kusari_index}:${c.beat_ref.beat}`,
+      c.content.value,
+    );
   }
   return values;
 }
@@ -168,7 +177,10 @@ export function TimelineGrid({
     const occ = occupancy.get(g);
     if (occ) {
       if (occ.isStart) {
-        dispatch({ type: "REMOVE_TE_INSTANCE", instanceIndex: occ.instanceIndex });
+        dispatch({
+          type: "REMOVE_TE_INSTANCE",
+          instanceIndex: occ.instanceIndex,
+        });
       }
       return;
     }
@@ -250,6 +262,56 @@ export function TimelineGrid({
     }
   }
 
+  /** クサリ1つ分の操作(種別の変更・すぐ下に追加・削除) */
+  function renderKusariControls(kusariIndex: number) {
+    return (
+      <div className="kusari-block-bar">
+        <select
+          value={song.kusari_sequence[kusariIndex].type}
+          title="このクサリの種別"
+          onChange={(e) =>
+            dispatch({
+              type: "SET_KUSARI_TYPE",
+              index: kusariIndex,
+              kusariType: e.target.value as KusariType,
+            })
+          }
+        >
+          {KUSARI_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {KUSARI_LABEL[t]}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="chip-remove"
+          title="すぐ下にクサリを追加"
+          onClick={() =>
+            dispatch({
+              type: "INSERT_KUSARI",
+              atIndex: kusariIndex + 1,
+              kusariType: "honji",
+            })
+          }
+        >
+          ＋
+        </button>
+        <button
+          type="button"
+          className="chip-remove"
+          title="このクサリを削除"
+          disabled={song.kusari_sequence.length <= 1}
+          onClick={() =>
+            dispatch({ type: "REMOVE_KUSARI", index: kusariIndex })
+          }
+        >
+          ×
+        </button>
+      </div>
+    );
+  }
+
   /** クサリ1つ分の表。クサリを増やすと、この表が下に積まれていく */
   function renderKusari(kusariIndex: number) {
     const startG = globalStarts[kusariIndex];
@@ -260,75 +322,86 @@ export function TimelineGrid({
     const beats = beatSlots.slice(startG, endG);
 
     return (
-      <table key={kusariIndex} className="timeline-grid">
-        <thead>
-          <tr>
-            <th className="row-label"></th>
-            {/* 拍番号は通し番号ではなく、クサリごとに1から振り直す */}
-            {beats.map((entry, i) => (
-              <th key={i} className="beat-header">
-                {entry ? entry.localBeat : ""}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th className="row-label">小鼓</th>
-            {buildTeCells(startG, endG, occupancy).map((cell) =>
-              cell.occ ? (
-                <td
-                  key={cell.g}
-                  colSpan={cell.span}
-                  className={"te-cell filled" + (cell.continued ? " continued" : "")}
-                  onClick={() => handleKotsuzumiClick(cell.g)}
-                  title={cell.continued ? undefined : "クリックで削除"}
-                >
-                  {/* 前のクサリから続いている分には名前を出さない */}
-                  {cell.continued ? "" : cell.occ.label}
-                </td>
-              ) : (
-                <td
-                  key={cell.g}
-                  className={"te-cell empty" + (selectedTeId ? " placeable" : "")}
-                  onClick={() => handleKotsuzumiClick(cell.g)}
-                />
-              ),
-            )}
-          </tr>
-          <tr>
-            <th className="row-label">謡</th>
-            {beats.map((entry, i) => {
-              const g = startG + i;
-              if (!entry) return <td key={g} className="utai-cell" />;
-              return (
-                <td key={g} className="utai-cell">
-                  <div className="utai-cell-inner">
-                    {entry.slots.map((slot, si) => (
-                      <input
-                        key={slot.key}
-                        ref={(el) => {
-                          if (el) utaiInputRefs.current.set(slot.key, el);
-                          else utaiInputRefs.current.delete(slot.key);
-                        }}
-                        className="utai-input"
-                        title={`${entry.kusariIndex + 1}つ目のクサリ / beat ${slot.beat}`}
-                        value={utaiValues.get(slot.key) ?? ""}
-                        onChange={(e) =>
-                          setUtaiValue(entry.kusariIndex, slot.beat, e.target.value)
-                        }
-                        onKeyDown={(e) =>
-                          handleUtaiKeyDown(e, g * SLOTS_PER_BEAT + si)
-                        }
-                      />
-                    ))}
-                  </div>
-                </td>
-              );
-            })}
-          </tr>
-        </tbody>
-      </table>
+      <div key={kusariIndex} className="kusari-block">
+        {renderKusariControls(kusariIndex)}
+        <table className="timeline-grid">
+          <thead>
+            <tr>
+              <th className="row-label"></th>
+              {/* 拍番号は通し番号ではなく、クサリごとに1から振り直す */}
+              {beats.map((entry, i) => (
+                <th key={i} className="beat-header">
+                  {entry ? entry.localBeat : ""}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th className="row-label">小鼓</th>
+              {buildTeCells(startG, endG, occupancy).map((cell) =>
+                cell.occ ? (
+                  <td
+                    key={cell.g}
+                    colSpan={cell.span}
+                    className={
+                      "te-cell filled" + (cell.continued ? " continued" : "")
+                    }
+                    onClick={() => handleKotsuzumiClick(cell.g)}
+                    title={cell.continued ? undefined : "クリックで削除"}
+                  >
+                    {/* 前のクサリから続いている分には名前を出さない */}
+                    {cell.continued ? "" : cell.occ.label}
+                  </td>
+                ) : (
+                  <td
+                    key={cell.g}
+                    className={
+                      "te-cell empty" + (selectedTeId ? " placeable" : "")
+                    }
+                    onClick={() => handleKotsuzumiClick(cell.g)}
+                  />
+                ),
+              )}
+            </tr>
+            <tr>
+              <th className="row-label">謡</th>
+              {beats.map((entry, i) => {
+                const g = startG + i;
+                if (!entry) return <td key={g} className="utai-cell" />;
+                return (
+                  <td key={g} className="utai-cell">
+                    <div className="utai-cell-inner">
+                      {entry.slots.map((slot, si) => (
+                        <input
+                          key={slot.key}
+                          ref={(el) => {
+                            if (el) utaiInputRefs.current.set(slot.key, el);
+                            else utaiInputRefs.current.delete(slot.key);
+                          }}
+                          className="utai-input"
+                          title={`${entry.kusariIndex + 1}つ目のクサリ / beat ${slot.beat}`}
+                          value={utaiValues.get(slot.key) ?? ""}
+                          onChange={(e) =>
+                            setUtaiValue(
+                              entry.kusariIndex,
+                              slot.beat,
+                              e.target.value,
+                            )
+                          }
+                          onKeyDown={(e) =>
+                            handleUtaiKeyDown(e, g * SLOTS_PER_BEAT + si)
+                          }
+                        />
+                      ))}
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          </tbody>
+        </table>
+      </div>
     );
   }
 
@@ -336,6 +409,19 @@ export function TimelineGrid({
     <div className="timeline-grid-wrap">
       <h2>タイムライン</h2>
       {song.kusari_sequence.map((_, i) => renderKusari(i))}
+      <button
+        type="button"
+        className="kusari-add"
+        onClick={() =>
+          dispatch({
+            type: "INSERT_KUSARI",
+            atIndex: song.kusari_sequence.length,
+            kusariType: "honji",
+          })
+        }
+      >
+        + クサリ追加
+      </button>
     </div>
   );
 }
