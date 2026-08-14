@@ -138,11 +138,11 @@ export interface BeatRef {
  * 曲データ内に配置された手組の1インスタンス。
  *
  * start_ref は手組の「起点」で、クサリのN拍目に置いた手組は
- *   beat = (N - 1) * 2
- * になる(1拍目に置けば 0)。手組の中身の位置は
+ *   beat = N * 2
+ * になる(1拍目に置けば 2)。手組の中身の位置は
  *   絶対スロット = start_ref.beat + rel_pos
- * で決まるため、rel_pos: 2 の手が1拍目の表に乗る。
- * rel_pos: 0 の手は、その1拍前(前のクサリの最終拍)に乗る。
+ * で決まる。1拍目に置いた場合、rel_pos: 0 の手は1拍目の表、
+ * rel_pos: 2 の手は2拍目の表に乗る。
  */
 export interface TeInstance {
   te_id: string;

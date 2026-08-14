@@ -128,6 +128,9 @@ interface TeBar {
 
 /**
  * 配置済みの手組を、クサリごとのバーに割り当てる。
+ * バーは開始拍から「長さの分だけ先の拍」までを結ぶ。占有するのは
+ * 開始拍から length 拍分だが、バーはその次の拍の点まで届く
+ * (N拍目に置いた長さ4の手組なら、N拍表から N+4拍表まで)。
  * 手組はクサリをまたぐことがあるため、はみ出す分はクサリの境目で切る。
  */
 function buildTeBars(
@@ -140,7 +143,7 @@ function buildTeBars(
     const def = teMaster[ti.te_id];
     if (!def) return;
     const startG = teInstanceStartBeat(ti.start_ref, globalStarts);
-    const endG = startG + def.internal_pattern.length - 1;
+    const endG = startG + def.internal_pattern.length;
 
     song.kusari_sequence.forEach((k, kusariIndex) => {
       const kStart = globalStarts[kusariIndex];

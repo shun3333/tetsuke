@@ -14,7 +14,6 @@ import {
   beatRefToGlobalPos,
   globalPosToBeatRef,
   isBeatRefValid,
-  isTeStartRefValid,
   slotToLocalOffset,
 } from "./position";
 
@@ -103,7 +102,7 @@ function buildTeItems(
 
   (song.tracks.kotsuzumi?.te_instances ?? []).forEach((ti, instanceIndex) => {
     const def = teMaster[ti.te_id];
-    if (!def || !isTeStartRefValid(ti.start_ref, song.kusari_sequence)) return;
+    if (!def || !isBeatRefValid(ti.start_ref, song.kusari_sequence)) return;
     const startGlobalPos = beatRefToGlobalPos(ti.start_ref, globalStarts);
 
     // 手組名は、その手組が始まるクサリの枠に表示する
