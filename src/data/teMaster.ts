@@ -31,19 +31,19 @@ export const kotsuzumiTeMaster: TeMaster = {
     label: "ツヅケ",
     instrument: "kotsuzumi",
     internal_pattern: {
-      length: 8,
+      length: 6,
       kakegoe: [
-        { rel_pos: 9, text: "ヤ" },
-        { rel_pos: 13, text: "ハ" },
-        { rel_pos: 15, text: "ハ" },
+        { rel_pos: 5, text: "ヤ" },
+        { rel_pos: 9, text: "ハ" },
+        { rel_pos: 11, text: "ハ" },
       ],
       hits: [
-        { rel_pos: 4, timing: "on", te: "po" },
-        { rel_pos: 8, timing: "on", te: "chi" },
-        { rel_pos: 10, timing: "on", te: "chi" },
+        { rel_pos: 0, timing: "on", te: "po" },
+        { rel_pos: 4, timing: "on", te: "chi" },
+        { rel_pos: 6, timing: "on", te: "chi" },
+        { rel_pos: 8, timing: "on", te: "po" },
+        { rel_pos: 10, timing: "on", te: "po" },
         { rel_pos: 12, timing: "on", te: "po" },
-        { rel_pos: 14, timing: "on", te: "po" },
-        { rel_pos: 16, timing: "on", te: "po" },
       ]
     },
   },
