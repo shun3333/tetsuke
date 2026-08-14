@@ -509,7 +509,7 @@ table.timeline-grid {
   flex-wrap: wrap;
 }
 
-.score-export {
+.score-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -517,13 +517,13 @@ table.timeline-grid {
   margin-bottom: 8px;
 }
 
-.export-hint {
+.toolbar-hint {
   margin: 0;
   font-size: 11px;
   color: var(--text);
 }
 
-.export-button {
+.toolbar-button {
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text-h);
@@ -533,12 +533,12 @@ table.timeline-grid {
   cursor: pointer;
 }
 
-.export-button:hover:not(:disabled) {
+.toolbar-button:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
 }
 
-.export-button:disabled {
+.toolbar-button:disabled {
   opacity: 0.5;
   cursor: default;
 }

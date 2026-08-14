@@ -7,7 +7,7 @@ import { TePalette } from "./components/TePalette";
 import { TimelineGrid } from "./components/TimelineGrid";
 import { ScoreView } from "./components/ScoreView";
 import { SplitPane } from "./components/SplitPane";
-import { ScoreExport } from "./components/ScoreExport";
+import { ScoreToolbar } from "./components/ScoreToolbar";
 
 function App() {
   const [song, dispatch] = useReducer(songReducer, sampleSong);
@@ -46,7 +46,7 @@ function App() {
           <section className="score-pane">
             <div className="score-pane-header">
               <h2>手付譜(縦書き)</h2>
-              <ScoreExport song={song} />
+              <ScoreToolbar song={song} dispatch={dispatch} />
             </div>
             <div className="score-scroll">
               <ScoreView song={song} teMaster={kotsuzumiTeMaster} />
