@@ -501,6 +501,40 @@ table.timeline-grid {
 }
 
 /* 描画ビュー */
+.score-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.score-export {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.export-button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.export-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.export-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .score-scroll {
   overflow-x: auto;
   overflow-y: auto;
@@ -555,3 +589,72 @@ table.timeline-grid {
   stroke-width: 1.6;
 }
 
+
+/* 印刷(PDF出力)。手付だけを紙に載せ、編集UIは出さない。
+   1クサリ枠 = 1ページ分の紙になるよう、ページごとに改ページする */
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  :root,
+  body {
+    background: #ffffff;
+  }
+
+  .app-header,
+  .editor-pane,
+  .pane-resizer,
+  .score-pane-header,
+  .score-page-label {
+    display: none;
+  }
+
+  .app {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 分割レイアウトを解いて、手付を紙幅いっぱいに使う */
+  .app-main {
+    display: block;
+  }
+
+  section.score-pane {
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .score-scroll {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .score-pages {
+    gap: 0;
+  }
+
+  .score-page {
+    display: block;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .score-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* 紙いっぱいまで拡大する。ただし縦がはみ出すと次の紙に送られてしまうので、
+     A4横(余白10mm)の高さに収まるところで止める。
+     viewBoxがあるので、高さで止まれば幅も比率を保って縮む */
+  .score-view {
+    width: 100%;
+    height: auto;
+    max-height: 185mm;
+  }
+}

@@ -1,4 +1,4 @@
-import { useReducer, useState } from "react";
+import { useReducer, useRef, useState } from "react";
 import { songReducer } from "./state/songReducer";
 import { sampleSong } from "./data/sampleSong";
 import { kotsuzumiTeMaster } from "./data/teMaster";
@@ -7,10 +7,13 @@ import { TePalette } from "./components/TePalette";
 import { TimelineGrid } from "./components/TimelineGrid";
 import { ScoreView } from "./components/ScoreView";
 import { SplitPane } from "./components/SplitPane";
+import { ScoreExport } from "./components/ScoreExport";
 
 function App() {
   const [song, dispatch] = useReducer(songReducer, sampleSong);
   const [selectedTeId, setSelectedTeId] = useState<string | null>(null);
+  /** ファイル出力で書き出す対象(手付を描いている領域) */
+  const scoreRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="app">
@@ -43,8 +46,11 @@ function App() {
         }
         right={
           <section className="score-pane">
-            <h2>手付譜(縦書き)</h2>
-            <div className="score-scroll">
+            <div className="score-pane-header">
+              <h2>手付譜(縦書き)</h2>
+              <ScoreExport targetRef={scoreRef} songId={song.song_id} />
+            </div>
+            <div className="score-scroll" ref={scoreRef}>
               <ScoreView song={song} teMaster={kotsuzumiTeMaster} />
             </div>
           </section>
