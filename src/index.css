@@ -328,6 +328,16 @@ table.timeline-grid {
   width: var(--beat-width);
   color: var(--text);
   font-size: 11px;
+  padding: 0;
+}
+
+/* 1拍の枠は「裏(左)・表(右)」の2つに分かれている。
+   拍の数字は表の入力欄の真上に来るよう、右半分の中央に置く */
+.beat-header-omote {
+  display: block;
+  width: 50%;
+  margin-left: 50%;
+  text-align: center;
 }
 
 .te-cell.empty {

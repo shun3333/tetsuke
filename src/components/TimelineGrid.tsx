@@ -366,10 +366,13 @@ export function TimelineGrid({
           <thead>
             <tr>
               <th className="row-label"></th>
-              {/* 拍番号は通し番号ではなく、クサリごとに1から振り直す */}
+              {/* 拍番号は通し番号ではなく、クサリごとに1から振り直す。
+                  数字は「表」の入力欄(セルの右半分)の真上に置く */}
               {beats.map((entry, i) => (
                 <th key={i} className="beat-header">
-                  {entry ? entry.localBeat : ""}
+                  <span className="beat-header-omote">
+                    {entry ? entry.localBeat : ""}
+                  </span>
                 </th>
               ))}
             </tr>
