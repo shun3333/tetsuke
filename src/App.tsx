@@ -1,4 +1,4 @@
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { songReducer } from "./state/songReducer";
 import { sampleSong } from "./data/sampleSong";
 import { TE_MASTER } from "./data/teMaster";
@@ -8,10 +8,24 @@ import { TimelineGrid, type SelectedTe } from "./components/TimelineGrid";
 import { ScoreView } from "./components/ScoreView";
 import { SplitPane } from "./components/SplitPane";
 import { ScoreToolbar } from "./components/ScoreToolbar";
+import { loadStoredSong, storeSong } from "./logic/songStorage";
+
+/** 保存が1文字ごとに走らないよう、少し待ってからまとめて書く */
+const SAVE_DELAY_MS = 300;
 
 function App() {
-  const [song, dispatch] = useReducer(songReducer, sampleSong);
+  // 前回の続きから編集できるよう、保存してあれば復元する
+  const [song, dispatch] = useReducer(
+    songReducer,
+    undefined,
+    () => loadStoredSong() ?? sampleSong,
+  );
   const [selectedTe, setSelectedTe] = useState<SelectedTe | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => storeSong(song), SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [song]);
 
   return (
     <div className="app">

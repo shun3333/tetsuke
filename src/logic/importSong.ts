@@ -3,8 +3,10 @@
 // 外から来たデータをそのまま state に入れると、形が違ったときに
 // 描画側で落ちる。ここで形を確かめてから渡す。
 import {
+  INSTRUMENTS,
   KUSARI_TYPES,
   type BeatRef,
+  type Instrument,
   type KusariEntry,
   type KusariType,
   type SongData,
@@ -53,18 +55,19 @@ function readKusariSequence(value: unknown): KusariEntry[] {
   });
 }
 
-function readTeInstances(value: unknown): TeInstance[] {
-  if (!Array.isArray(value)) throw new Error("te_instances が配列ではありません");
+function readTeInstances(value: unknown, where: Instrument): TeInstance[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${where}.te_instances が配列ではありません`);
+  }
   return value.map((entry, i) => {
-    if (!isRecord(entry)) {
-      throw new Error(`te_instances[${i}] がオブジェクトではありません`);
-    }
+    const at = `${where}.te_instances[${i}]`;
+    if (!isRecord(entry)) throw new Error(`${at} がオブジェクトではありません`);
     if (typeof entry.te_id !== "string" || entry.te_id === "") {
-      throw new Error(`te_instances[${i}].te_id が文字列ではありません`);
+      throw new Error(`${at}.te_id が文字列ではありません`);
     }
     return {
       te_id: entry.te_id,
-      start_ref: readBeatRef(entry.start_ref, `te_instances[${i}].start_ref`),
+      start_ref: readBeatRef(entry.start_ref, `${at}.start_ref`),
     };
   });
 }
@@ -94,21 +97,22 @@ function readUtaiChars(value: unknown): UtaiChar[] {
 function readTracks(value: unknown): SongData["tracks"] {
   if (!isRecord(value)) throw new Error("tracks がオブジェクトではありません");
 
-  const kotsuzumi = isRecord(value.kotsuzumi)
-    ? {
-        instrument: "kotsuzumi" as const,
-        te_instances: readTeInstances(value.kotsuzumi.te_instances),
-      }
-    : undefined;
+  const tracks: SongData["tracks"] = {
+    utai: isRecord(value.utai)
+      ? { track_type: "utai", chars: readUtaiChars(value.utai.chars) }
+      : undefined,
+  };
 
-  const utai = isRecord(value.utai)
-    ? {
-        track_type: "utai" as const,
-        chars: readUtaiChars(value.utai.chars),
-      }
-    : undefined;
-
-  return { kotsuzumi, utai };
+  // 楽器のトラックは、あるものだけ読む
+  for (const instrument of INSTRUMENTS) {
+    const track: unknown = value[instrument];
+    if (!isRecord(track)) continue;
+    tracks[instrument] = {
+      instrument,
+      te_instances: readTeInstances(track.te_instances, instrument),
+    };
+  }
+  return tracks;
 }
 
 /**
