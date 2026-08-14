@@ -1,4 +1,4 @@
-import { useReducer, useRef, useState } from "react";
+import { useReducer, useState } from "react";
 import { songReducer } from "./state/songReducer";
 import { sampleSong } from "./data/sampleSong";
 import { kotsuzumiTeMaster } from "./data/teMaster";
@@ -12,8 +12,6 @@ import { ScoreExport } from "./components/ScoreExport";
 function App() {
   const [song, dispatch] = useReducer(songReducer, sampleSong);
   const [selectedTeId, setSelectedTeId] = useState<string | null>(null);
-  /** ファイル出力で書き出す対象(手付を描いている領域) */
-  const scoreRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="app">
@@ -48,9 +46,9 @@ function App() {
           <section className="score-pane">
             <div className="score-pane-header">
               <h2>手付譜(縦書き)</h2>
-              <ScoreExport targetRef={scoreRef} songId={song.song_id} />
+              <ScoreExport />
             </div>
-            <div className="score-scroll" ref={scoreRef}>
+            <div className="score-scroll">
               <ScoreView song={song} teMaster={kotsuzumiTeMaster} />
             </div>
           </section>
