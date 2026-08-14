@@ -35,16 +35,11 @@ interface Props {
 }
 
 // --- レイアウト定数 ---
-const BEAT_HEIGHT = 32;
 const HEADER_ROW_HEIGHT = 80;
 const MARGIN_TOP = 16;
 const MARGIN_BOTTOM = 20;
 const MARGIN_LEFT = 16;
 const MARGIN_RIGHT = 16;
-/** 1拍目の横線の上に確保する余白(半拍分の「0拍裏」+ 半拍分の余白) */
-const TOP_PAD = BEAT_HEIGHT;
-/** 最終拍の横線の下に確保する余白 */
-const BOTTOM_PAD = BEAT_HEIGHT;
 /** 謡:楽器1つの枠の横幅は概ね2:1 */
 const TE_COL_WIDTH = 22;
 const UTAI_COL_WIDTH = 44;
@@ -58,6 +53,33 @@ const GRID_TOP = MARGIN_TOP + HEADER_ROW_HEIGHT;
 const ROWS_PER_PAGE = Math.max(...Object.values(KUSARI_BEAT_COUNT));
 /** 見やすさのため太線にする拍(1始まり) */
 const THICK_BEATS = new Set([1, 3, 5, 8]);
+
+/** 1ページの横幅。クサリ枠の数と列の幅だけで決まる */
+const PAGE_WIDTH =
+  MARGIN_LEFT + KUSARI_PER_PAGE * SLOT_WIDTH + AXIS_COL_WIDTH + MARGIN_RIGHT;
+
+/**
+ * 印刷する紙(A4横、余白10mm)の内側の縦横比。index.css の @page と揃える。
+ * 楽器の列が増えると手付は横に伸びるので、紙の形に合うよう
+ * 1拍の高さ(= 手付の縦の伸び)をここから逆算する。
+ */
+const PAPER_ASPECT_RATIO = 277 / 190;
+
+/**
+ * 1拍の高さ。紙の縦横比に合う高さになるよう、横幅から決める。
+ *   高さ = MARGIN_TOP + HEADER_ROW_HEIGHT + MARGIN_BOTTOM
+ *        + BEAT_HEIGHT * (拍の数 + 上下の余白1拍ずつ)
+ */
+const BEAT_HEIGHT = Math.round(
+  (PAGE_WIDTH / PAPER_ASPECT_RATIO -
+    (MARGIN_TOP + HEADER_ROW_HEIGHT + MARGIN_BOTTOM)) /
+    (ROWS_PER_PAGE + 1),
+);
+
+/** 1拍目の横線の上に確保する余白(半拍分の「0拍裏」+ 半拍分の余白) */
+const TOP_PAD = BEAT_HEIGHT;
+/** 最終拍の横線の下に確保する余白 */
+const BOTTOM_PAD = BEAT_HEIGHT;
 
 // --- 文字の大きさ ---
 const INK_COLOR = "#000000";
