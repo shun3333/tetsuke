@@ -69,7 +69,7 @@ const TE_LABEL_BAND_PAD = 6;
 
 /** 補助線の太さと、くの字の折れ幅(列の中心からの左へのずれ) */
 const GUIDE_WIDTH = 1.2;
-const GUIDE_BEND = 5;
+const GUIDE_BEND = 8;
 /** 補助線と重なる掛け声を、右にずらす量 */
 const KAKEGOE_GUIDE_DX = 6;
 
