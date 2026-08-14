@@ -46,7 +46,7 @@ function App() {
           <section className="score-pane">
             <div className="score-pane-header">
               <h2>手付譜(縦書き)</h2>
-              <ScoreExport />
+              <ScoreExport song={song} />
             </div>
             <div className="score-scroll">
               <ScoreView song={song} teMaster={kotsuzumiTeMaster} />

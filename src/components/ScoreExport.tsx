@@ -7,10 +7,24 @@
 // 送り先が「PDFに保存」のときだけ。OSのPDFプリンタ(Microsoft Print to PDF等)を
 // 選ぶと用紙の向きはドライバ側の設定が優先され、縦向きの紙に横向きの
 // 内容が回転して載ってしまう。
+import type { SongData } from "../types";
+import { saveSongAsJson } from "../logic/exportSong";
 
-export function ScoreExport() {
+interface Props {
+  song: SongData;
+}
+
+export function ScoreExport({ song }: Props) {
   return (
     <div className="score-export">
+      <button
+        type="button"
+        className="export-button"
+        onClick={() => saveSongAsJson(song)}
+        title="作った手付のデータ(クサリ列・手組・謡)をJSONファイルとして保存します"
+      >
+        JSONで保存
+      </button>
       <button
         type="button"
         className="export-button"
