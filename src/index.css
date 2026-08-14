@@ -355,10 +355,10 @@ table.timeline-grid {
 .te-dot {
   position: absolute;
   top: 26px;
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   /* 中心を left/top に合わせる(幅・高さの半分だけ戻す) */
-  margin: -4.5px 0 0 -4.5px;
+  margin: -5.5px 0 0 -5.5px;
   padding: 0;
   border: 1px solid var(--text);
   border-radius: 50%;
@@ -373,24 +373,24 @@ table.timeline-grid {
   background: var(--accent);
 }
 
+/* 手組が乗っている点。バーと同色にし、白い縁で粒として見せる */
 .te-dot.occupied {
-  border-color: var(--te-box-stroke);
+  border: 2px solid var(--panel-bg);
   background: var(--te-box-stroke);
 }
 
 .te-bar {
   position: absolute;
   top: 26px;
-  height: 6px;
-  margin-top: -3px;
-  border-radius: 3px;
-  background: var(--te-box-fill);
-  border: 1px solid var(--te-box-stroke);
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 5px;
+  background: var(--te-box-stroke);
   cursor: pointer;
 }
 
 .te-bar:hover {
-  background: var(--accent-bg);
+  opacity: 0.7;
 }
 
 /* 手組名はバーのすぐ上に置く */

@@ -42,11 +42,12 @@ interface Occupancy {
 const SLOTS_PER_BEAT = 2;
 
 /**
- * 1拍の枠の中で「表」が来る位置(枠の幅に対する比)。
- * 謡の入力欄は左が裏・右が表なので、右半分の中央が表にあたる。
+ * 1拍の枠の中で「表」「裏」が来る位置(枠の幅に対する比)。
+ * 謡の入力欄は左が裏・右が表なので、右半分の中央が表・左半分の中央が裏にあたる。
  * 小鼓の点も拍番号もこの位置に合わせる。
  */
 const BEAT_DOT_RATIO = 0.75;
+const BEAT_URA_RATIO = 0.25;
 
 /** 手組の一覧(ポップアップ)の表示状態 */
 interface PickerState {
@@ -247,7 +248,10 @@ export function TimelineGrid({
     const occ = occupancy.get(g);
     if (occ) {
       // 手組が乗っている点はどこを押しても、その手組を外す
-      dispatch({ type: "REMOVE_TE_INSTANCE", instanceIndex: occ.instanceIndex });
+      dispatch({
+        type: "REMOVE_TE_INSTANCE",
+        instanceIndex: occ.instanceIndex,
+      });
       return;
     }
     // パレットで選んである場合はそのまま置く。選んでいなければ一覧を出す
@@ -398,28 +402,34 @@ export function TimelineGrid({
                   拍の表の位置に点を並べ、手組は点から点までのバーで表す */}
               <td className="te-lane" colSpan={beats.length}>
                 <div className="te-lane-inner">
-                  {(teBars.get(kusariIndex) ?? []).map((bar) => (
-                    <div
-                      key={bar.key}
-                      className="te-bar"
-                      style={{
-                        left: `calc(var(--beat-width) * ${bar.fromBeat + BEAT_DOT_RATIO})`,
-                        width: `calc(var(--beat-width) * ${bar.toBeat - bar.fromBeat})`,
-                      }}
-                      title="クリックで削除"
-                      onClick={() =>
-                        dispatch({
-                          type: "REMOVE_TE_INSTANCE",
-                          instanceIndex: bar.instanceIndex,
-                        })
-                      }
-                    >
-                      {/* 前のクサリから続いている分には名前を出さない */}
-                      {!bar.continued && (
-                        <span className="te-bar-label">{bar.label}</span>
-                      )}
-                    </div>
-                  ))}
+                  {(teBars.get(kusariIndex) ?? []).map((bar) => {
+                    // 前のクサリから続く分は、0拍の裏から引き始めて繋がりを示す
+                    const from = bar.continued
+                      ? bar.fromBeat + BEAT_URA_RATIO
+                      : bar.fromBeat + BEAT_DOT_RATIO;
+                    return (
+                      <div
+                        key={bar.key}
+                        className="te-bar"
+                        style={{
+                          left: `calc(var(--beat-width) * ${from})`,
+                          width: `calc(var(--beat-width) * ${bar.toBeat + BEAT_DOT_RATIO - from})`,
+                        }}
+                        title="クリックで削除"
+                        onClick={() =>
+                          dispatch({
+                            type: "REMOVE_TE_INSTANCE",
+                            instanceIndex: bar.instanceIndex,
+                          })
+                        }
+                      >
+                        {/* 前のクサリから続いている分には名前を出さない */}
+                        {!bar.continued && (
+                          <span className="te-bar-label">{bar.label}</span>
+                        )}
+                      </div>
+                    );
+                  })}
                   {beats.map((_, i) => {
                     const g = startG + i;
                     const occupied = occupancy.has(g);
@@ -508,7 +518,10 @@ export function TimelineGrid({
             className="te-picker"
             style={{
               left: Math.min(picker.x, window.innerWidth - PICKER_WIDTH - 8),
-              top: Math.min(picker.y, window.innerHeight - PICKER_MAX_HEIGHT - 8),
+              top: Math.min(
+                picker.y,
+                window.innerHeight - PICKER_MAX_HEIGHT - 8,
+              ),
               width: PICKER_WIDTH,
               maxHeight: PICKER_MAX_HEIGHT,
             }}
