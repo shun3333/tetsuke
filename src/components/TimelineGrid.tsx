@@ -14,7 +14,7 @@ import {
 } from "../types";
 import {
   computeGlobalStarts,
-  globalBeatToBeatRef,
+  globalBeatToTeStartRef,
   globalBeatToKusariBeat,
   teInstanceStartBeat,
   totalBeats,
@@ -215,7 +215,11 @@ export function TimelineGrid({
       window.alert(error);
       return;
     }
-    const startRef = globalBeatToBeatRef(g, song.kusari_sequence, globalStarts);
+    const startRef = globalBeatToTeStartRef(
+      g,
+      song.kusari_sequence,
+      globalStarts,
+    );
     if (!startRef) return;
     dispatch({ type: "ADD_TE_INSTANCE", teId, startRef });
     onPlaced();

@@ -65,6 +65,21 @@ export function isBeatRefValid(
 }
 
 /**
+ * 手組の start_ref が有効な範囲か。
+ * 手組の起点は beat: 0(= 0拍の表。1拍の表の1拍前)から始まる。
+ * 手組内の位置は start_ref.beat + rel_pos で決まるため、
+ * rel_pos: 0 の手を1拍目の表に置く手組では起点が 0 になる。
+ */
+export function isTeStartRefValid(
+  ref: BeatRef,
+  kusariSequence: KusariEntry[],
+): boolean {
+  const k = kusariSequence[ref.kusari_index];
+  if (!k) return false;
+  return ref.beat >= 0 && ref.beat <= slotCountOf(k.type);
+}
+
+/**
  * beat_ref をグローバル位置(拍単位、小数可)に変換する。
  * globalStartsは computeGlobalStarts の結果を渡す(呼び出し側でキャッシュ可能)。
  */
@@ -97,17 +112,18 @@ export function globalPosToBeatRef(
 }
 
 /**
- * グローバル拍番号(0-indexed の整数拍)を、その拍の表を指す beat_ref に変換する。
- * 編集グリッドのように「拍」単位で扱うUIから使う。
+ * グローバル拍番号(0-indexed の整数拍)を、その拍から始まる手組の start_ref に変換する。
+ * 編集グリッドで置いた拍を、手組の起点に直すために使う。
+ *   クサリのN拍目に置く → beat = (N - 1) * 2
  */
-export function globalBeatToBeatRef(
+export function globalBeatToTeStartRef(
   globalBeat: number,
   kusariSequence: KusariEntry[],
   globalStarts: number[],
 ): BeatRef | null {
   const local = globalBeatToKusariBeat(globalBeat, kusariSequence, globalStarts);
   if (!local) return null;
-  return { kusari_index: local.kusariIndex, beat: local.localBeat * 2 };
+  return { kusari_index: local.kusariIndex, beat: (local.localBeat - 1) * 2 };
 }
 
 /** グローバル拍番号(0-indexed) → クサリindexとクサリ内の拍番号(1始まり) */
@@ -128,8 +144,8 @@ export function globalBeatToKusariBeat(
 
 /**
  * 手組インスタンスが占める最初の拍のグローバル拍番号(0-indexed)。
- * 手組は拍(表)から始まる想定なので整数に丸めて返す。
+ * start_ref.beat は (クサリ内の拍 - 1) * 2 なので、2で割ればその拍に戻る。
  */
 export function teInstanceStartBeat(ref: BeatRef, globalStarts: number[]): number {
-  return Math.max(0, Math.floor(ref.beat / 2) - 1) + globalStarts[ref.kusari_index];
+  return Math.floor(ref.beat / 2) + globalStarts[ref.kusari_index];
 }

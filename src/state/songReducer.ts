@@ -2,7 +2,7 @@
 import type { BeatRef, KusariType, SongData, TeMaster } from "../types";
 import {
   computeGlobalStarts,
-  isBeatRefValid,
+  isTeStartRefValid,
   teInstanceStartBeat,
   totalBeats,
 } from "../logic/position";
@@ -169,7 +169,7 @@ function dropUnfittableTe(state: SongData, teMaster: TeMaster): SongData {
   const globalStarts = computeGlobalStarts(state.kusari_sequence);
   const total = totalBeats(state.kusari_sequence);
   const kept = track.te_instances.filter((ti) => {
-    if (!isBeatRefValid(ti.start_ref, state.kusari_sequence)) return false;
+    if (!isTeStartRefValid(ti.start_ref, state.kusari_sequence)) return false;
     const def = teMaster[ti.te_id];
     // マスタに無い手組は長さが分からないので、判断せずそのまま残す
     if (!def) return true;

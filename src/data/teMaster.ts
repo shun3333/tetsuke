@@ -1,6 +1,10 @@
 // 手組マスタ(te_master) — 小鼓のサンプルデータ
 // 楽器ごとに名前空間を分ける想定だが、今回は小鼓のみのためte_idをキーにフラットに持つ。
-// rel_pos は手組の頭からの相対位置を半拍単位で表す(0 = 頭の拍の表、1 = その裏、-1 = 頭の半拍前)。
+// rel_pos は手組の起点からの相対位置を半拍単位で表す。
+// 手付の上の位置は「絶対スロット = start_ref.beat + rel_pos」で決まり、
+// クサリのN拍目に置いた手組では start_ref.beat = (N-1)*2 になる。
+// つまり手組をN拍目に置くと rel_pos: 2 が N拍の表、rel_pos: 2k が (N+k-1)拍の表、
+// 奇数の rel_pos はその裏。rel_pos: 0 は N拍の1拍前(=前のクサリの最終拍)。
 import type { TeMaster } from "../types";
 
 export const kotsuzumiTeMaster: TeMaster = {
