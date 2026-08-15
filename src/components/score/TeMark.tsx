@@ -1,8 +1,6 @@
 // 手(打ち方)の記号。どの図形を描くかは手マスタの shape で決まる。
 import type { TeShape } from "../../types";
-
-/** 手付は白地の印刷物なので、中抜きの図形はこの色で塗って罫線を隠す */
-const PAPER_COLOR = "#ffffff";
+import { PAPER_COLOR } from "./paper";
 
 const RADIUS = 4.5;
 const SMALL_RADIUS = 2.8;

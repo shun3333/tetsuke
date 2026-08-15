@@ -1,6 +1,8 @@
 // 縦書きの短い文字列(謡・掛け声)の描画。
 // 謡は通常1文字1音だが、拗音や「ン」がつくと複数文字で1音になるため、
 // 「1音 = 1マス」に分けてから描く。
+import { PAPER_COLOR } from "./paper";
+
 const CHOON_LINE_RATIO = 0.85;
 const CHOON_LINE_WIDTH = 1.2;
 
@@ -19,9 +21,12 @@ const N_CHARS = new Set(["ン", "ん"]);
 /** 句点。謡では文字ではなく「ゴマ点」の印として描く */
 const KUTEN_CHARS = new Set(["。", "｡", "．", "."]);
 
-/** ゴマ点の半径(文字の大きさに対する比)と、扇の開き(度) */
+/** ゴマ点の半径(文字の大きさに対する比)と、扇の開き(度)・線の太さ */
 const GOMA_RADIUS_RATIO = 0.5;
 const GOMA_ANGLE_DEG = 70;
+const GOMA_STROKE_WIDTH = 1.2;
+/** 角の丸み(半径に対する比) */
+const GOMA_CORNER_RATIO = 0.22;
 
 /** 小書き文字の大きさ・位置(親文字のサイズに対する比) */
 const SMALL_KANA_SCALE = 0.68;
@@ -146,9 +151,10 @@ export function VerticalText({
 }
 
 /**
- * ゴマ点。句点の代わりに置く、塗りつぶしの扇形の点。
+ * ゴマ点。句点の代わりに置く、上側の辺が水平な扇形の印。
  * 扇の要(かなめ)を左上に置き、そこから右へ水平に開いて弧で閉じる。
- * 上側の辺が水平になり、右下が弧になる。
+ * 中は紙の色で塗り、下に重なる罫線が透けないようにする。
+ * 3つの角はそれぞれ手前で切って、二次曲線でつないで丸める。
  */
 function GomaTen({
   cx,
@@ -162,19 +168,45 @@ function GomaTen({
   color: string;
 }) {
   const r = size * GOMA_RADIUS_RATIO;
-  const rad = (GOMA_ANGLE_DEG * Math.PI) / 180;
+  const spread = (GOMA_ANGLE_DEG * Math.PI) / 180;
+  /** 角を丸めるために、角の手前で切る長さ */
+  const cut = r * GOMA_CORNER_RATIO;
+  /** 弧の側で切る角度(切る長さを弧長とみなす) */
+  const cutAngle = cut / r;
+
   // 扇全体が (cx, cy) を中心に来るよう、要の位置を左上へずらす
   const pivotX = cx - r / 2;
-  const pivotY = cy - (r * Math.sin(rad)) / 2;
+  const pivotY = cy - (r * Math.sin(spread)) / 2;
+  /** 要から見て、角度a・距離dの点 */
+  const at = (a: number, d: number) =>
+    `${pivotX + d * Math.cos(a)} ${pivotY + d * Math.sin(a)}`;
+
   const d = [
-    `M ${pivotX} ${pivotY}`,
+    `M ${at(0, cut)}`,
     // 上側の水平な辺
-    `L ${pivotX + r} ${pivotY}`,
+    `L ${at(0, r - cut)}`,
+    // 右上の角
+    `Q ${at(0, r)} ${at(cutAngle, r)}`,
     // 弧(右下へ)
-    `A ${r} ${r} 0 0 1 ${pivotX + r * Math.cos(rad)} ${pivotY + r * Math.sin(rad)}`,
+    `A ${r} ${r} 0 0 1 ${at(spread - cutAngle, r)}`,
+    // 弧の終わりの角
+    `Q ${at(spread, r)} ${at(spread, r - cut)}`,
+    // 要へ戻る辺
+    `L ${at(spread, cut)}`,
+    // 要の角
+    `Q ${at(0, 0)} ${at(0, cut)}`,
     "Z",
   ].join(" ");
-  return <path d={d} fill={color} />;
+
+  return (
+    <path
+      d={d}
+      fill={PAPER_COLOR}
+      stroke={color}
+      strokeWidth={GOMA_STROKE_WIDTH}
+      strokeLinejoin="round"
+    />
+  );
 }
 
 /** 1文字分のテキスト。指定座標を中心に置く */
