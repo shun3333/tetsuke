@@ -56,6 +56,9 @@ function nextTeId(master: TeMaster): string {
 export function TeMasterEditor({ teMaster, onChange }: Props) {
   const [instrument, setInstrument] = useState<Instrument>(INSTRUMENTS[0]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** ドラッグ中の手組と、いま重なっている手組 */
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const entries = teMaster[instrument];
@@ -98,14 +101,35 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
     setSelectedId(id);
   }
 
-  /** 一覧の中で手組を前後に動かす */
-  function moveTe(id: string, delta: number) {
+  /** 一覧の中で手組をその位置へ動かす */
+  function moveTeTo(id: string, to: number) {
     const ids = Object.keys(entries);
     const from = ids.indexOf(id);
-    const to = from + delta;
-    if (from < 0 || to < 0 || to >= ids.length) return;
+    if (from < 0 || to < 0 || to >= ids.length || from === to) return;
     ids.splice(to, 0, ...ids.splice(from, 1));
     onChange({ ...teMaster, [instrument]: reorderByIds(entries, ids) });
+  }
+
+  /** 一覧の中で手組を前後に動かす */
+  function moveTe(id: string, delta: number) {
+    moveTeTo(id, Object.keys(entries).indexOf(id) + delta);
+  }
+
+  /** ドラッグしていた手組を、重ねた手組の位置へ移す */
+  function dropOn(targetId: string) {
+    if (dragId && dragId !== targetId) {
+      moveTeTo(dragId, Object.keys(entries).indexOf(targetId));
+    }
+    setDragId(null);
+    setOverId(null);
+  }
+
+  /** 落とす位置を上下どちらで示すか。動かす向きで決まる */
+  function dropClass(id: string): string {
+    if (!dragId || dragId === id) return dragId === id ? " dragging" : "";
+    if (overId !== id) return "";
+    const ids = Object.keys(entries);
+    return ids.indexOf(dragId) < ids.indexOf(id) ? " drop-below" : " drop-above";
   }
 
   function removeTe(id: string) {
@@ -203,7 +227,34 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
       <div className="master-body">
         <div className="master-list">
           {Object.values(entries).map((te, i, all) => (
-            <div key={te.te_id} className="master-list-row">
+            <div
+              key={te.te_id}
+              className={"master-list-row" + dropClass(te.te_id)}
+              draggable
+              onDragStart={(e) => {
+                setDragId(te.te_id);
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", te.te_id);
+              }}
+              onDragEnd={() => {
+                setDragId(null);
+                setOverId(null);
+              }}
+              onDragOver={(e) => {
+                if (!dragId) return;
+                // 既定の動作(受け付けない)を止めないと、落とせない
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                setOverId(te.te_id);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                dropOn(te.te_id);
+              }}
+            >
+              <span className="master-list-handle" title="ドラッグで並べ替え">
+                ⋮⋮
+              </span>
               <button
                 type="button"
                 className={

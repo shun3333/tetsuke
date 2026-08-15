@@ -890,11 +890,36 @@ table.timeline-grid {
   color: #cc2222;
 }
 
-/* 手組の一覧の1行(選択ボタン + 並べ替え) */
+/* 手組の一覧の1行(つまみ + 選択ボタン + 並べ替え) */
 .master-list-row {
   display: flex;
   align-items: stretch;
   gap: 2px;
+}
+
+/* ドラッグで並べ替えるためのつまみ */
+.master-list-handle {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+.master-list-row.dragging {
+  opacity: 0.4;
+}
+
+/* 落とす位置を、その手組の上か下かで示す */
+.master-list-row.drop-above .master-list-item {
+  box-shadow: inset 0 3px 0 var(--accent);
+}
+
+.master-list-row.drop-below .master-list-item {
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 
 .master-list-row .master-list-item {
@@ -964,11 +989,18 @@ table.te-timeline {
   height: 28px;
   border: none;
   outline: none;
-  background: transparent;
+  background: var(--bg);
   color: var(--text-h);
   text-align: center;
   font-size: 13px;
   padding: 0;
+}
+
+/* 開いたときの一覧は背景を引き継がないので、色を明示しておく
+   (これを省くと、暗い配色のときに白地に白文字で読めなくなる) */
+.te-timeline-select option {
+  background: var(--bg);
+  color: var(--text-h);
 }
 
 .te-timeline-select:focus,
