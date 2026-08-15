@@ -84,20 +84,21 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
     });
   }
 
+  /** 選んでいる手組のすぐ下に足す。選んでいなければ一番下 */
   function addTe() {
     const id = nextTeId(entries);
-    onChange({
-      ...teMaster,
-      [instrument]: {
-        ...entries,
-        [id]: {
-          te_id: id,
-          label: "新しい手組",
-          instrument,
-          internal_pattern: { length: 4, kakegoe: [], hits: [] },
-        },
+    const added: TeMaster = {
+      ...entries,
+      [id]: {
+        te_id: id,
+        label: "新しい手組",
+        instrument,
+        internal_pattern: { length: 4, kakegoe: [], hits: [] },
       },
-    });
+    };
+    const ids = Object.keys(entries);
+    ids.splice(currentId ? ids.indexOf(currentId) + 1 : ids.length, 0, id);
+    onChange({ ...teMaster, [instrument]: reorderByIds(added, ids) });
     setSelectedId(id);
   }
 
