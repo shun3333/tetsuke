@@ -762,6 +762,19 @@ table.timeline-grid {
   gap: 6px;
 }
 
+/* 一覧が長くなっても画面が伸びないよう、ここだけスクロールさせる。
+   「+ 手組を追加」はこの外に置き、常に見えるようにしている */
+.master-list-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+  /* 選択枠や落とす位置の線が、スクロールバーに隠れないように */
+  padding: 2px;
+  margin: -2px;
+}
+
 .master-list-item {
   display: flex;
   flex-direction: column;

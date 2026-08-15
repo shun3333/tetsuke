@@ -226,70 +226,73 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
 
       <div className="master-body">
         <div className="master-list">
-          {Object.values(entries).map((te, i, all) => (
-            <div
-              key={te.te_id}
-              className={"master-list-row" + dropClass(te.te_id)}
-              draggable
-              onDragStart={(e) => {
-                setDragId(te.te_id);
-                e.dataTransfer.effectAllowed = "move";
-                e.dataTransfer.setData("text/plain", te.te_id);
-              }}
-              onDragEnd={() => {
-                setDragId(null);
-                setOverId(null);
-              }}
-              onDragOver={(e) => {
-                if (!dragId) return;
-                // 既定の動作(受け付けない)を止めないと、落とせない
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
-                setOverId(te.te_id);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                dropOn(te.te_id);
-              }}
-            >
-              <span className="master-list-handle" title="ドラッグで並べ替え">
-                ⋮⋮
-              </span>
-              <button
-                type="button"
-                className={
-                  "master-list-item" +
-                  (te.te_id === currentId ? " selected" : "")
-                }
-                onClick={() => setSelectedId(te.te_id)}
+          {/* 手組が増えても縦に伸び続けないよう、一覧だけスクロールさせる */}
+          <div className="master-list-scroll">
+            {Object.values(entries).map((te, i, all) => (
+              <div
+                key={te.te_id}
+                className={"master-list-row" + dropClass(te.te_id)}
+                draggable
+                onDragStart={(e) => {
+                  setDragId(te.te_id);
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", te.te_id);
+                }}
+                onDragEnd={() => {
+                  setDragId(null);
+                  setOverId(null);
+                }}
+                onDragOver={(e) => {
+                  if (!dragId) return;
+                  // 既定の動作(受け付けない)を止めないと、落とせない
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                  setOverId(te.te_id);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  dropOn(te.te_id);
+                }}
               >
-                <span className="te-name">{te.label}</span>
-                <span className="te-length">
-                  {te.internal_pattern.length}拍 / {te.te_id}
+                <span className="master-list-handle" title="ドラッグで並べ替え">
+                  ⋮⋮
                 </span>
-              </button>
-              <div className="master-list-move">
                 <button
                   type="button"
-                  className="chip-remove"
-                  title="1つ上へ移動"
-                  disabled={i === 0}
-                  onClick={() => moveTe(te.te_id, -1)}
+                  className={
+                    "master-list-item" +
+                    (te.te_id === currentId ? " selected" : "")
+                  }
+                  onClick={() => setSelectedId(te.te_id)}
                 >
-                  ↑
+                  <span className="te-name">{te.label}</span>
+                  <span className="te-length">
+                    {te.internal_pattern.length}拍 / {te.te_id}
+                  </span>
                 </button>
-                <button
-                  type="button"
-                  className="chip-remove"
-                  title="1つ下へ移動"
-                  disabled={i === all.length - 1}
-                  onClick={() => moveTe(te.te_id, 1)}
-                >
-                  ↓
-                </button>
+                <div className="master-list-move">
+                  <button
+                    type="button"
+                    className="chip-remove"
+                    title="1つ上へ移動"
+                    disabled={i === 0}
+                    onClick={() => moveTe(te.te_id, -1)}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="chip-remove"
+                    title="1つ下へ移動"
+                    disabled={i === all.length - 1}
+                    onClick={() => moveTe(te.te_id, 1)}
+                  >
+                    ↓
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
           <button type="button" className="kusari-add" onClick={addTe}>
             + 手組を追加
           </button>
