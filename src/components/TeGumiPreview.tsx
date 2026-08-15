@@ -8,6 +8,7 @@ import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 import { VerticalText } from "./score/VerticalText";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
+import { timingOffsetY } from "./score/timing";
 
 interface Props {
   pattern: InternalPattern;
@@ -115,7 +116,7 @@ export function TeGumiPreview({ pattern, instrument }: Props) {
           <TeMark
             key={i}
             cx={cx}
-            cy={posY(hit.rel_pos)}
+            cy={posY(hit.rel_pos) + timingOffsetY(hit.timing, BEAT_HEIGHT)}
             shape={glyph.shape}
             color={color}
             label={glyph.label}

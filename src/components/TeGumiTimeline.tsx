@@ -6,7 +6,15 @@
 //
 // 枠の数は「長さ×2 + 1」。長さ×2 が最後の表拍(= 長さ拍の表)にあたり、
 // 既存の手組はそこに手を置いているため、その1枠を含める。
-import type { HitEntry, InternalPattern, TeGlyph } from "../types";
+import {
+  TIMINGS,
+  TIMING_LABEL,
+  TIMING_SIGN,
+  type HitEntry,
+  type InternalPattern,
+  type TeGlyph,
+  type Timing,
+} from "../types";
 
 interface Props {
   pattern: InternalPattern;
@@ -49,6 +57,15 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
     onChange({ hits: next.sort((a, b) => a.rel_pos - b.rel_pos) });
   }
 
+  /** 手を少し前・少し後にずらして描くかどうか */
+  function setTiming(relPos: number, timing: Timing) {
+    onChange({
+      hits: pattern.hits.map((h) =>
+        h.rel_pos === relPos ? { ...h, timing } : h,
+      ),
+    });
+  }
+
   return (
     <div className="te-timeline-wrap">
       <table className="te-timeline">
@@ -87,6 +104,32 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
             ))}
           </tr>
           <tr>
+            <th className="row-label">打ち方</th>
+            {slots.map((slot) => {
+              const hit = hitAt.get(slot);
+              return (
+                <td key={slot} className="te-timeline-cell">
+                  {hit && (
+                    <select
+                      className="te-timeline-select"
+                      value={hit.timing}
+                      title={`打ち方: ${TIMING_LABEL[hit.timing]}`}
+                      onChange={(e) =>
+                        setTiming(slot, e.target.value as Timing)
+                      }
+                    >
+                      {TIMINGS.map((t) => (
+                        <option key={t} value={t} title={TIMING_LABEL[t]}>
+                          {TIMING_SIGN[t]}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </td>
+              );
+            })}
+          </tr>
+          <tr>
             <th className="row-label">掛け声</th>
             {slots.map((slot) => (
               <td key={slot} className="te-timeline-cell">
@@ -100,6 +143,12 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
           </tr>
         </tbody>
       </table>
+      <p className="te-timeline-note hint">
+        打ち方は {TIMING_SIGN.slightly_early} が{" "}
+        {TIMING_LABEL.slightly_early}、{TIMING_SIGN.on} が {TIMING_LABEL.on}、
+        {TIMING_SIGN.slightly_late} が {TIMING_LABEL.slightly_late}
+        (手を少し上下にずらして描きます)。
+      </p>
       {outside > 0 && (
         <p className="te-timeline-note">
           この表に収まらない位置のものが{outside}件あります。長さを伸ばすと編集できます。

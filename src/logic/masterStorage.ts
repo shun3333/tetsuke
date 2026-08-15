@@ -4,6 +4,7 @@
 // 読むときは形を確かめてから使う(合わなければ既定のマスタに戻す)。
 import {
   INSTRUMENTS,
+  TIMINGS,
   type GuideEntry,
   type GuideShape,
   type HitEntry,
@@ -12,7 +13,6 @@ import {
   type KakegoeEntry,
   type TeMaster,
   type TeMasterEntry,
-  type Timing,
 } from "../types";
 import { TE_MASTER } from "../data/teMaster";
 import {
@@ -27,7 +27,6 @@ import {
 
 const STORAGE_KEY = "tetsuke:te-master";
 
-const TIMINGS: readonly Timing[] = ["on", "slightly_early", "slightly_late"];
 const GUIDE_SHAPES: readonly GuideShape[] = ["straight", "bent"];
 
 export type TeMasterByInstrument = Record<Instrument, TeMaster>;

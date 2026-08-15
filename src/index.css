@@ -1027,6 +1027,11 @@ table.te-timeline {
   color: #cc2222;
 }
 
+/* 読み方の説明。注意書きではないので、目立たない色にする */
+.te-timeline-note.hint {
+  color: var(--text);
+}
+
 /* プレビューは手付と同じく、画面のテーマに関わらず白地に黒線で描く。
    入力しながら見えるよう、スクロールしても付いてくるようにする */
 .master-preview {

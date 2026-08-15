@@ -31,6 +31,27 @@ export interface KusariEntry {
 /** hitsの微妙なタイミングを表す質的タグ */
 export type Timing = "on" | "slightly_early" | "slightly_late";
 
+/** 打ち方の選択肢。早い順に並べてある */
+export const TIMINGS: readonly Timing[] = [
+  "slightly_early",
+  "on",
+  "slightly_late",
+];
+
+/** 画面に出す打ち方の名前 */
+export const TIMING_LABEL: Record<Timing, string> = {
+  slightly_early: "少し前",
+  on: "ちょうど",
+  slightly_late: "少し後",
+};
+
+/** 一覧の枠に収まるよう、打ち方を1文字で表したもの */
+export const TIMING_SIGN: Record<Timing, string> = {
+  slightly_early: "↑",
+  on: "－",
+  slightly_late: "↓",
+};
+
 /**
  * 手(打ち方)のID。楽器ごとに定義される。
  * 小鼓は プ / ポ / チ / タ の4種類。

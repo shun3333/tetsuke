@@ -11,6 +11,7 @@ import {
   KUSARI_BEAT_COUNT,
   type Instrument,
   type KusariEntry,
+  TIMINGS,
   type SongData,
   type TeMaster,
   type Timing,
@@ -29,6 +30,7 @@ import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 import { VerticalText } from "./score/VerticalText";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
+import { timingOffsetY } from "./score/timing";
 
 interface Props {
   song: SongData;
@@ -98,11 +100,9 @@ const TE_LABEL_BAND_PAD = 6;
 /** 補助線と重なる掛け声を、右にずらす量 */
 const KAKEGOE_GUIDE_DX = 6;
 
-const TIMING_Y_OFFSET: Record<Timing, number> = {
-  slightly_early: -BEAT_HEIGHT * 0.18,
-  on: 0,
-  slightly_late: BEAT_HEIGHT * 0.18,
-};
+const TIMING_Y_OFFSET: Record<Timing, number> = Object.fromEntries(
+  TIMINGS.map((t) => [t, timingOffsetY(t, BEAT_HEIGHT)]),
+) as Record<Timing, number>;
 
 /** 拍単位オフセット(0 = 1拍目の横線)→ y座標 */
 const offsetY = (offset: number) => GRID_TOP + TOP_PAD + offset * BEAT_HEIGHT;
