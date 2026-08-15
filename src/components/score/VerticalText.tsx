@@ -16,6 +16,13 @@ const SMALL_KANA = new Set([
 /** 前の音にくっつけて発音する「ン」 */
 const N_CHARS = new Set(["ン", "ん"]);
 
+/** 句点。謡では文字ではなく「ゴマ点」の印として描く */
+const KUTEN_CHARS = new Set(["。", "｡", "．", "."]);
+
+/** ゴマ点の大きさ(文字の大きさに対する比)と傾き */
+const GOMA_WIDTH_RATIO = 0.42;
+const GOMA_HEIGHT_RATIO = 0.4;
+
 /** 小書き文字の大きさ・位置(親文字のサイズに対する比) */
 const SMALL_KANA_SCALE = 0.68;
 const SMALL_KANA_DX = 0.51;
@@ -89,6 +96,10 @@ export function VerticalText({
       {units.map((unit, i) => {
         const y = firstY + i * charHeight;
 
+        if (KUTEN_CHARS.has(unit.base)) {
+          return <GomaTen key={i} cx={cx} cy={y} size={fontSize} color={color} />;
+        }
+
         if (CHOON_CHARS.has(unit.base)) {
           const half = (charHeight * CHOON_LINE_RATIO) / 2;
           return (
@@ -132,6 +143,33 @@ export function VerticalText({
       })}
     </g>
   );
+}
+
+/**
+ * ゴマ点。句点の代わりに置く、ごまのような形の塗りつぶしの点。
+ * 左上が太く、右下に向かって細くなる。
+ */
+function GomaTen({
+  cx,
+  cy,
+  size,
+  color,
+}: {
+  cx: number;
+  cy: number;
+  size: number;
+  color: string;
+}) {
+  const w = size * GOMA_WIDTH_RATIO;
+  const h = size * GOMA_HEIGHT_RATIO;
+  // 左上の端から右下の先端へ、ふくらみを付けて往復する
+  const d = [
+    `M ${cx - w} ${cy - h}`,
+    `Q ${cx + w} ${cy - h * 0.5} ${cx + w * 0.6} ${cy + h}`,
+    `Q ${cx - w * 0.3} ${cy + h * 0.1} ${cx - w} ${cy - h}`,
+    "Z",
+  ].join(" ");
+  return <path d={d} fill={color} />;
 }
 
 /** 1文字分のテキスト。指定座標を中心に置く */
