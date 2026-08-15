@@ -22,8 +22,8 @@ const N_CHARS = new Set(["ン", "ん"]);
 const KUTEN_CHARS = new Set(["。", "｡", "．", "."]);
 
 /** ゴマ点の半径(文字の大きさに対する比)と、扇の開き(度)・線の太さ */
-const GOMA_RADIUS_RATIO = 0.5;
-const GOMA_ANGLE_DEG = 70;
+const GOMA_RADIUS_RATIO = 0.7;
+const GOMA_ANGLE_DEG = 40;
 const GOMA_STROKE_WIDTH = 1.2;
 /** 角の丸み(半径に対する比) */
 const GOMA_CORNER_RATIO = 0.22;
