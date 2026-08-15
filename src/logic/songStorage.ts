@@ -15,7 +15,7 @@ export function loadStoredSong(): SongData | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw === null) return null;
     const result = parseSongJson(raw);
-    return result.ok ? result.song : null;
+    return result.ok ? result.value : null;
   } catch {
     return null;
   }

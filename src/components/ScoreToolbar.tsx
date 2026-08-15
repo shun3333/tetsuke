@@ -40,7 +40,7 @@ export function ScoreToolbar({ song, dispatch }: Props) {
       window.alert(`読み込めませんでした。\n${result.error}`);
       return;
     }
-    replaceSong(result.song, "読み込みますか？");
+    replaceSong(result.value, "読み込みますか？");
   }
 
   return (

@@ -14,17 +14,22 @@ export function songToJson(song: SongData): string {
   return `${JSON.stringify(song, null, 2)}\n`;
 }
 
-/** 曲データをJSONファイルとして保存する */
-export function saveSongAsJson(song: SongData): void {
+/** JSONの文字列をファイルとしてダウンロードさせる */
+export function downloadJson(content: string, filename: string): void {
   const url = URL.createObjectURL(
-    new Blob([songToJson(song)], { type: "application/json" }),
+    new Blob([content], { type: "application/json" }),
   );
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${safeFileName(song.song_id)}.json`;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();
   // すぐに解放するとダウンロードが始まらない場合があるため少し待つ
   setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+/** 曲データをJSONファイルとして保存する */
+export function saveSongAsJson(song: SongData): void {
+  downloadJson(songToJson(song), `${safeFileName(song.song_id)}.json`);
 }

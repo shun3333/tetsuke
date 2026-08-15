@@ -684,3 +684,202 @@ table.timeline-grid {
     border: none;
   }
 }
+
+/* 画面の切り替えタブ(手付 / 手組マスタ) */
+.app-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tab-button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tab-button.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 手組マスタの編集画面 */
+.master-pane {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.master-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.master-instrument-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 14px;
+}
+
+/* 左に手組の一覧、右に選んだ手組の中身 */
+.master-body {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .master-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.master-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.master-list-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text-h);
+  text-align: left;
+}
+
+.master-list-item.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.master-list-item .te-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.master-list-item .te-length {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.master-empty {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.master-detail > * + * {
+  margin-top: 18px;
+}
+
+.master-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.master-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.master-fields input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-h);
+  width: 150px;
+}
+
+.master-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.master-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.master-row select,
+.master-row .master-text {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.master-row .master-text {
+  width: 70px;
+}
+
+/* 半拍単位の位置。数字だけでは分かりにくいので読み方を添える */
+.master-position {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.master-position input {
+  width: 60px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.master-position-hint {
+  font-size: 11px;
+  color: var(--text);
+  min-width: 62px;
+}
+
+.master-remove {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.master-remove:hover {
+  border-color: #cc2222;
+  color: #cc2222;
+}

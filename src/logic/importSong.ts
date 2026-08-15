@@ -14,21 +14,16 @@ import {
   type UtaiChar,
   type UtaiContent,
 } from "../types";
+import {
+  isRecord,
+  parseJson,
+  readArray,
+  readInteger,
+  readString,
+  type ParseResult,
+} from "./jsonRead";
 
-export type ImportResult =
-  | { ok: true; song: SongData }
-  | { ok: false; error: string };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function readInteger(value: unknown, where: string): number {
-  if (typeof value !== "number" || !Number.isInteger(value)) {
-    throw new Error(`${where} が整数ではありません`);
-  }
-  return value;
-}
+export type ImportResult = ParseResult<SongData>;
 
 function readBeatRef(value: unknown, where: string): BeatRef {
   if (!isRecord(value)) throw new Error(`${where} がオブジェクトではありません`);
@@ -39,9 +34,9 @@ function readBeatRef(value: unknown, where: string): BeatRef {
 }
 
 function readKusariSequence(value: unknown): KusariEntry[] {
-  if (!Array.isArray(value)) throw new Error("kusari_sequence が配列ではありません");
-  if (value.length === 0) throw new Error("kusari_sequence が空です");
-  return value.map((entry, i) => {
+  const list = readArray(value, "kusari_sequence");
+  if (list.length === 0) throw new Error("kusari_sequence が空です");
+  return list.map((entry, i) => {
     if (!isRecord(entry)) {
       throw new Error(`kusari_sequence[${i}] がオブジェクトではありません`);
     }
@@ -56,17 +51,11 @@ function readKusariSequence(value: unknown): KusariEntry[] {
 }
 
 function readTeInstances(value: unknown, where: Instrument): TeInstance[] {
-  if (!Array.isArray(value)) {
-    throw new Error(`${where}.te_instances が配列ではありません`);
-  }
-  return value.map((entry, i) => {
+  return readArray(value, `${where}.te_instances`).map((entry, i) => {
     const at = `${where}.te_instances[${i}]`;
     if (!isRecord(entry)) throw new Error(`${at} がオブジェクトではありません`);
-    if (typeof entry.te_id !== "string" || entry.te_id === "") {
-      throw new Error(`${at}.te_id が文字列ではありません`);
-    }
     return {
-      te_id: entry.te_id,
+      te_id: readString(entry.te_id, `${at}.te_id`),
       start_ref: readBeatRef(entry.start_ref, `${at}.start_ref`),
     };
   });
@@ -82,8 +71,7 @@ function readUtaiContent(value: unknown, where: string): UtaiContent {
 }
 
 function readUtaiChars(value: unknown): UtaiChar[] {
-  if (!Array.isArray(value)) throw new Error("chars が配列ではありません");
-  return value.map((entry, i) => {
+  return readArray(value, "chars").map((entry, i) => {
     if (!isRecord(entry)) {
       throw new Error(`chars[${i}] がオブジェクトではありません`);
     }
@@ -120,27 +108,12 @@ function readTracks(value: unknown): SongData["tracks"] {
  * 形が合わない場合は、どこが問題かを添えて返す。
  */
 export function parseSongJson(text: string): ImportResult {
-  let raw: unknown;
-  try {
-    raw = JSON.parse(text);
-  } catch {
-    return { ok: false, error: "JSONとして読めませんでした" };
-  }
-
-  try {
+  return parseJson(text, (raw) => {
     if (!isRecord(raw)) throw new Error("中身がオブジェクトではありません");
-    if (typeof raw.song_id !== "string" || raw.song_id === "") {
-      throw new Error("song_id が文字列ではありません");
-    }
     return {
-      ok: true,
-      song: {
-        song_id: raw.song_id,
-        kusari_sequence: readKusariSequence(raw.kusari_sequence),
-        tracks: readTracks(raw.tracks),
-      },
+      song_id: readString(raw.song_id, "song_id"),
+      kusari_sequence: readKusariSequence(raw.kusari_sequence),
+      tracks: readTracks(raw.tracks),
     };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
+  });
 }
