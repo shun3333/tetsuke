@@ -8,7 +8,7 @@ import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 import { VerticalText } from "./score/VerticalText";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
-import { timingOffsetY } from "./score/timing";
+import { timingOffsetY } from "../logic/timing";
 
 interface Props {
   pattern: InternalPattern;
@@ -90,8 +90,8 @@ export function TeGumiPreview({ pattern, instrument }: Props) {
         <GuideMark
           key={i}
           cx={cx}
-          y1={posY(guide.from_pos)}
-          y2={posY(guide.to_pos)}
+          y1={posY(guide.from_pos) + timingOffsetY(guide.from_timing ?? "on", BEAT_HEIGHT)}
+          y2={posY(guide.to_pos) + timingOffsetY(guide.to_timing ?? "on", BEAT_HEIGHT)}
           shape={guide.shape}
           color={color}
         />

@@ -2,7 +2,7 @@
 //
 // ずれ幅は1拍の高さに対する比で持つ。手付の出力とプレビューでは
 // 1拍の高さが違うため、それぞれの高さに掛けて使う。
-import type { Timing } from "../../types";
+import type { Timing } from "../types";
 
 export const TIMING_OFFSET_RATIO: Record<Timing, number> = {
   slightly_early: -0.18,

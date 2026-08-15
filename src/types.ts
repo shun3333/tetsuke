@@ -116,6 +116,13 @@ export interface GuideEntry {
   from_pos: number;
   to_pos: number;
   shape: GuideShape;
+  /**
+   * 端を上下に少しずらして引くかどうか。手と同じ打ち方で表す。
+   * 繋ぐ手をずらしているときに、線の端もそれに合わせるために使う。
+   * 省略時は "on"(ずらさない)。
+   */
+  from_timing?: Timing;
+  to_timing?: Timing;
 }
 
 /** 手組の内部パターン(掛け声・手・補助線・長さ) */

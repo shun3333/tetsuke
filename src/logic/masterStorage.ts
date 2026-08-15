@@ -13,6 +13,7 @@ import {
   type KakegoeEntry,
   type TeMaster,
   type TeMasterEntry,
+  type Timing,
 } from "../types";
 import { TE_MASTER } from "../data/teMaster";
 import {
@@ -54,7 +55,14 @@ function readGuide(value: unknown, where: string): GuideEntry {
     from_pos: readInteger(value.from_pos, `${where}.from_pos`),
     to_pos: readInteger(value.to_pos, `${where}.to_pos`),
     shape: readEnum(value.shape, GUIDE_SHAPES, `${where}.shape`),
+    from_timing: readTiming(value.from_timing, `${where}.from_timing`),
+    to_timing: readTiming(value.to_timing, `${where}.to_timing`),
   };
+}
+
+/** 端のずらし方は無くてもよい(古いデータには入っていない) */
+function readTiming(value: unknown, where: string): Timing | undefined {
+  return value === undefined ? undefined : readEnum(value, TIMINGS, where);
 }
 
 function readPattern(value: unknown, where: string): InternalPattern {

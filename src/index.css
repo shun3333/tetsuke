@@ -882,6 +882,21 @@ table.timeline-grid {
   color: var(--text-h);
 }
 
+/* 端を上下にずらす量(手の打ち方と同じ↑－↓) */
+.master-position-timing {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 2px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.master-position-timing option {
+  background: var(--bg);
+  color: var(--text-h);
+}
+
 .master-position-hint {
   font-size: 11px;
   color: var(--text);

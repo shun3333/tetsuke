@@ -30,7 +30,7 @@ import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 import { VerticalText } from "./score/VerticalText";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
-import { timingOffsetY } from "./score/timing";
+import { timingOffsetY } from "../logic/timing";
 
 interface Props {
   song: SongData;

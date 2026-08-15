@@ -17,6 +17,7 @@ import {
   isBeatRefValid,
   slotToLocalOffset,
 } from "./position";
+import { TIMING_OFFSET_RATIO } from "./timing";
 
 /** 謡の1枠 */
 export interface UtaiCell {
@@ -167,7 +168,13 @@ function buildTeItems(
       const to = place(guide.to_pos);
       if (!from || !to) return;
       const key = `guide-${instanceIndex}-${i}`;
-      for (const seg of splitAcrossKusari(from, to, song)) {
+      // 端のずらしは拍単位のオフセットに足しておく。こうすると
+      // クサリの境目で切る処理にも、そのまま乗る
+      const ends = {
+        from: { ...from, offset: from.offset + timingOffset(guide.from_timing) },
+        to: { ...to, offset: to.offset + timingOffset(guide.to_timing) },
+      };
+      for (const seg of splitAcrossKusari(ends.from, ends.to, song)) {
         pushTo(guidesByKusari, seg.kusariIndex, {
           key: `${key}-${seg.kusariIndex}`,
           fromOffset: seg.fromOffset,
@@ -181,6 +188,11 @@ function buildTeItems(
 
   markKakegoeOnGuides(kakegoeByKusari, guidesByKusari);
   return { kakegoeByKusari, hitsByKusari, guidesByKusari, labelsByKusari };
+}
+
+/** 打ち方による上下のずれ。拍単位のオフセットと同じ単位で返す */
+function timingOffset(timing: Timing | undefined): number {
+  return TIMING_OFFSET_RATIO[timing ?? "on"];
 }
 
 /** 補助線1本分の、1つのクサリの枠に収まる区間 */

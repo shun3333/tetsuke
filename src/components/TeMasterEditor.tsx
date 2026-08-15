@@ -8,11 +8,15 @@ import { useRef, useState } from "react";
 import {
   INSTRUMENTS,
   INSTRUMENT_LABEL,
+  TIMINGS,
+  TIMING_LABEL,
+  TIMING_SIGN,
   type GuideEntry,
   type GuideShape,
   type Instrument,
   type TeMaster,
   type TeMasterEntry,
+  type Timing,
 } from "../types";
 import { TE_GLYPH_MASTER } from "../data/instruments";
 import { TeGumiTimeline } from "./TeGumiTimeline";
@@ -354,10 +358,14 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                   <PositionInput
                     value={guide.from_pos}
                     onChange={(from_pos) => set({ ...guide, from_pos })}
+                    timing={guide.from_timing ?? "on"}
+                    onTimingChange={(from_timing) => set({ ...guide, from_timing })}
                   />
                   <PositionInput
                     value={guide.to_pos}
                     onChange={(to_pos) => set({ ...guide, to_pos })}
+                    timing={guide.to_timing ?? "on"}
+                    onTimingChange={(to_timing) => set({ ...guide, to_timing })}
                   />
                   <select
                     value={guide.shape}
@@ -397,13 +405,20 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
   );
 }
 
-/** 半拍単位の位置の入力欄。読み方を横に添える */
+/**
+ * 半拍単位の位置の入力欄。読み方を横に添える。
+ * 手と同じように、そこから少し上下にずらすことができる。
+ */
 function PositionInput({
   value,
   onChange,
+  timing,
+  onTimingChange,
 }: {
   value: number;
   onChange: (value: number) => void;
+  timing: Timing;
+  onTimingChange: (timing: Timing) => void;
 }) {
   return (
     <span className="master-position">
@@ -412,6 +427,18 @@ function PositionInput({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       />
+      <select
+        className="master-position-timing"
+        value={timing}
+        title={`ずらし方: ${TIMING_LABEL[timing]}`}
+        onChange={(e) => onTimingChange(e.target.value as Timing)}
+      >
+        {TIMINGS.map((t) => (
+          <option key={t} value={t} title={TIMING_LABEL[t]}>
+            {TIMING_SIGN[t]}
+          </option>
+        ))}
+      </select>
       <span className="master-position-hint">{positionLabel(value)}</span>
     </span>
   );
