@@ -10,13 +10,14 @@ import {
   INSTRUMENT_LABEL,
   type GuideEntry,
   type GuideShape,
-  type HitEntry,
   type Instrument,
-  type KakegoeEntry,
   type TeMaster,
   type TeMasterEntry,
 } from "../types";
 import { TE_GLYPH_MASTER } from "../data/instruments";
+import { TeGumiTimeline } from "./TeGumiTimeline";
+import { clampToLength } from "../logic/tePattern";
+import { TeGumiPreview } from "./TeGumiPreview";
 import { downloadJson } from "../logic/exportSong";
 import {
   defaultTeMaster,
@@ -263,9 +264,13 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                   type="number"
                   min={1}
                   value={current.internal_pattern.length}
-                  onChange={(e) =>
-                    updatePattern({ length: Math.max(1, Number(e.target.value)) })
-                  }
+                  onChange={(e) => {
+                    const length = Math.max(1, Number(e.target.value));
+                    updatePattern({
+                      length,
+                      ...clampToLength(current.internal_pattern, length),
+                    });
+                  }}
                 />
               </label>
               <label>
@@ -278,50 +283,20 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
               </label>
             </div>
 
-            <EntryList<HitEntry>
-              title="手"
-              items={current.internal_pattern.hits}
-              onChange={(hits) => updatePattern({ hits })}
-              create={() => ({ rel_pos: 0, timing: "on", te: teNames[0].te })}
-              render={(hit, set) => (
-                <>
-                  <PositionInput
-                    value={hit.rel_pos}
-                    onChange={(rel_pos) => set({ ...hit, rel_pos })}
-                  />
-                  <select
-                    value={hit.te}
-                    onChange={(e) => set({ ...hit, te: e.target.value })}
-                  >
-                    {teNames.map((g) => (
-                      <option key={g.te} value={g.te}>
-                        {g.label}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-            />
-
-            <EntryList<KakegoeEntry>
-              title="掛け声"
-              items={current.internal_pattern.kakegoe}
-              onChange={(kakegoe) => updatePattern({ kakegoe })}
-              create={() => ({ rel_pos: 0, text: "ヤ" })}
-              render={(kg, set) => (
-                <>
-                  <PositionInput
-                    value={kg.rel_pos}
-                    onChange={(rel_pos) => set({ ...kg, rel_pos })}
-                  />
-                  <input
-                    className="master-text"
-                    value={kg.text}
-                    onChange={(e) => set({ ...kg, text: e.target.value })}
-                  />
-                </>
-              )}
-            />
+            <div className="master-timeline-row">
+              <TeGumiTimeline
+                pattern={current.internal_pattern}
+                teNames={teNames}
+                onChange={updatePattern}
+              />
+              <div className="master-preview">
+                <h3 className="master-group-title">プレビュー</h3>
+                <TeGumiPreview
+                  pattern={current.internal_pattern}
+                  instrument={instrument}
+                />
+              </div>
+            </div>
 
             <EntryList<GuideEntry>
               title="補助線"

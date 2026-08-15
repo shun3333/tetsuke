@@ -907,3 +907,100 @@ table.timeline-grid {
   line-height: 1.2;
   font-size: 12px;
 }
+
+/* 手組編集用のタイムラインとプレビュー */
+.master-timeline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.te-timeline-wrap {
+  overflow-x: auto;
+}
+
+table.te-timeline {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: min-content;
+  font-size: 13px;
+}
+
+.te-timeline th,
+.te-timeline td {
+  border: 1px solid var(--border);
+  height: 30px;
+  padding: 0;
+  text-align: center;
+}
+
+.te-timeline .row-label {
+  width: 52px;
+  font-size: 12px;
+  color: var(--text);
+  padding: 0 4px;
+}
+
+/* 半拍ごとの枠。表の枠に拍数を出す */
+.te-timeline-beat {
+  width: 34px;
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.te-timeline-beat.omote {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.te-timeline-cell {
+  width: 34px;
+}
+
+.te-timeline-select,
+.te-timeline-input {
+  width: 100%;
+  height: 28px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-h);
+  text-align: center;
+  font-size: 13px;
+  padding: 0;
+}
+
+.te-timeline-select:focus,
+.te-timeline-input:focus {
+  background: var(--accent-bg);
+}
+
+.te-timeline-note {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #cc2222;
+}
+
+/* プレビューは手付と同じく、画面のテーマに関わらず白地に黒線で描く */
+.master-preview {
+  flex: none;
+}
+
+.te-preview {
+  background: #ffffff;
+  border: 1px solid #000000;
+}
+
+.te-preview text {
+  font-family: var(--serif-ja);
+}
+
+.te-preview .beat-axis-text {
+  fill: #000000;
+}
+
+.te-preview .skewer-line {
+  stroke: #000000;
+}
