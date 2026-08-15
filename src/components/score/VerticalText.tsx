@@ -19,9 +19,9 @@ const N_CHARS = new Set(["ン", "ん"]);
 /** 句点。謡では文字ではなく「ゴマ点」の印として描く */
 const KUTEN_CHARS = new Set(["。", "｡", "．", "."]);
 
-/** ゴマ点の大きさ(文字の大きさに対する比)と傾き */
-const GOMA_WIDTH_RATIO = 0.42;
-const GOMA_HEIGHT_RATIO = 0.4;
+/** ゴマ点の半径(文字の大きさに対する比)と、扇の開き(度) */
+const GOMA_RADIUS_RATIO = 0.5;
+const GOMA_ANGLE_DEG = 70;
 
 /** 小書き文字の大きさ・位置(親文字のサイズに対する比) */
 const SMALL_KANA_SCALE = 0.68;
@@ -146,8 +146,9 @@ export function VerticalText({
 }
 
 /**
- * ゴマ点。句点の代わりに置く、ごまのような形の塗りつぶしの点。
- * 左上が太く、右下に向かって細くなる。
+ * ゴマ点。句点の代わりに置く、塗りつぶしの扇形の点。
+ * 扇の要(かなめ)を左上に置き、そこから右へ水平に開いて弧で閉じる。
+ * 上側の辺が水平になり、右下が弧になる。
  */
 function GomaTen({
   cx,
@@ -160,13 +161,17 @@ function GomaTen({
   size: number;
   color: string;
 }) {
-  const w = size * GOMA_WIDTH_RATIO;
-  const h = size * GOMA_HEIGHT_RATIO;
-  // 左上の端から右下の先端へ、ふくらみを付けて往復する
+  const r = size * GOMA_RADIUS_RATIO;
+  const rad = (GOMA_ANGLE_DEG * Math.PI) / 180;
+  // 扇全体が (cx, cy) を中心に来るよう、要の位置を左上へずらす
+  const pivotX = cx - r / 2;
+  const pivotY = cy - (r * Math.sin(rad)) / 2;
   const d = [
-    `M ${cx - w} ${cy - h}`,
-    `Q ${cx + w} ${cy - h * 0.5} ${cx + w * 0.6} ${cy + h}`,
-    `Q ${cx - w * 0.3} ${cy + h * 0.1} ${cx - w} ${cy - h}`,
+    `M ${pivotX} ${pivotY}`,
+    // 上側の水平な辺
+    `L ${pivotX + r} ${pivotY}`,
+    // 弧(右下へ)
+    `A ${r} ${r} 0 0 1 ${pivotX + r * Math.cos(rad)} ${pivotY + r * Math.sin(rad)}`,
     "Z",
   ].join(" ");
   return <path d={d} fill={color} />;
