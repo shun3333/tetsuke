@@ -14,6 +14,12 @@ interface Props {
   instrument: Instrument;
 }
 
+/**
+ * 描画は手付と同じ大きさの座標で組み、最後にまとめて拡大する。
+ * こうすると手・文字・線の太さの比率が手付とそのまま同じになる。
+ */
+const SCALE = 1.8;
+
 const BEAT_HEIGHT = 44;
 const COL_WIDTH = 36;
 const AXIS_WIDTH = 22;
@@ -49,8 +55,8 @@ export function TeGumiPreview({ pattern, instrument }: Props) {
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
+      width={width * SCALE}
+      height={height * SCALE}
       className="te-preview"
       role="img"
       aria-label="手組のプレビュー"

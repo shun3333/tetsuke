@@ -283,20 +283,11 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
               </label>
             </div>
 
-            <div className="master-timeline-row">
-              <TeGumiTimeline
-                pattern={current.internal_pattern}
-                teNames={teNames}
-                onChange={updatePattern}
-              />
-              <div className="master-preview">
-                <h3 className="master-group-title">プレビュー</h3>
-                <TeGumiPreview
-                  pattern={current.internal_pattern}
-                  instrument={instrument}
-                />
-              </div>
-            </div>
+            <TeGumiTimeline
+              pattern={current.internal_pattern}
+              teNames={teNames}
+              onChange={updatePattern}
+            />
 
             <EntryList<GuideEntry>
               title="補助線"
@@ -333,6 +324,17 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
             >
               この手組を削除
             </button>
+          </div>
+        )}
+
+        {/* プレビューは入力エリア全体の右に置く */}
+        {current !== null && (
+          <div className="master-preview">
+            <h3 className="master-group-title">プレビュー</h3>
+            <TeGumiPreview
+              pattern={current.internal_pattern}
+              instrument={instrument}
+            />
           </div>
         )}
       </div>

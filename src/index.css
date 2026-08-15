@@ -736,12 +736,18 @@ table.timeline-grid {
   margin: 4px 0 14px;
 }
 
-/* 左に手組の一覧、右に選んだ手組の中身 */
+/* 左から: 手組の一覧 / 選んだ手組の中身 / プレビュー */
 .master-body {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 220px minmax(0, 1fr) auto;
   gap: 20px;
   align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .master-body {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 760px) {
@@ -908,14 +914,7 @@ table.timeline-grid {
   font-size: 12px;
 }
 
-/* 手組編集用のタイムラインとプレビュー */
-.master-timeline-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
+/* 手組編集用のタイムライン */
 .te-timeline-wrap {
   overflow-x: auto;
 }
@@ -983,9 +982,11 @@ table.te-timeline {
   color: #cc2222;
 }
 
-/* プレビューは手付と同じく、画面のテーマに関わらず白地に黒線で描く */
+/* プレビューは手付と同じく、画面のテーマに関わらず白地に黒線で描く。
+   入力しながら見えるよう、スクロールしても付いてくるようにする */
 .master-preview {
-  flex: none;
+  position: sticky;
+  top: 16px;
 }
 
 .te-preview {
