@@ -37,6 +37,13 @@ function positionLabel(relPos: number): string {
   return `${beats >= 0 ? "+" : ""}${beats}拍 ${side}`;
 }
 
+/** 並び順を保つため、IDの列の順にオブジェクトを作り直す */
+function reorderByIds(entries: TeMaster, ids: string[]): TeMaster {
+  const next: TeMaster = {};
+  for (const id of ids) next[id] = entries[id];
+  return next;
+}
+
 /** 既にある名前とぶつからないIDを作る */
 function nextTeId(master: TeMaster): string {
   for (let i = 1; ; i++) {
@@ -90,6 +97,16 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
     setSelectedId(id);
   }
 
+  /** 一覧の中で手組を前後に動かす */
+  function moveTe(id: string, delta: number) {
+    const ids = Object.keys(entries);
+    const from = ids.indexOf(id);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= ids.length) return;
+    ids.splice(to, 0, ...ids.splice(from, 1));
+    onChange({ ...teMaster, [instrument]: reorderByIds(entries, ids) });
+  }
+
   function removeTe(id: string) {
     if (!window.confirm(`「${entries[id].label}」を削除しますか？`)) return;
     const next = { ...entries };
@@ -101,13 +118,14 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
   /** IDを変えると、既に置いてある手組はこのIDを見失う */
   function renameTeId(nextId: string) {
     if (!currentId || !current || nextId === "" || entries[nextId]) return;
-    const next: TeMaster = {};
-    // 並び順を保つため、入れ替えながら作り直す
-    for (const [id, entry] of Object.entries(entries)) {
-      if (id === currentId) next[nextId] = { ...entry, te_id: nextId };
-      else next[id] = entry;
-    }
-    onChange({ ...teMaster, [instrument]: next });
+    // 数字だけのIDは並び順を保てなくなるため受け付けない
+    if (/^\d+$/.test(nextId)) return;
+    const renamed = { ...entries, [nextId]: { ...current, te_id: nextId } };
+    delete renamed[currentId];
+    const ids = Object.keys(entries).map((id) =>
+      id === currentId ? nextId : id,
+    );
+    onChange({ ...teMaster, [instrument]: reorderByIds(renamed, ids) });
     setSelectedId(nextId);
   }
 
@@ -183,20 +201,42 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
 
       <div className="master-body">
         <div className="master-list">
-          {Object.values(entries).map((te) => (
-            <button
-              key={te.te_id}
-              type="button"
-              className={
-                "master-list-item" + (te.te_id === currentId ? " selected" : "")
-              }
-              onClick={() => setSelectedId(te.te_id)}
-            >
-              <span className="te-name">{te.label}</span>
-              <span className="te-length">
-                {te.internal_pattern.length}拍 / {te.te_id}
-              </span>
-            </button>
+          {Object.values(entries).map((te, i, all) => (
+            <div key={te.te_id} className="master-list-row">
+              <button
+                type="button"
+                className={
+                  "master-list-item" +
+                  (te.te_id === currentId ? " selected" : "")
+                }
+                onClick={() => setSelectedId(te.te_id)}
+              >
+                <span className="te-name">{te.label}</span>
+                <span className="te-length">
+                  {te.internal_pattern.length}拍 / {te.te_id}
+                </span>
+              </button>
+              <div className="master-list-move">
+                <button
+                  type="button"
+                  className="chip-remove"
+                  title="1つ上へ移動"
+                  disabled={i === 0}
+                  onClick={() => moveTe(te.te_id, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className="chip-remove"
+                  title="1つ下へ移動"
+                  disabled={i === all.length - 1}
+                  onClick={() => moveTe(te.te_id, 1)}
+                >
+                  ↓
+                </button>
+              </div>
+            </div>
           ))}
           <button type="button" className="kusari-add" onClick={addTe}>
             + 手組を追加

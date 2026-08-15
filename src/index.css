@@ -883,3 +883,27 @@ table.timeline-grid {
   border-color: #cc2222;
   color: #cc2222;
 }
+
+/* 手組の一覧の1行(選択ボタン + 並べ替え) */
+.master-list-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.master-list-row .master-list-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.master-list-move {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.master-list-move .chip-remove {
+  padding: 0 4px;
+  line-height: 1.2;
+  font-size: 12px;
+}
