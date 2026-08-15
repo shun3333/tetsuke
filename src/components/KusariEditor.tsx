@@ -43,6 +43,28 @@ export function KusariEditor({ song, teMaster, dispatch }: Props) {
             <button
               type="button"
               className="chip-remove"
+              title="1つ前へ移動"
+              disabled={i === 0}
+              onClick={() =>
+                dispatch({ type: "MOVE_KUSARI", from: i, to: i - 1, teMaster })
+              }
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              className="chip-remove"
+              title="1つ後ろへ移動"
+              disabled={i === song.kusari_sequence.length - 1}
+              onClick={() =>
+                dispatch({ type: "MOVE_KUSARI", from: i, to: i + 1, teMaster })
+              }
+            >
+              →
+            </button>
+            <button
+              type="button"
+              className="chip-remove"
               title="このクサリを削除"
               disabled={song.kusari_sequence.length <= 1}
               onClick={() =>

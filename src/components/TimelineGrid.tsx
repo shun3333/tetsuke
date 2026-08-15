@@ -379,6 +379,38 @@ export function TimelineGrid({
         <button
           type="button"
           className="chip-remove"
+          title="1つ上へ移動"
+          disabled={kusariIndex === 0}
+          onClick={() =>
+            dispatch({
+              type: "MOVE_KUSARI",
+              from: kusariIndex,
+              to: kusariIndex - 1,
+              teMaster,
+            })
+          }
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          className="chip-remove"
+          title="1つ下へ移動"
+          disabled={kusariIndex === song.kusari_sequence.length - 1}
+          onClick={() =>
+            dispatch({
+              type: "MOVE_KUSARI",
+              from: kusariIndex,
+              to: kusariIndex + 1,
+              teMaster,
+            })
+          }
+        >
+          ↓
+        </button>
+        <button
+          type="button"
+          className="chip-remove"
           title="すぐ下にクサリを追加"
           onClick={() =>
             dispatch({

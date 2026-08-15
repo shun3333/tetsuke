@@ -21,6 +21,12 @@ export type SongAction =
   | { type: "INSERT_KUSARI"; atIndex: number; kusariType: KusariType }
   | { type: "REMOVE_KUSARI"; index: number; teMaster: Record<Instrument, TeMaster> }
   | {
+      type: "MOVE_KUSARI";
+      from: number;
+      to: number;
+      teMaster: Record<Instrument, TeMaster>;
+    }
+  | {
       type: "SET_KUSARI_TYPE";
       index: number;
       kusariType: KusariType;
@@ -86,6 +92,31 @@ export function songReducer(state: SongData, action: SongAction): SongData {
         remapRefs({ ...state, kusari_sequence: nextSeq }, index, null),
         action.teMaster,
       );
+    }
+
+    case "MOVE_KUSARI": {
+      const { from, to } = action;
+      const seq = state.kusari_sequence;
+      if (from === to || !seq[from] || !seq[to]) return state;
+
+      // 並べ替えと同じ操作を「元のindexの列」にも施し、移動先を割り出す
+      const order = seq.map((_, i) => i);
+      const nextSeq = [...seq];
+      order.splice(to, 0, ...order.splice(from, 1));
+      nextSeq.splice(to, 0, ...nextSeq.splice(from, 1));
+
+      const movedTo = new Map(order.map((oldIndex, i) => [oldIndex, i]));
+      // クサリと一緒に中身も動くよう、参照のkusari_indexを付け替える
+      const moved = remapAllRefs(
+        { ...state, kusari_sequence: reindexKusari(nextSeq) },
+        (ref) => {
+          const next = movedTo.get(ref.kusari_index);
+          if (next === undefined) return null;
+          return next === ref.kusari_index ? ref : { ...ref, kusari_index: next };
+        },
+      );
+      // 並び順が変わると曲の終わりをはみ出す手組が出ることがある
+      return dropUnfittableTe(moved, action.teMaster);
     }
 
     case "SET_KUSARI_TYPE": {
@@ -220,8 +251,16 @@ function remapRefs(
   removedIndex: number | null,
   insertedAtIndex: number | null,
 ): SongData {
-  const shift = (ref: BeatRef) =>
-    shiftBeatRef(ref, removedIndex, insertedAtIndex);
+  return remapAllRefs(state, (ref) =>
+    shiftBeatRef(ref, removedIndex, insertedAtIndex),
+  );
+}
+
+/** 全トラックの参照を付け替える。shiftがnullを返した参照は取り除く */
+function remapAllRefs(
+  state: SongData,
+  shift: (ref: BeatRef) => BeatRef | null,
+): SongData {
   const utai = state.tracks.utai;
   const tracks: SongData["tracks"] = {
     utai: utai && {
