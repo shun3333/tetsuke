@@ -1,5 +1,5 @@
 // 手組マスタ(te_master) — 楽器ごとのサンプルデータ
-// 楽器ごとに別のマスタを持ち、その中では te_id をキーにフラットに持つ。
+// 楽器ごとに別のマスタを持ち、その中は手組を並べた列として持つ。
 // rel_pos は手組の起点からの相対位置を半拍単位で表す。
 // 手付の上の位置は「絶対スロット = start_ref.beat + rel_pos」で決まり、
 // クサリのN拍目に置いた手組では start_ref.beat = N*2 になる。
@@ -7,8 +7,8 @@
 // 奇数の rel_pos はその裏。
 import type { Instrument, TeMaster } from "../types";
 
-export const kotsuzumiTeMaster: TeMaster = {
-  mitsuji: {
+export const kotsuzumiTeMaster: TeMaster = [
+  {
     te_id: "mitsuji",
     label: "三地",
     instrument: "kotsuzumi",
@@ -26,7 +26,7 @@ export const kotsuzumiTeMaster: TeMaster = {
       ]
     },
   },
-  tsuzuke: {
+  {
     te_id: "tsuzuke",
     label: "ツヅケ",
     instrument: "kotsuzumi",
@@ -47,7 +47,7 @@ export const kotsuzumiTeMaster: TeMaster = {
       ]
     },
   },
-  uchioroshi: {
+  {
     te_id: "uchioroshi",
     label: "打下",
     instrument: "kotsuzumi",
@@ -71,7 +71,7 @@ export const kotsuzumiTeMaster: TeMaster = {
       ],
     },
   },
-  uchikiri: {
+  {
     te_id: "uchikiri",
     label: "打切",
     instrument: "kotsuzumi",
@@ -85,12 +85,12 @@ export const kotsuzumiTeMaster: TeMaster = {
       guides: [{ from_pos: 0, to_pos: 2, shape: "bent" }],
     },
   },
-};
+];
 
 // 大鼓の手組マスタ。大鼓の手は チョン(chon) / ドン(don) の2種類のみ。
 // 中身は動きを確認するための仮の値なので、実際の手組に合わせて直すこと。
-export const otsuzumiTeMaster: TeMaster = {
-  o_mitsuji: {
+export const otsuzumiTeMaster: TeMaster = [
+  {
     te_id: "o_mitsuji",
     label: "三地",
     instrument: "otsuzumi",
@@ -107,7 +107,7 @@ export const otsuzumiTeMaster: TeMaster = {
       ],
     },
   },
-  o_tsuzuke: {
+  {
     te_id: "o_tsuzuke",
     label: "ツヅケ",
     instrument: "otsuzumi",
@@ -125,7 +125,7 @@ export const otsuzumiTeMaster: TeMaster = {
       ],
     },
   },
-  o_uchikiri: {
+  {
     te_id: "o_uchikiri",
     label: "打切",
     instrument: "otsuzumi",
@@ -139,7 +139,7 @@ export const otsuzumiTeMaster: TeMaster = {
       guides: [{ from_pos: 0, to_pos: 2, shape: "bent" }],
     },
   },
-};
+];
 
 /** 楽器ごとの手組マスタ */
 export const TE_MASTER: Record<Instrument, TeMaster> = {

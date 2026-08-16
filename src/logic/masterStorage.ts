@@ -93,12 +93,33 @@ function readEntry(
 ): TeMasterEntry {
   if (!isRecord(value)) throw new Error(`${where} がオブジェクトではありません`);
   return {
-    te_id: readString(value.te_id, `${where}.te_id`),
+    // IDは任意。無いものは空のIDとして扱う(曲データから参照できないだけ)
+    te_id:
+      value.te_id === undefined
+        ? ""
+        : readString(value.te_id, `${where}.te_id`),
     label: readString(value.label, `${where}.label`),
     // 楽器はどのマスタに入っているかで決まる
     instrument,
     internal_pattern: readPattern(value.internal_pattern, `${where}.internal_pattern`),
   };
+}
+
+/**
+ * 1つの楽器分の手組を読む。
+ * いまは手組を並べた配列で持つが、以前は te_id をキーにした
+ * オブジェクトだったため、そちらの形も読めるようにしてある。
+ */
+function readGroup(value: unknown, instrument: Instrument): TeMaster {
+  if (Array.isArray(value)) {
+    return value.map((v, i) => readEntry(v, instrument, `${instrument}[${i}]`));
+  }
+  if (isRecord(value)) {
+    return Object.entries(value).map(([teId, v]) =>
+      readEntry(v, instrument, `${instrument}.${teId}`),
+    );
+  }
+  throw new Error(`${instrument} が手組の配列ではありません`);
 }
 
 /** JSONの文字列を手組マスタとして読み込む */
@@ -107,15 +128,7 @@ export function parseTeMasterJson(text: string): ParseResult<TeMasterByInstrumen
     if (!isRecord(raw)) throw new Error("中身がオブジェクトではありません");
     const master = {} as TeMasterByInstrument;
     for (const instrument of INSTRUMENTS) {
-      const group: unknown = raw[instrument];
-      if (!isRecord(group)) {
-        throw new Error(`${instrument} がオブジェクトではありません`);
-      }
-      const entries: TeMaster = {};
-      for (const [teId, value] of Object.entries(group)) {
-        entries[teId] = readEntry(value, instrument, `${instrument}.${teId}`);
-      }
-      master[instrument] = entries;
+      master[instrument] = readGroup(raw[instrument], instrument);
     }
     return master;
   });

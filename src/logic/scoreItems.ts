@@ -18,6 +18,7 @@ import {
   slotToLocalOffset,
 } from "./position";
 import { TIMING_OFFSET_RATIO } from "./timing";
+import { findTe } from "./tePattern";
 
 /** 謡の1枠 */
 export interface UtaiCell {
@@ -115,7 +116,7 @@ function buildTeItems(
     emptyInstrumentItems();
 
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, instanceIndex) => {
-    const def = teMaster[ti.te_id];
+    const def = findTe(teMaster, ti.te_id);
     if (!def || !isBeatRefValid(ti.start_ref, song.kusari_sequence)) return;
     const startGlobalPos = beatRefToGlobalPos(ti.start_ref, globalStarts);
 

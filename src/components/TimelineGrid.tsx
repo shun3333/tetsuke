@@ -23,6 +23,7 @@ import {
   teInstanceStartBeat,
   totalBeats,
 } from "../logic/position";
+import { findTe } from "../logic/tePattern";
 import type { SongAction } from "../state/songReducer";
 import { INSTRUMENT_COLOR } from "../data/instruments";
 
@@ -110,7 +111,7 @@ function buildOccupancy(
 ): Map<number, Occupancy> {
   const occupancy = new Map<number, Occupancy>();
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
-    const def = teMaster[ti.te_id];
+    const def = findTe(teMaster, ti.te_id);
     if (!def) return;
     const start = teInstanceStartBeat(ti.start_ref, globalStarts);
     const len = def.internal_pattern.length;
@@ -153,7 +154,7 @@ function buildTeBars(
 ): Map<number, TeBar[]> {
   const bars = new Map<number, TeBar[]>();
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
-    const def = teMaster[ti.te_id];
+    const def = findTe(teMaster, ti.te_id);
     if (!def) return;
     const startG = teInstanceStartBeat(ti.start_ref, globalStarts);
     const endG = startG + def.internal_pattern.length;
@@ -246,7 +247,9 @@ export function TimelineGrid({
     teId: string,
     g: number,
   ): string | null {
-    const def = teMaster[instrument][teId];
+    // 曲データは手組をIDで指すため、IDが無いものは置けない
+    if (teId === "") return "IDが空の手組は置けません";
+    const def = findTe(teMaster[instrument], teId);
     if (!def) return "手組が見つかりません";
     const len = def.internal_pattern.length;
     if (g + len > total) return "長さが収まりません";
@@ -628,7 +631,7 @@ export function TimelineGrid({
             <div className="te-picker-title">
               {INSTRUMENT_LABEL[picker.instrument]}の手組を選ぶ
             </div>
-            {Object.values(teMaster[picker.instrument]).map((def) => {
+            {teMaster[picker.instrument].map((def, i) => {
               const error = placementError(
                 picker.instrument,
                 def.te_id,
@@ -636,7 +639,7 @@ export function TimelineGrid({
               );
               return (
                 <button
-                  key={def.te_id}
+                  key={i}
                   type="button"
                   className="te-picker-item"
                   disabled={error !== null}

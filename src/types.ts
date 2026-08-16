@@ -151,7 +151,10 @@ export const INSTRUMENTS: Instrument[] = ["otsuzumi", "kotsuzumi"];
 
 /** 手組マスタの1エントリ */
 export interface TeMasterEntry {
-  /** 曲データから参照するためのID。表示には使わない */
+  /**
+   * 曲データから参照するためのID。表示には使わない。
+   * 必須ではなく、同じIDの手組が並んでいてもよい(その場合は先にあるものを使う)。
+   */
   te_id: string;
   /** 画面・手付に表示する名前(日本語) */
   label: string;
@@ -159,8 +162,11 @@ export interface TeMasterEntry {
   internal_pattern: InternalPattern;
 }
 
-/** 楽器ごとの手組辞書(te_id -> 定義) */
-export type TeMaster = Record<string, TeMasterEntry>;
+/**
+ * 楽器ごとの手組の一覧。並び順が画面での並び順になる。
+ * te_id をキーにした辞書ではないので、IDが空のものや同じIDのものも持てる。
+ */
+export type TeMaster = TeMasterEntry[];
 
 /**
  * クサリ内の位置を指す参照。

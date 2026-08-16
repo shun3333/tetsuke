@@ -13,6 +13,7 @@ import {
   teInstanceStartBeat,
   totalBeats,
 } from "../logic/position";
+import { findTe } from "../logic/tePattern";
 
 // クサリが短くなると、配置済みの手組が収まらなくなることがある。
 // 収まらなくなった手組を落とすために、手組の長さ(手組マスタ)を受け取る。
@@ -214,7 +215,7 @@ function dropUnfittableTe(
     if (!track) continue;
     const kept = track.te_instances.filter((ti) => {
       if (!isBeatRefValid(ti.start_ref, state.kusari_sequence)) return false;
-      const def = teMaster[instrument][ti.te_id];
+      const def = findTe(teMaster[instrument], ti.te_id);
       // マスタに無い手組は長さが分からないので、判断せずそのまま残す
       if (!def) return true;
       const start = teInstanceStartBeat(ti.start_ref, globalStarts);
