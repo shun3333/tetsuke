@@ -2,9 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 import { songReducer } from "./state/songReducer";
 import { sampleSong } from "./data/sampleSong";
 import { TeMasterEditor } from "./components/TeMasterEditor";
-import { KusariEditor } from "./components/KusariEditor";
-import { TePalette } from "./components/TePalette";
-import { TimelineGrid, type SelectedTe } from "./components/TimelineGrid";
+import { TimelineGrid } from "./components/TimelineGrid";
 import { ScoreView } from "./components/ScoreView";
 import { SplitPane } from "./components/SplitPane";
 import { ScoreToolbar } from "./components/ScoreToolbar";
@@ -28,7 +26,6 @@ function App() {
     undefined,
     () => loadStoredSong() ?? sampleSong,
   );
-  const [selectedTe, setSelectedTe] = useState<SelectedTe | null>(null);
   // 手組マスタも画面から編集できるので、曲データと同じく保存・復元する
   const [teMaster, setTeMaster] = useState(
     () => loadStoredTeMaster() ?? defaultTeMaster(),
@@ -73,23 +70,7 @@ function App() {
         <SplitPane
           left={
             <section className="editor-pane">
-              <KusariEditor
-                song={song}
-                teMaster={teMaster}
-                dispatch={dispatch}
-              />
-              <TePalette
-                teMaster={teMaster}
-                selectedTe={selectedTe}
-                onSelect={setSelectedTe}
-              />
-              <TimelineGrid
-                song={song}
-                teMaster={teMaster}
-                selectedTe={selectedTe}
-                onPlaced={() => setSelectedTe(null)}
-                dispatch={dispatch}
-              />
+              <TimelineGrid song={song} teMaster={teMaster} dispatch={dispatch} />
             </section>
           }
           right={

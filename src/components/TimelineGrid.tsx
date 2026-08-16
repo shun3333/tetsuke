@@ -27,17 +27,9 @@ import { findTe } from "../logic/tePattern";
 import type { SongAction } from "../state/songReducer";
 import { INSTRUMENT_COLOR } from "../data/instruments";
 
-/** パレットで選んである手組(楽器とセットで持つ) */
-export interface SelectedTe {
-  instrument: Instrument;
-  teId: string;
-}
-
 interface Props {
   song: SongData;
   teMaster: Record<Instrument, TeMaster>;
-  selectedTe: SelectedTe | null;
-  onPlaced: () => void;
   dispatch: React.Dispatch<SongAction>;
 }
 
@@ -195,8 +187,6 @@ function buildUtaiValues(song: SongData): Map<string, string> {
 export function TimelineGrid({
   song,
   teMaster,
-  selectedTe,
-  onPlaced,
   dispatch,
 }: Props) {
   const utaiInputRefs = useRef(new Map<string, HTMLInputElement>());
@@ -273,7 +263,6 @@ export function TimelineGrid({
     );
     if (!startRef) return;
     dispatch({ type: "ADD_TE_INSTANCE", instrument, teId, startRef });
-    onPlaced();
   }
 
   function handleTeClick(
@@ -291,12 +280,8 @@ export function TimelineGrid({
       });
       return;
     }
-    // パレットで選んである場合はそのまま置く。選んでいなければ一覧を出す
-    if (selectedTe && selectedTe.instrument === instrument) {
-      placeTe(instrument, selectedTe.teId, g);
-    } else {
-      setPicker({ instrument, g, x: e.clientX, y: e.clientY });
-    }
+    // 空いている点を押したら、その場で手組の一覧から選ぶ
+    setPicker({ instrument, g, x: e.clientX, y: e.clientY });
   }
 
   function setUtaiValue(kusariIndex: number, beat: number, value: string) {

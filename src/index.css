@@ -157,32 +157,6 @@ section.editor-pane,
   padding: 16px;
 }
 
-/* クサリ編集 */
-.kusari-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.kusari-chip {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px 4px 2px 8px;
-  background: var(--bg);
-}
-
-.kusari-chip select {
-  border: none;
-  background: transparent;
-  color: var(--text-h);
-  font-size: 14px;
-  padding: 4px 2px;
-}
-
 .chip-remove {
   border: none;
   background: transparent;
@@ -216,58 +190,6 @@ section.editor-pane,
 .kusari-add:hover {
   border-color: var(--accent);
   color: var(--accent);
-}
-
-/* 手組パレット */
-.te-palette-hint {
-  font-size: 13px;
-  color: var(--text);
-  margin-bottom: 10px;
-}
-
-.te-palette-group + .te-palette-group {
-  margin-top: 10px;
-}
-
-.te-palette-group-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 0 0 6px;
-}
-
-.te-palette-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.te-palette-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-  color: var(--text-h);
-}
-
-.te-palette-item .te-name {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.te-palette-item .te-length {
-  font-size: 11px;
-  color: var(--text);
-}
-
-.te-palette-item.selected {
-  border-color: var(--accent);
-  background: var(--accent-bg);
 }
 
 /* タイムライングリッド。クサリ1つにつき表が1つで、下に積んでいく */
