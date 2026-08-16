@@ -31,8 +31,8 @@ const PAD_Y = BEAT_HEIGHT / 2;
 const KAKEGOE_FONT_SIZE = 10;
 const KAKEGOE_CHAR_HEIGHT = 11;
 const AXIS_FONT_SIZE = 11;
-/** 補助線と重なる掛け声を、右にずらす量 */
-const KAKEGOE_GUIDE_DX = 6;
+/** 掛け声を列の中心から右にずらす量(補助線と重ならないように) */
+const KAKEGOE_DX = 6;
 
 export function TeGumiPreview({ pattern, instrument }: Props) {
   const color = INSTRUMENT_COLOR[instrument];
@@ -44,14 +44,6 @@ export function TeGumiPreview({ pattern, instrument }: Props) {
   const axisX = MARGIN_X + COL_WIDTH + AXIS_WIDTH / 2;
   /** 手組の頭からの相対位置(半拍単位) → y座標 */
   const posY = (relPos: number) => PAD_Y + (relPos / 2) * BEAT_HEIGHT;
-
-  /** 補助線と重なる掛け声は少し右にずらして避ける */
-  const onGuide = (relPos: number) =>
-    (pattern.guides ?? []).some(
-      (g) =>
-        relPos >= Math.min(g.from_pos, g.to_pos) &&
-        relPos <= Math.max(g.from_pos, g.to_pos),
-    );
 
   return (
     <svg
@@ -100,7 +92,7 @@ export function TeGumiPreview({ pattern, instrument }: Props) {
       {pattern.kakegoe.map((kg, i) => (
         <VerticalText
           key={i}
-          cx={cx + (onGuide(kg.rel_pos) ? KAKEGOE_GUIDE_DX : 0)}
+          cx={cx + KAKEGOE_DX}
           cy={posY(kg.rel_pos)}
           text={kg.text}
           color={color}

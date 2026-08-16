@@ -97,8 +97,8 @@ const TE_LABEL_CHAR_HEIGHT = 10;
 /** 手組名の上下に空ける余白 */
 const TE_LABEL_BAND_PAD = 6;
 
-/** 補助線と重なる掛け声を、右にずらす量 */
-const KAKEGOE_GUIDE_DX = 6;
+/** 掛け声を列の中心から右にずらす量(補助線と重ならないように) */
+const KAKEGOE_DX = 6;
 
 const TIMING_Y_OFFSET: Record<Timing, number> = Object.fromEntries(
   TIMINGS.map((t) => [t, timingOffsetY(t, BEAT_HEIGHT)]),
@@ -320,8 +320,8 @@ function InstrumentColumn({
       {kakegoe.map((item) => (
         <VerticalText
           key={item.key}
-          // 補助線と重なる掛け声は、少し右にずらして避ける
-          cx={cx + (item.avoidsGuide ? KAKEGOE_GUIDE_DX : 0)}
+          // 掛け声は補助線の有無にかかわらず、少し右に寄せる
+          cx={cx + KAKEGOE_DX}
           cy={offsetY(item.offset)}
           text={item.text ?? ""}
           color={INSTRUMENT_COLOR[item.instrument]}

@@ -35,8 +35,6 @@ export interface TeRenderItem {
   text?: string;
   te?: TeName;
   timing?: Timing;
-  /** 補助線と重なるため、少し右にずらして描く掛け声 */
-  avoidsGuide?: boolean;
 }
 
 /** 手と手の間の補助線1本。描画先のクサリと位置は解決済み */
@@ -187,7 +185,6 @@ function buildTeItems(
     });
   });
 
-  markKakegoeOnGuides(kakegoeByKusari, guidesByKusari);
   return { kakegoeByKusari, hitsByKusari, guidesByKusari, labelsByKusari };
 }
 
@@ -238,27 +235,6 @@ function splitAcrossKusari(
     });
   }
   return segments;
-}
-
-/**
- * 補助線と重なる掛け声に印をつける。
- * 掛け声は補助線と同じ列の中央に描かれるため、そのままだと重なってしまう。
- */
-function markKakegoeOnGuides(
-  kakegoeByKusari: Map<number, TeRenderItem[]>,
-  guidesByKusari: Map<number, GuideRenderItem[]>,
-): void {
-  for (const [kusariIndex, list] of kakegoeByKusari) {
-    const guides = guidesByKusari.get(kusariIndex);
-    if (!guides) continue;
-    for (const kakegoe of list) {
-      kakegoe.avoidsGuide = guides.some(
-        (g) =>
-          kakegoe.offset >= Math.min(g.fromOffset, g.toOffset) &&
-          kakegoe.offset <= Math.max(g.fromOffset, g.toOffset),
-      );
-    }
-  }
 }
 
 /** 曲データ全体を、クサリごとの描画アイテムに展開する */
