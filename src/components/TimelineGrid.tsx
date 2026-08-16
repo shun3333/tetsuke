@@ -631,7 +631,7 @@ export function TimelineGrid({
             <div className="te-picker-title">
               {INSTRUMENT_LABEL[picker.instrument]}の手組を選ぶ
             </div>
-            {teMaster[picker.instrument].map((def, i) => {
+            {teMaster[picker.instrument].map((def) => {
               const error = placementError(
                 picker.instrument,
                 def.te_id,
@@ -639,7 +639,7 @@ export function TimelineGrid({
               );
               return (
                 <button
-                  key={i}
+                  key={def.uid}
                   type="button"
                   className="te-picker-item"
                   disabled={error !== null}

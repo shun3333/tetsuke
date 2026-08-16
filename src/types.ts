@@ -152,6 +152,12 @@ export const INSTRUMENTS: Instrument[] = ["otsuzumi", "kotsuzumi"];
 /** 手組マスタの1エントリ */
 export interface TeMasterEntry {
   /**
+   * その手組を一意に指す内部のID。画面には出さず、編集中に
+   * 「どの手組か」を見失わないために使う。
+   * te_id は空・重複が許され、並び順も変わるため、これとは別に持つ。
+   */
+  uid: string;
+  /**
    * 曲データから参照するためのID。表示には使わない。
    * 必須ではなく、同じIDの手組が並んでいてもよい(その場合は先にあるものを使う)。
    */

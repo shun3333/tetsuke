@@ -20,7 +20,7 @@ import {
 } from "../types";
 import { TE_GLYPH_MASTER } from "../data/instruments";
 import { TeGumiTimeline } from "./TeGumiTimeline";
-import { clampToLength } from "../logic/tePattern";
+import { clampToLength, newUid } from "../logic/tePattern";
 import { TeGumiPreview } from "./TeGumiPreview";
 import { downloadJson } from "../logic/exportSong";
 import {
@@ -52,17 +52,20 @@ function nextTeId(master: TeMaster): string {
 
 export function TeMasterEditor({ teMaster, onChange }: Props) {
   const [instrument, setInstrument] = useState<Instrument>(INSTRUMENTS[0]);
-  // IDは空でも重複してもよいので、一覧の中の位置で手組を指す
-  const [selected, setSelected] = useState<number | null>(null);
-  /** ドラッグ中の手組と、いま重なっている手組(どちらも一覧の中の位置) */
-  const [dragAt, setDragAt] = useState<number | null>(null);
-  const [overAt, setOverAt] = useState<number | null>(null);
+  // te_id は空でも重複してもよく、並び順も変わるので、内部IDで手組を指す
+  const [selected, setSelected] = useState<string | null>(null);
+  /** ドラッグ中の手組と、いま重なっている手組(どちらも内部ID) */
+  const [dragUid, setDragUid] = useState<string | null>(null);
+  const [overUid, setOverUid] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const entries = teMaster[instrument];
-  const currentAt = selected !== null && entries[selected] ? selected : null;
-  const current = currentAt === null ? null : entries[currentAt];
+  const currentAt = entries.findIndex((te) => te.uid === selected);
+  const current = currentAt < 0 ? null : entries[currentAt];
   const teNames = Object.values(TE_GLYPH_MASTER[instrument]);
+
+  /** 一覧の中の位置。無ければ -1 */
+  const indexOf = (uid: string) => entries.findIndex((te) => te.uid === uid);
 
   /** その楽器の一覧を差し替える */
   function replaceEntries(next: TeMaster) {
@@ -71,8 +74,8 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
 
   /** 選択中の手組を差し替える */
   function updateCurrent(next: TeMasterEntry) {
-    if (currentAt === null) return;
-    replaceEntries(entries.map((te, i) => (i === currentAt ? next : te)));
+    if (!current) return;
+    replaceEntries(entries.map((te) => (te.uid === current.uid ? next : te)));
   }
 
   /** 選択中の手組の内部パターンだけ差し替える */
@@ -86,57 +89,48 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
 
   /** 選んでいる手組のすぐ下に足す。選んでいなければ一番下 */
   function addTe() {
-    const at = currentAt === null ? entries.length : currentAt + 1;
-    const next = [...entries];
-    next.splice(at, 0, {
+    const added: TeMasterEntry = {
+      uid: newUid(),
       te_id: nextTeId(entries),
       label: "新しい手組",
       instrument,
       internal_pattern: { length: 4, kakegoe: [], hits: [] },
-    });
+    };
+    const next = [...entries];
+    next.splice(currentAt < 0 ? entries.length : currentAt + 1, 0, added);
     replaceEntries(next);
-    setSelected(at);
+    setSelected(added.uid);
   }
 
-  /** 一覧の中で手組をその位置へ動かす */
-  function moveTeTo(from: number, to: number) {
+  /** 一覧の中で手組をその位置へ動かす。選択は内部IDで追いかける */
+  function moveTeTo(uid: string, to: number) {
+    const from = indexOf(uid);
     if (from < 0 || to < 0 || to >= entries.length || from === to) return;
     const next = [...entries];
     next.splice(to, 0, ...next.splice(from, 1));
     replaceEntries(next);
-    // 動かしたものを選んだままにする
-    if (currentAt === from) setSelected(to);
-    else if (currentAt !== null) {
-      const shifted =
-        from < currentAt && currentAt <= to
-          ? currentAt - 1
-          : to <= currentAt && currentAt < from
-            ? currentAt + 1
-            : currentAt;
-      setSelected(shifted);
-    }
   }
 
   /** ドラッグしていた手組を、重ねた手組の位置へ移す */
-  function dropOn(target: number) {
-    if (dragAt !== null) moveTeTo(dragAt, target);
-    setDragAt(null);
-    setOverAt(null);
+  function dropOn(targetUid: string) {
+    if (dragUid) moveTeTo(dragUid, indexOf(targetUid));
+    setDragUid(null);
+    setOverUid(null);
   }
 
   /** 落とす位置を上下どちらで示すか。動かす向きで決まる */
-  function dropClass(at: number): string {
-    if (dragAt === null) return "";
-    if (dragAt === at) return " dragging";
-    if (overAt !== at) return "";
-    return dragAt < at ? " drop-below" : " drop-above";
+  function dropClass(uid: string): string {
+    if (!dragUid) return "";
+    if (dragUid === uid) return " dragging";
+    if (overUid !== uid) return "";
+    return indexOf(dragUid) < indexOf(uid) ? " drop-below" : " drop-above";
   }
 
-  function removeTe(at: number) {
-    if (!window.confirm(`「${entries[at].label}」を削除しますか？`)) return;
-    replaceEntries(entries.filter((_, i) => i !== at));
-    if (currentAt === at) setSelected(null);
-    else if (currentAt !== null && at < currentAt) setSelected(currentAt - 1);
+  function removeTe(uid: string) {
+    const te = entries[indexOf(uid)];
+    if (!te || !window.confirm(`「${te.label}」を削除しますか？`)) return;
+    replaceEntries(entries.filter((e) => e.uid !== uid));
+    if (selected === uid) setSelected(null);
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -215,28 +209,28 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
           <div className="master-list-scroll">
             {entries.map((te, i, all) => (
               <div
-                key={i}
-                className={"master-list-row" + dropClass(i)}
+                key={te.uid}
+                className={"master-list-row" + dropClass(te.uid)}
                 draggable
                 onDragStart={(e) => {
-                  setDragAt(i);
+                  setDragUid(te.uid);
                   e.dataTransfer.effectAllowed = "move";
-                  e.dataTransfer.setData("text/plain", String(i));
+                  e.dataTransfer.setData("text/plain", te.uid);
                 }}
                 onDragEnd={() => {
-                  setDragAt(null);
-                  setOverAt(null);
+                  setDragUid(null);
+                  setOverUid(null);
                 }}
                 onDragOver={(e) => {
-                  if (dragAt === null) return;
+                  if (!dragUid) return;
                   // 既定の動作(受け付けない)を止めないと、落とせない
                   e.preventDefault();
                   e.dataTransfer.dropEffect = "move";
-                  setOverAt(i);
+                  setOverUid(te.uid);
                 }}
                 onDrop={(e) => {
                   e.preventDefault();
-                  dropOn(i);
+                  dropOn(te.uid);
                 }}
               >
                 <span className="master-list-handle" title="ドラッグで並べ替え">
@@ -247,7 +241,7 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                   className={
                     "master-list-item" + (i === currentAt ? " selected" : "")
                   }
-                  onClick={() => setSelected(i)}
+                  onClick={() => setSelected(te.uid)}
                 >
                   <span className="te-name">{te.label}</span>
                   <span className="te-length">
@@ -261,7 +255,7 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                     className="chip-remove"
                     title="1つ上へ移動"
                     disabled={i === 0}
-                    onClick={() => moveTeTo(i, i - 1)}
+                    onClick={() => moveTeTo(te.uid, i - 1)}
                   >
                     ↑
                   </button>
@@ -270,7 +264,7 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                     className="chip-remove"
                     title="1つ下へ移動"
                     disabled={i === all.length - 1}
-                    onClick={() => moveTeTo(i, i + 1)}
+                    onClick={() => moveTeTo(te.uid, i + 1)}
                   >
                     ↓
                   </button>
@@ -365,7 +359,7 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
             <button
               type="button"
               className="master-remove"
-              onClick={() => currentAt !== null && removeTe(currentAt)}
+              onClick={() => removeTe(current.uid)}
             >
               この手組を削除
             </button>

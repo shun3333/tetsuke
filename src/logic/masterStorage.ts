@@ -16,6 +16,7 @@ import {
   type Timing,
 } from "../types";
 import { TE_MASTER } from "../data/teMaster";
+import { newUid } from "./tePattern";
 import {
   isRecord,
   parseJson,
@@ -90,9 +91,11 @@ function readEntry(
   value: unknown,
   instrument: Instrument,
   where: string,
+  usedUids: Set<string>,
 ): TeMasterEntry {
   if (!isRecord(value)) throw new Error(`${where} がオブジェクトではありません`);
   return {
+    uid: readUid(value.uid, where, usedUids),
     // IDは任意。無いものは空のIDとして扱う(曲データから参照できないだけ)
     te_id:
       value.te_id === undefined
@@ -106,17 +109,37 @@ function readEntry(
 }
 
 /**
+ * 内部IDを読む。無い(古いデータ)ものや、他と同じものは振り直す。
+ * 内部IDは画面の中で手組を指すためのものなので、読めた時点で
+ * 一意になっていればよい。
+ */
+function readUid(value: unknown, where: string, used: Set<string>): string {
+  const uid =
+    value === undefined || used.has(String(value))
+      ? newUid()
+      : readString(value, `${where}.uid`);
+  used.add(uid);
+  return uid;
+}
+
+/**
  * 1つの楽器分の手組を読む。
  * いまは手組を並べた配列で持つが、以前は te_id をキーにした
  * オブジェクトだったため、そちらの形も読めるようにしてある。
  */
-function readGroup(value: unknown, instrument: Instrument): TeMaster {
+function readGroup(
+  value: unknown,
+  instrument: Instrument,
+  usedUids: Set<string>,
+): TeMaster {
   if (Array.isArray(value)) {
-    return value.map((v, i) => readEntry(v, instrument, `${instrument}[${i}]`));
+    return value.map((v, i) =>
+      readEntry(v, instrument, `${instrument}[${i}]`, usedUids),
+    );
   }
   if (isRecord(value)) {
     return Object.entries(value).map(([teId, v]) =>
-      readEntry(v, instrument, `${instrument}.${teId}`),
+      readEntry(v, instrument, `${instrument}.${teId}`, usedUids),
     );
   }
   throw new Error(`${instrument} が手組の配列ではありません`);
@@ -127,8 +150,10 @@ export function parseTeMasterJson(text: string): ParseResult<TeMasterByInstrumen
   return parseJson(text, (raw) => {
     if (!isRecord(raw)) throw new Error("中身がオブジェクトではありません");
     const master = {} as TeMasterByInstrument;
+    // 内部IDは楽器をまたいで一意にしておく
+    const usedUids = new Set<string>();
     for (const instrument of INSTRUMENTS) {
-      master[instrument] = readGroup(raw[instrument], instrument);
+      master[instrument] = readGroup(raw[instrument], instrument, usedUids);
     }
     return master;
   });

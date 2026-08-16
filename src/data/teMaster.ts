@@ -9,6 +9,7 @@ import type { Instrument, TeMaster } from "../types";
 
 export const kotsuzumiTeMaster: TeMaster = [
   {
+    uid: "u_mitsuji",
     te_id: "mitsuji",
     label: "三地",
     instrument: "kotsuzumi",
@@ -27,6 +28,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     },
   },
   {
+    uid: "u_tsuzuke",
     te_id: "tsuzuke",
     label: "ツヅケ",
     instrument: "kotsuzumi",
@@ -48,6 +50,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     },
   },
   {
+    uid: "u_uchioroshi",
     te_id: "uchioroshi",
     label: "打下",
     instrument: "kotsuzumi",
@@ -72,6 +75,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     },
   },
   {
+    uid: "u_uchikiri",
     te_id: "uchikiri",
     label: "打切",
     instrument: "kotsuzumi",
@@ -91,6 +95,7 @@ export const kotsuzumiTeMaster: TeMaster = [
 // 中身は動きを確認するための仮の値なので、実際の手組に合わせて直すこと。
 export const otsuzumiTeMaster: TeMaster = [
   {
+    uid: "u_o_mitsuji",
     te_id: "o_mitsuji",
     label: "三地",
     instrument: "otsuzumi",
@@ -108,6 +113,7 @@ export const otsuzumiTeMaster: TeMaster = [
     },
   },
   {
+    uid: "u_o_tsuzuke",
     te_id: "o_tsuzuke",
     label: "ツヅケ",
     instrument: "otsuzumi",
@@ -126,6 +132,7 @@ export const otsuzumiTeMaster: TeMaster = [
     },
   },
   {
+    uid: "u_o_uchikiri",
     te_id: "o_uchikiri",
     label: "打切",
     instrument: "otsuzumi",

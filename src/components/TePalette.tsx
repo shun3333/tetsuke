@@ -28,13 +28,13 @@ export function TePalette({ teMaster, selectedTe, onSelect }: Props) {
             {INSTRUMENT_LABEL[instrument]}
           </h3>
           <div className="te-palette-list">
-            {teMaster[instrument].map((te, i) => {
+            {teMaster[instrument].map((te) => {
               const selected =
                 selectedTe?.instrument === instrument &&
                 selectedTe.teId === te.te_id;
               return (
                 <button
-                  key={i}
+                  key={te.uid}
                   type="button"
                   className={"te-palette-item" + (selected ? " selected" : "")}
                   onClick={() =>
