@@ -1,0 +1,1060 @@
+/* 手付の描画に使う筆書き風フォント(佑字 肅)。
+   印刷時に環境差が出ないよう、ファイルを同梱して読み込む。
+   SIL Open Font License 1.1 / public/fonts/OFL.txt を参照。 */
+@font-face {
+  font-family: "Yuji Syuku";
+  src: url("/fonts/YujiSyuku-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --text: #4a4552;
+  --text-h: #08060d;
+  --bg: #fdfcfb;
+  --panel-bg: #ffffff;
+  --border: #e5e4e7;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+
+  --kusari-line: #c9c6cf;
+  --track-guide: #e5e4e7;
+  --te-box-fill: rgba(170, 59, 255, 0.08);
+  --te-box-stroke: #aa3bff;
+  --hit-fill: #08060d;
+  --kakegoe-fill: #6b6375;
+
+  --sans: system-ui, "Hiragino Sans", "Yu Gothic", "Segoe UI", Roboto, sans-serif;
+  /* 手付の描画用。同梱した筆書き風フォントを使い、
+     読み込めなかった場合に備えて明朝体を後ろに並べる */
+  --serif-ja:
+    "Yuji Syuku",
+    "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", YuMincho,
+    "游明朝", "Noto Serif JP", "Noto Serif CJK JP", "Source Han Serif JP",
+    "IPAmjMincho", "IPAMincho", "MS PMincho", "ＭＳ Ｐ明朝", serif;
+
+  font: 16px/1.5 var(--sans);
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #b8b3c0;
+    --text-h: #f3f2f6;
+    --bg: #15131a;
+    --panel-bg: #1c1a22;
+    --border: #322f3a;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.15);
+
+    --kusari-line: #4a4655;
+    --track-guide: #322f3a;
+    --te-box-fill: rgba(192, 132, 252, 0.12);
+    --te-box-stroke: #c084fc;
+    --hit-fill: #f3f2f6;
+    --kakegoe-fill: #b8b3c0;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: 22px;
+}
+
+h2 {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 20px 60px;
+}
+
+.app-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.app-subtitle {
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* 左(編集) / 仕切り / 右(手付)。左の幅は仕切りのドラッグで決まる */
+.app-main {
+  display: grid;
+  grid-template-columns: var(--editor-width, 520px) 20px 1fr;
+  gap: 0;
+  align-items: start;
+}
+
+/* ドラッグ中に文字が選択されてしまうのを防ぐ */
+.app-main.dragging {
+  user-select: none;
+  cursor: col-resize;
+}
+
+.pane-resizer {
+  align-self: stretch;
+  justify-self: center;
+  width: 100%;
+  min-height: 120px;
+  cursor: col-resize;
+  /* 当たり判定は列の幅いっぱい、見た目は中央の細い線だけ */
+  background: linear-gradient(var(--border), var(--border)) center / 1px 100%
+    no-repeat;
+}
+
+.pane-resizer:hover,
+.pane-resizer:focus-visible {
+  background: linear-gradient(var(--accent), var(--accent)) center / 3px 100%
+    no-repeat;
+  outline: none;
+}
+
+/* 狭い画面では上下に積むので、仕切りは出さない */
+@media (max-width: 960px) {
+  .app-main {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .pane-resizer {
+    display: none;
+  }
+}
+
+.editor-pane > * + * {
+  margin-top: 20px;
+}
+
+section.editor-pane,
+.score-pane {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.chip-remove:hover:not(:disabled) {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.chip-remove:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.kusari-add {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.kusari-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* タイムライングリッド。クサリ1つにつき表が1つで、下に積んでいく */
+.timeline-grid-wrap {
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* クサリ1つ分(操作バー + 表) */
+.kusari-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kusari-block-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.kusari-block-bar select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 12px;
+  padding: 3px 4px;
+}
+
+table.timeline-grid {
+  /* 1拍の幅はここだけで決める。どの表でも同じ幅になるようにするため、
+     列幅は内容から自動計算させず指定値で固定する
+     (自動計算だと、拍数の少ないクサリの列だけ広がってしまう) */
+  --beat-width: 72px;
+  --row-label-width: 60px;
+
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+  width: min-content;
+}
+
+.timeline-grid th,
+.timeline-grid td {
+  border: 1px solid var(--border);
+  height: 30px;
+  text-align: center;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+
+.timeline-grid .row-label {
+  position: sticky;
+  left: 0;
+  background: var(--panel-bg);
+  z-index: 1;
+  width: var(--row-label-width);
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* 列幅は先頭行(この拍番号の行)の指定で決まる。
+   謡の入力欄と同じく、半拍(裏と表の境目)にも区切り線を入れる。
+   数字の位置がずれないよう、線は背景として描く */
+.timeline-grid .beat-header {
+  width: var(--beat-width);
+  color: var(--text);
+  font-size: 11px;
+  padding: 0;
+  background: linear-gradient(var(--border), var(--border)) 50% 0 / 1px 100%
+    no-repeat;
+}
+
+/* 1拍の枠は「裏(左)・表(右)」の2つに分かれている。
+   拍の数字は表の入力欄の真上に来るよう、右半分の中央に置く */
+.beat-header-omote {
+  display: block;
+  width: 50%;
+  margin-left: 50%;
+  text-align: center;
+}
+
+/* 楽器の行。1クサリで1つの枠にし、そのクサリに置かれている手組の
+   名札を置いた順に並べる。どの拍を占めるかはここでは示さない。
+   色は --te-color(楽器ごと)で決まる */
+.timeline-grid .te-lane {
+  padding: 3px 6px;
+  height: 34px;
+  text-align: left;
+}
+
+.te-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 手組1つ分の名札。名前 + 拍数 + 外すボタン */
+.te-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 11px;
+  background: var(--te-color, var(--te-box-stroke));
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.te-chip-length {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.te-chip-remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 3px;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.te-chip-remove:hover {
+  background: rgba(255, 255, 255, 0.25);
+  opacity: 1;
+}
+
+/* 名札の末尾に置く追加ボタン。手組の有無に関わらず常に出す */
+.te-chips-add {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 11px;
+  padding: 2px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.te-chips-add:hover {
+  border-color: var(--te-color, var(--accent));
+  color: var(--te-color, var(--accent));
+}
+
+/* 表・裏の2つの入力欄をセルいっぱいに並べる(列幅は--beat-widthで決まる) */
+.timeline-grid .utai-cell {
+  padding: 0;
+}
+
+/* td自体をflexにするとテーブルのレイアウトから外れるため、内側のdivで横並びにする */
+.utai-cell-inner {
+  display: flex;
+}
+
+.utai-input {
+  display: block;
+  width: 50%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: none;
+  border-right: 1px solid var(--border);
+  outline: none;
+  text-align: center;
+  font-size: 15px;
+  height: 34px;
+  padding: 0 2px;
+  background: var(--panel-bg);
+  color: var(--text-h);
+}
+
+.utai-input:last-child {
+  border-right: none;
+}
+
+.utai-input:focus {
+  background: var(--accent-bg);
+}
+
+/* 手組の一覧(セルをクリックしたときに出す) */
+.te-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+/* 見出しと絞り込みの入力欄は動かさず、一覧だけスクロールさせる */
+.te-picker {
+  position: fixed;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+}
+
+.te-picker-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text);
+  padding: 4px 8px;
+}
+
+/* 絞り込みで何件に減ったか */
+.te-picker-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.te-picker-search {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 13px;
+  padding: 5px 8px;
+  margin: 0 4px 4px;
+}
+
+.te-picker-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.te-picker-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.te-picker-empty {
+  margin: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.te-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--text-h);
+  text-align: left;
+}
+
+/* 上下キーで選んでいるもの。マウスを載せたときと同じ見た目にする */
+.te-picker-item:hover:not(:disabled),
+.te-picker-item.active:not(:disabled) {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.te-picker-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.te-picker-item .te-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.te-picker-item .te-length {
+  font-size: 11px;
+  color: var(--text);
+}
+
+/* 描画ビュー */
+.score-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.score-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.toolbar-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.toolbar-button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.toolbar-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.score-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.score-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.score-page {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.score-page-label {
+  font-size: 12px;
+  color: var(--text);
+  background: var(--accent-bg);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+/* 手付は印刷物なので、画面のテーマ(ダークモード)に関わらず
+   常に「白地に黒線」で描く。ここでは意図的にテーマ変数を使わない。 */
+.score-view {
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
+}
+
+/* 文字色は楽器ごとに描画側でfill属性として指定するため、ここでは色を決めない
+   (ここでfillを指定すると属性より優先され、楽器の色が効かなくなる) */
+.score-view text {
+  font-family: var(--serif-ja);
+}
+
+.score-view .beat-axis-text {
+  fill: #000000;
+}
+
+.score-view .skewer-line {
+  stroke: #888888;
+}
+
+.score-view .skewer-line.thick {
+  stroke: #000000;
+  stroke-width: 1.6;
+}
+
+
+/* 印刷(PDF出力)。手付だけを紙に載せ、編集UIは出さない。
+   1クサリ枠 = 1ページ分の紙になるよう、ページごとに改ページする */
+/* 余白を0にすると、ブラウザが余白領域に描くヘッダー・フッター
+   (ページ番号・日付・アプリ名・URL)が出なくなる。
+   紙の余白はこの下の .score-page の padding で取る */
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  :root,
+  body {
+    background: #ffffff;
+  }
+
+  .app-header,
+  .editor-pane,
+  .pane-resizer,
+  .score-pane-header,
+  .score-page-label {
+    display: none;
+  }
+
+  .app {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 分割レイアウトを解いて、手付を紙幅いっぱいに使う */
+  .app-main {
+    display: block;
+  }
+
+  section.score-pane {
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .score-scroll {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .score-pages {
+    gap: 0;
+  }
+
+  .score-page {
+    display: block;
+    /* @pageの余白を0にしたぶん、こちらで紙の余白を取る */
+    padding: 10mm;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .score-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* 紙いっぱいまで拡大する。ただし縦がはみ出すと次の紙に送られてしまうので、
+     A4横(210mm) から上下の余白20mmを引いた高さで止める。
+     viewBoxがあるので、高さで止まれば幅も比率を保って縮む。
+     手付の外枠は罫線と重なって二重に見えるため、印刷では出さない */
+  .score-view {
+    width: 100%;
+    height: auto;
+    max-height: 185mm;
+    border: none;
+  }
+}
+
+/* 画面の切り替えタブ(手付 / 手組マスタ) */
+.app-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tab-button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tab-button.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 手組マスタの編集画面 */
+.master-pane {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.master-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.master-instrument-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 14px;
+}
+
+/* 左から: 手組の一覧 / 選んだ手組の中身 / プレビュー */
+.master-body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .master-body {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .master-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.master-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 一覧が長くなっても画面が伸びないよう、ここだけスクロールさせる。
+   「+ 手組を追加」はこの外に置き、常に見えるようにしている */
+.master-list-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+  /* 選択枠や落とす位置の線が、スクロールバーに隠れないように */
+  padding: 2px;
+  margin: -2px;
+}
+
+.master-list-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text-h);
+  text-align: left;
+}
+
+.master-list-item.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.master-list-item .te-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.master-list-item .te-length {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.master-empty {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.master-detail > * + * {
+  margin-top: 18px;
+}
+
+.master-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.master-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.master-fields input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-h);
+  width: 150px;
+}
+
+.master-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.master-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.master-row select,
+.master-row .master-text {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.master-row .master-text {
+  width: 70px;
+}
+
+/* 半拍単位の位置。数字だけでは分かりにくいので読み方を添える */
+.master-position {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.master-position input {
+  width: 60px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+/* 端を上下にずらす量(手の打ち方と同じ↑－↓) */
+.master-position-timing {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 2px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.master-position-timing option {
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.master-position-hint {
+  font-size: 11px;
+  color: var(--text);
+  min-width: 62px;
+}
+
+.master-remove {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.master-remove:hover {
+  border-color: #cc2222;
+  color: #cc2222;
+}
+
+/* 手組の一覧の1行(つまみ + 選択ボタン + 並べ替え) */
+.master-list-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+/* ドラッグで並べ替えるためのつまみ */
+.master-list-handle {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+.master-list-row.dragging {
+  opacity: 0.4;
+}
+
+/* 落とす位置を、その手組の上か下かで示す */
+.master-list-row.drop-above .master-list-item {
+  box-shadow: inset 0 3px 0 var(--accent);
+}
+
+.master-list-row.drop-below .master-list-item {
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.master-list-row .master-list-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.master-list-move {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.master-list-move .chip-remove {
+  padding: 0 4px;
+  line-height: 1.2;
+  font-size: 12px;
+}
+
+/* 手組編集用のタイムライン */
+.te-timeline-wrap {
+  overflow-x: auto;
+}
+
+/* 手・掛け声・補助線をまとめてずらすボタン */
+.te-timeline-shift {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+table.te-timeline {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: min-content;
+  font-size: 13px;
+}
+
+.te-timeline th,
+.te-timeline td {
+  border: 1px solid var(--border);
+  height: 30px;
+  padding: 0;
+  text-align: center;
+}
+
+.te-timeline .row-label {
+  width: 52px;
+  font-size: 12px;
+  color: var(--text);
+  padding: 0 4px;
+}
+
+/* 半拍ごとの枠。表の枠に拍数を出す */
+.te-timeline-beat {
+  width: 34px;
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.te-timeline-beat.omote {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.te-timeline-cell {
+  width: 34px;
+}
+
+.te-timeline-select,
+.te-timeline-input {
+  width: 100%;
+  height: 28px;
+  border: none;
+  outline: none;
+  background: var(--bg);
+  color: var(--text-h);
+  text-align: center;
+  font-size: 13px;
+  padding: 0;
+}
+
+/* 開いたときの一覧は背景を引き継がないので、色を明示しておく
+   (これを省くと、暗い配色のときに白地に白文字で読めなくなる) */
+.te-timeline-select option {
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.te-timeline-select:focus,
+.te-timeline-input:focus {
+  background: var(--accent-bg);
+}
+
+.te-timeline-note {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #cc2222;
+}
+
+/* 読み方の説明。注意書きではないので、目立たない色にする */
+.te-timeline-note.hint {
+  color: var(--text);
+}
+
+/* 唱歌編集用のタイムライン。作りは手付編集画面の謡の行と同じだが、
+   マスタ編集画面に収まるよう、1拍の幅は狭くしてある */
+.shoga-timeline-wrap {
+  overflow-x: auto;
+}
+
+table.timeline-grid.shoga-timeline {
+  --beat-width: 56px;
+  --row-label-width: 44px;
+}
+
+/* プレビューは手付と同じく、画面のテーマに関わらず白地に黒線で描く。
+   入力しながら見えるよう、スクロールしても付いてくるようにする */
+.master-preview {
+  position: sticky;
+  top: 16px;
+}
+
+.te-preview {
+  background: #ffffff;
+  border: 1px solid #000000;
+}
+
+.te-preview text {
+  font-family: var(--serif-ja);
+}
+
+.te-preview .beat-axis-text {
+  fill: #000000;
+}
+
+.te-preview .skewer-line {
+  stroke: #000000;
+}
