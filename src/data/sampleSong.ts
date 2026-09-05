@@ -1,7 +1,8 @@
 // サンプル曲データ(手付本体) — 設計ドキュメントの例をもとに拡張
 // beat は半拍単位の枠番号(1 = 0拍の裏、2 = 1拍の表、3 = 1拍の裏、… 16 = 8拍の表)。
-// 手組は常にクサリの1拍目を起点として置かれるため、
-// ここでは te_instances にどのクサリへ置くか(kusari_index)だけを持つ。
+// 手組は常に、置いたクサリの1拍前(前のクサリの最後の拍の表)を起点として
+// 置かれるため、ここでは te_instances にどのクサリへ置くか(kusari_index)
+// だけを持つ。
 import type { SongData } from "../types";
 
 export const sampleSong: SongData = {

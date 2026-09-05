@@ -9,8 +9,7 @@ import {
 } from "../types";
 import {
   computeGlobalStarts,
-  teInstanceStartBeat,
-  teInstanceStartRef,
+  teInstanceStartGlobalPos,
   totalBeats,
 } from "../logic/position";
 import { findTe } from "../logic/tePattern";
@@ -223,10 +222,7 @@ function dropUnfittableTe(
       const def = findTe(teMaster[instrument], ti.te_id);
       // マスタに無い手組は長さが分からないので、判断せずそのまま残す
       if (!def) return true;
-      const start = teInstanceStartBeat(
-        teInstanceStartRef(ti.kusari_index),
-        globalStarts,
-      );
+      const start = teInstanceStartGlobalPos(ti.kusari_index, globalStarts);
       return start + def.internal_pattern.length <= total;
     });
     if (kept.length === track.te_instances.length) continue;

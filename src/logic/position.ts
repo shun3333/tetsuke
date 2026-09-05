@@ -66,18 +66,6 @@ export function isBeatRefValid(
 
 
 /**
- * beat_ref をグローバル位置(拍単位、小数可)に変換する。
- * globalStartsは computeGlobalStarts の結果を渡す(呼び出し側でキャッシュ可能)。
- */
-export function beatRefToGlobalPos(ref: BeatRef, globalStarts: number[]): number {
-  const start = globalStarts[ref.kusari_index];
-  if (start === undefined) {
-    throw new Error(`invalid kusari_index: ${ref.kusari_index}`);
-  }
-  return start + slotToLocalOffset(ref.beat);
-}
-
-/**
  * グローバル位置(拍単位、小数可)を beat_ref に変換する。
  * 各クサリは [global_start - 0.5, global_start + 拍数 - 1] の範囲を受け持つ。
  * (クサリ末尾の拍の裏は次のクサリの beat: 1 になる)
@@ -98,12 +86,16 @@ export function globalPosToBeatRef(
 }
 
 /**
- * 手組の起点(start_ref)を作る。
- * 開始位置はクサリの1拍目(表)に固定で、手組の中身(rel_pos)は
- * そこからの相対位置としてそのまま乗る(rel_pos: 0 が1拍の表)。
+ * 手組の起点となるグローバル位置(拍単位)。
+ * 選んだクサリの1拍前(そのクサリが始まる直前の拍)を起点にする。
+ * 最初のクサリを選んだ場合、起点は曲の頭より前になり得るが、
+ * そこにかかる分は描画されないだけで、置くこと自体は問題ない。
  */
-export function teInstanceStartRef(kusariIndex: number): BeatRef {
-  return { kusari_index: kusariIndex, beat: 2 };
+export function teInstanceStartGlobalPos(
+  kusariIndex: number,
+  globalStarts: number[],
+): number {
+  return globalStarts[kusariIndex] - 1;
 }
 
 /** グローバル拍番号(0-indexed) → クサリindexとクサリ内の拍番号(1始まり) */
@@ -122,10 +114,3 @@ export function globalBeatToKusariBeat(
   return null;
 }
 
-/**
- * 手組インスタンスが占める最初の拍のグローバル拍番号(0-indexed)。
- * start_ref.beat は「クサリ内の拍 × 2」なので、2で割って1を引けばその拍(0始まり)に戻る。
- */
-export function teInstanceStartBeat(ref: BeatRef, globalStarts: number[]): number {
-  return Math.floor(ref.beat / 2) - 1 + globalStarts[ref.kusari_index];
-}

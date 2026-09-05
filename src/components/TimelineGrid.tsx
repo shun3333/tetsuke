@@ -19,8 +19,7 @@ import {
   beatCountOf,
   computeGlobalStarts,
   globalBeatToKusariBeat,
-  teInstanceStartBeat,
-  teInstanceStartRef,
+  teInstanceStartGlobalPos,
   totalBeats,
 } from "../logic/position";
 import { findTe } from "../logic/tePattern";
@@ -115,10 +114,7 @@ function buildTeBars(
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
     const def = findTe(teMaster, ti.te_id);
     if (!def) return;
-    const startG = teInstanceStartBeat(
-      teInstanceStartRef(ti.kusari_index),
-      globalStarts,
-    );
+    const startG = teInstanceStartGlobalPos(ti.kusari_index, globalStarts);
     const endG = startG + def.internal_pattern.length;
 
     song.kusari_sequence.forEach((k, kusariIndex) => {
@@ -194,7 +190,7 @@ export function TimelineGrid({
 
   /**
    * その手組をこのクサリに置けない理由。置けるならnull。
-   * 起点はクサリの一番始めに固定で、ここでは選べない。
+   * 起点はクサリの1拍目から1拍前にずらした位置に固定で、ここでは選べない。
    * 他の手組と重なるかどうかは見ない(重ねて置いてよい)。
    */
   function placementError(
@@ -206,10 +202,7 @@ export function TimelineGrid({
     if (teId === "") return "IDが空の手組は置けません";
     const def = findTe(teMaster[instrument], teId);
     if (!def) return "手組が見つかりません";
-    const start = teInstanceStartBeat(
-      teInstanceStartRef(kusariIndex),
-      globalStarts,
-    );
+    const start = teInstanceStartGlobalPos(kusariIndex, globalStarts);
     if (start + def.internal_pattern.length > total) return "長さが収まりません";
     return null;
   }
@@ -435,7 +428,7 @@ export function TimelineGrid({
                         } as React.CSSProperties
                       }
                     >
-                      {/* 拍の目印。手組は常にクサリの一番始めから置かれる */}
+                      {/* 拍の目印。手組は常にこのクサリの1拍前(前のクサリの末尾)から置かれる */}
                       {beats.map((_, i) => (
                         <div
                           key={i}
