@@ -1,9 +1,10 @@
 // 手組マスタ(te_master) — 楽器ごとのサンプルデータ
 // 楽器ごとに別のマスタを持ち、その中は手組を並べた列として持つ。
 // rel_pos は手組の起点からの相対位置を半拍単位で表す。
-// 手組は、置いたクサリの1拍目(表)から1拍前にずらした位置
-// (= 前のクサリの最後の拍の表)を起点として置かれる。
-// つまり rel_pos: 2 が1拍の表、rel_pos: 2k が k拍の表、奇数の rel_pos はその裏。
+// 起点は「置いたクサリの1拍目(表)」なので、
+// rel_pos: 0 が1拍の表、rel_pos: 2k が (1+k)拍の表、奇数の rel_pos はその裏。
+// 負の rel_pos は起点より前で、-2 が前のクサリの最後の拍(本地なら8拍目)の表、
+// -1 がその裏。大鼓を中心に、ここから始まる手組が多い。
 // 置くクサリより長い手組は、続きが自動的に次のクサリに乗る。
 import type { Instrument, TeMaster } from "../types";
 
@@ -17,31 +18,31 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
+        },
+        {
+          rel_pos: 3,
+          text: "ハ",
         },
         {
           rel_pos: 5,
           text: "ハ",
         },
-        {
-          rel_pos: 7,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -57,31 +58,31 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
+        },
+        {
+          rel_pos: 3,
+          text: "ハ",
         },
         {
           rel_pos: 5,
           text: "ハ",
         },
-        {
-          rel_pos: 7,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "chi",
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -97,27 +98,27 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 7,
+          rel_pos: 5,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "chi",
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -134,7 +135,7 @@ export const kotsuzumiTeMaster: TeMaster = [
       kakegoe: [],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
@@ -150,22 +151,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "chi",
         },
@@ -181,31 +182,31 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 7,
+          rel_pos: 5,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -221,27 +222,27 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 7,
+          rel_pos: 5,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "chi",
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -257,22 +258,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
@@ -288,22 +289,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
@@ -319,13 +320,13 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
@@ -341,13 +342,13 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
@@ -363,15 +364,20 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
         {
           rel_pos: 2,
           timing: "on",
@@ -379,11 +385,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 4,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -399,15 +400,20 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "chi",
+        },
         {
           rel_pos: 2,
           timing: "on",
@@ -415,11 +421,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 4,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -435,22 +436,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
@@ -466,22 +467,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
@@ -497,23 +498,28 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "chi",
         },
         {
           rel_pos: 4,
@@ -523,7 +529,7 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 6,
           timing: "on",
-          te: "chi",
+          te: "po",
         },
         {
           rel_pos: 8,
@@ -532,11 +538,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
           timing: "on",
           te: "po",
         },
@@ -552,21 +553,26 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
@@ -578,7 +584,7 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 6,
           timing: "on",
-          te: "chi",
+          te: "po",
         },
         {
           rel_pos: 8,
@@ -587,11 +593,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
           timing: "on",
           te: "po",
         },
@@ -607,19 +608,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
+        },
+        {
+          rel_pos: 3,
+          text: "ハ",
         },
         {
           rel_pos: 5,
           text: "ハ",
         },
-        {
-          rel_pos: 7,
-          text: "ハ",
-        },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
         {
           rel_pos: 0,
           timing: "on",
@@ -628,7 +634,7 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 2,
           timing: "on",
-          te: "chi",
+          te: "po",
         },
         {
           rel_pos: 4,
@@ -637,11 +643,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -657,19 +658,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "chi",
         },
         {
           rel_pos: 4,
@@ -679,15 +685,10 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 6,
           timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
           te: "po",
         },
         {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -703,17 +704,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
@@ -725,15 +731,10 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 6,
           timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
           te: "po",
         },
         {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -749,15 +750,20 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
         {
           rel_pos: 0,
           timing: "on",
@@ -766,15 +772,10 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 2,
           timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 4,
-          timing: "on",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -790,21 +791,26 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
@@ -814,17 +820,12 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "chi",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 12,
+          rel_pos: 10,
           timing: "on",
           te: "po",
         },
@@ -840,21 +841,26 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
@@ -864,17 +870,12 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "chi",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 12,
+          rel_pos: 10,
           timing: "on",
           te: "po",
         },
@@ -890,36 +891,36 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
+        },
+        {
+          rel_pos: 3,
+          text: "ハ",
         },
         {
           rel_pos: 5,
           text: "ハ",
         },
-        {
-          rel_pos: 7,
-          text: "ハ",
-        },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
         {
           rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 2,
+          rel_pos: 4,
           timing: "on",
           te: "chi",
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -936,17 +937,17 @@ export const kotsuzumiTeMaster: TeMaster = [
       kakegoe: [],
       hits: [
         {
+          rel_pos: -2,
+          timing: "on",
+          te: "po",
+        },
+        {
           rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
           rel_pos: 2,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -962,13 +963,13 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 1,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
@@ -984,15 +985,20 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 2,
@@ -1004,21 +1010,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 1,
-          to_pos: 2,
+          from_pos: -1,
+          to_pos: 0,
           shape: "straight",
         },
         {
-          from_pos: 2,
-          to_pos: 4,
+          from_pos: 0,
+          to_pos: 2,
           shape: "bent",
         },
       ],
@@ -1033,19 +1034,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
         {
-          rel_pos: 7,
+          rel_pos: 5,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 2,
@@ -1062,21 +1068,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 1,
-          to_pos: 2,
+          from_pos: -1,
+          to_pos: 0,
           shape: "straight",
         },
         {
-          from_pos: 2,
-          to_pos: 4,
+          from_pos: 0,
+          to_pos: 2,
           shape: "bent",
         },
       ],
@@ -1092,30 +1093,30 @@ export const kotsuzumiTeMaster: TeMaster = [
       kakegoe: [],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 2,
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 4,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 1,
-          to_pos: 2,
+          from_pos: -1,
+          to_pos: 0,
           shape: "straight",
         },
         {
-          from_pos: 2,
-          to_pos: 4,
+          from_pos: 0,
+          to_pos: 2,
           shape: "bent",
         },
       ],
@@ -1131,7 +1132,12 @@ export const kotsuzumiTeMaster: TeMaster = [
       kakegoe: [],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
@@ -1140,21 +1146,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 4,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 1,
-          to_pos: 2,
+          from_pos: -1,
+          to_pos: 0,
           shape: "straight",
         },
         {
-          from_pos: 2,
-          to_pos: 4,
+          from_pos: 0,
+          to_pos: 2,
           shape: "bent",
         },
       ],
@@ -1170,7 +1171,12 @@ export const kotsuzumiTeMaster: TeMaster = [
       kakegoe: [],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
@@ -1179,21 +1185,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 4,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 1,
-          to_pos: 2,
+          from_pos: -1,
+          to_pos: 0,
           shape: "straight",
         },
         {
-          from_pos: 2,
-          to_pos: 4,
+          from_pos: 0,
+          to_pos: 2,
           shape: "bent",
         },
       ],
@@ -1209,7 +1210,12 @@ export const kotsuzumiTeMaster: TeMaster = [
       kakegoe: [],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
@@ -1218,21 +1224,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 4,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 1,
-          to_pos: 2,
+          from_pos: -1,
+          to_pos: 0,
           shape: "straight",
         },
         {
-          from_pos: 2,
-          to_pos: 4,
+          from_pos: 0,
+          to_pos: 2,
           shape: "bent",
         },
       ],
@@ -1248,17 +1249,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       kakegoe: [],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -1267,26 +1273,21 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 1,
-          to_pos: 2,
+          from_pos: -1,
+          to_pos: 0,
           shape: "bent",
         },
         {
-          from_pos: 5,
-          to_pos: 6,
+          from_pos: 3,
+          to_pos: 4,
           shape: "straight",
         },
         {
-          from_pos: 6,
-          to_pos: 8,
+          from_pos: 4,
+          to_pos: 6,
           shape: "bent",
         },
       ],
@@ -1301,18 +1302,23 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -1321,21 +1327,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 5,
-          to_pos: 6,
+          from_pos: 3,
+          to_pos: 4,
           shape: "straight",
         },
         {
-          from_pos: 6,
-          to_pos: 8,
+          from_pos: 4,
+          to_pos: 6,
           shape: "bent",
         },
       ],
@@ -1350,31 +1351,31 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 7,
+          rel_pos: 5,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -1390,43 +1391,43 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "slightly_late",
           te: "pu",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 6,
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 4,
-          to_pos: 6,
+          from_pos: 2,
+          to_pos: 4,
           shape: "straight",
           from_timing: "slightly_late",
           to_timing: "on",
         },
         {
-          from_pos: 6,
-          to_pos: 8,
+          from_pos: 4,
+          to_pos: 6,
           shape: "bent",
         },
       ],
@@ -1441,23 +1442,28 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "slightly_late",
           te: "po",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -1466,27 +1472,22 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 0,
-          to_pos: 2,
+          from_pos: -2,
+          to_pos: 0,
           shape: "bent",
           from_timing: "slightly_late",
         },
         {
-          from_pos: 5,
-          to_pos: 6,
+          from_pos: 3,
+          to_pos: 4,
           shape: "straight",
         },
         {
-          from_pos: 6,
-          to_pos: 8,
+          from_pos: 4,
+          to_pos: 6,
           shape: "bent",
         },
       ],
@@ -1501,37 +1502,42 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "chi",
+        },
         {
           rel_pos: 2,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 4,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_early",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -1540,26 +1546,21 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 4,
-          to_pos: 6,
+          from_pos: 2,
+          to_pos: 4,
           shape: "straight",
         },
         {
-          from_pos: 9,
+          from_pos: 7,
+          to_pos: 8,
+          shape: "straight",
+        },
+        {
+          from_pos: 8,
           to_pos: 10,
-          shape: "straight",
-        },
-        {
-          from_pos: 10,
-          to_pos: 12,
           shape: "bent",
         },
       ],
@@ -1574,37 +1575,42 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_early",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -1613,26 +1619,21 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 4,
-          to_pos: 6,
+          from_pos: 2,
+          to_pos: 4,
           shape: "straight",
         },
         {
-          from_pos: 9,
+          from_pos: 7,
+          to_pos: 8,
+          shape: "straight",
+        },
+        {
+          from_pos: 8,
           to_pos: 10,
-          shape: "straight",
-        },
-        {
-          from_pos: 10,
-          to_pos: 12,
           shape: "bent",
         },
       ],
@@ -1647,37 +1648,42 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "ta",
+        },
         {
           rel_pos: 2,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 4,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_early",
           te: "ta",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -1686,26 +1692,21 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 4,
-          to_pos: 6,
+          from_pos: 2,
+          to_pos: 4,
           shape: "straight",
         },
         {
-          from_pos: 9,
+          from_pos: 7,
+          to_pos: 8,
+          shape: "straight",
+        },
+        {
+          from_pos: 8,
           to_pos: 10,
-          shape: "straight",
-        },
-        {
-          from_pos: 10,
-          to_pos: 12,
           shape: "bent",
         },
       ],
@@ -1720,32 +1721,37 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "slightly_late",
           te: "ta",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -1754,27 +1760,22 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 4,
-          to_pos: 6,
+          from_pos: 2,
+          to_pos: 4,
           shape: "bent",
           from_timing: "slightly_late",
         },
         {
-          from_pos: 9,
-          to_pos: 10,
+          from_pos: 7,
+          to_pos: 8,
           shape: "straight",
         },
         {
-          from_pos: 10,
-          to_pos: 12,
+          from_pos: 8,
+          to_pos: 10,
           shape: "bent",
         },
       ],
@@ -1789,32 +1790,37 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "slightly_late",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -1823,27 +1829,22 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 4,
-          to_pos: 6,
+          from_pos: 2,
+          to_pos: 4,
           shape: "bent",
           from_timing: "slightly_late",
         },
         {
-          from_pos: 9,
-          to_pos: 10,
+          from_pos: 7,
+          to_pos: 8,
           shape: "straight",
         },
         {
-          from_pos: 10,
-          to_pos: 12,
+          from_pos: 8,
+          to_pos: 10,
           shape: "bent",
         },
       ],
@@ -1858,41 +1859,46 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 8,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
           timing: "slightly_late",
           te: "chi",
         },
         {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 13,
+          rel_pos: 11,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 12,
           timing: "on",
           te: "po",
         },
@@ -1901,27 +1907,22 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 16,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 8,
-          to_pos: 10,
+          from_pos: 6,
+          to_pos: 8,
           shape: "bent",
           from_timing: "slightly_late",
         },
         {
-          from_pos: 13,
-          to_pos: 14,
+          from_pos: 11,
+          to_pos: 12,
           shape: "straight",
         },
         {
-          from_pos: 14,
-          to_pos: 16,
+          from_pos: 12,
+          to_pos: 14,
           shape: "bent",
         },
       ],
@@ -1936,28 +1937,28 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_late",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -1973,23 +1974,23 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_late",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -2005,28 +2006,33 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           text: "ハ ア ー",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "slightly_late",
           te: "pu",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_late",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
           te: "po",
         },
         {
@@ -2034,16 +2040,11 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 0,
-          to_pos: 2,
+          from_pos: -2,
+          to_pos: 0,
           shape: "bent",
           from_timing: "slightly_late",
         },
@@ -2059,40 +2060,40 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           text: "ハ ア ー",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "slightly_late",
           te: "pu",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_late",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
       ],
       guides: [
         {
-          from_pos: 0,
-          to_pos: 2,
+          from_pos: -2,
+          to_pos: 0,
           shape: "bent",
           from_timing: "slightly_late",
         },
@@ -2108,51 +2109,56 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 13,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           text: "ハ ア ー",
         },
         {
-          rel_pos: 17,
+          rel_pos: 15,
           text: "イヤ",
         },
         {
-          rel_pos: 21,
+          rel_pos: 19,
           text: "ハ",
         },
         {
-          rel_pos: 25,
+          rel_pos: 23,
           text: "イヤ",
         },
       ],
       hits: [
         {
+          rel_pos: -2,
+          timing: "slightly_late",
+          te: "pu",
+        },
+        {
           rel_pos: 0,
-          timing: "slightly_late",
-          te: "pu",
-        },
-        {
-          rel_pos: 2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_late",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 8,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 10,
@@ -2160,9 +2166,9 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 12,
+          rel_pos: 14,
           timing: "on",
-          te: "po",
+          te: "ta",
         },
         {
           rel_pos: 16,
@@ -2170,36 +2176,31 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "ta",
         },
         {
-          rel_pos: 18,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 22,
+          rel_pos: 20,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 26,
+          rel_pos: 24,
           timing: "on",
           te: "ta",
         },
       ],
       guides: [
         {
-          from_pos: 0,
-          to_pos: 2,
+          from_pos: -2,
+          to_pos: 0,
           shape: "bent",
           from_timing: "slightly_late",
         },
         {
-          from_pos: 9,
-          to_pos: 10,
+          from_pos: 7,
+          to_pos: 8,
           shape: "straight",
         },
         {
-          from_pos: 10,
-          to_pos: 12,
+          from_pos: 8,
+          to_pos: 10,
           shape: "bent",
         },
       ],
@@ -2214,44 +2215,49 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 17,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           text: "ハ ア ー",
         },
         {
-          rel_pos: 13,
+          rel_pos: 11,
           text: "ハ",
         },
         {
-          rel_pos: 25,
+          rel_pos: 23,
           text: "イヤ",
         },
         {
-          rel_pos: 29,
+          rel_pos: 27,
           text: "ハ",
         },
         {
-          rel_pos: 33,
+          rel_pos: 31,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "slightly_late",
           te: "pu",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "slightly_late",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
           te: "po",
         },
         {
@@ -2260,7 +2266,7 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 8,
+          rel_pos: 10,
           timing: "on",
           te: "po",
         },
@@ -2270,14 +2276,116 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 14,
+          rel_pos: 15,
+          timing: "on",
+          te: "pu",
+        },
+        {
+          rel_pos: 16,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 17,
+          rel_pos: 18,
           timing: "on",
-          te: "pu",
+          te: "po",
+        },
+        {
+          rel_pos: 22,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 24,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 28,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 32,
+          timing: "on",
+          te: "ta",
+        },
+      ],
+      guides: [
+        {
+          from_pos: -2,
+          to_pos: 0,
+          shape: "bent",
+          from_timing: "slightly_late",
+        },
+        {
+          from_pos: 15,
+          to_pos: 16,
+          shape: "straight",
+        },
+        {
+          from_pos: 16,
+          to_pos: 18,
+          shape: "bent",
+        },
+      ],
+    },
+  },
+  {
+    uid: "8b06d805-77e4-4ba2-90ef-eeb5fd060334",
+    te_id: "kae-kusedome",
+    label: "替曲止",
+    instrument: "kotsuzumi",
+    internal_pattern: {
+      length: 13,
+      kakegoe: [
+        {
+          rel_pos: 0,
+          text: "ヤ ア ー",
+        },
+        {
+          rel_pos: 15,
+          text: "ヤ",
+        },
+        {
+          rel_pos: 19,
+          text: "ハ",
+        },
+        {
+          rel_pos: 23,
+          text: "イヤ",
+        },
+      ],
+      hits: [
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 10,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 14,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 16,
+          timing: "on",
+          te: "chi",
         },
         {
           rel_pos: 18,
@@ -2294,113 +2402,6 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "ta",
         },
-        {
-          rel_pos: 26,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 30,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 34,
-          timing: "on",
-          te: "ta",
-        },
-      ],
-      guides: [
-        {
-          from_pos: 0,
-          to_pos: 2,
-          shape: "bent",
-          from_timing: "slightly_late",
-        },
-        {
-          from_pos: 17,
-          to_pos: 18,
-          shape: "straight",
-        },
-        {
-          from_pos: 18,
-          to_pos: 20,
-          shape: "bent",
-        },
-      ],
-    },
-  },
-  {
-    uid: "8b06d805-77e4-4ba2-90ef-eeb5fd060334",
-    te_id: "kae-kusedome",
-    label: "替曲止",
-    instrument: "kotsuzumi",
-    internal_pattern: {
-      length: 13,
-      kakegoe: [
-        {
-          rel_pos: 2,
-          text: "ヤ ア ー",
-        },
-        {
-          rel_pos: 17,
-          text: "ヤ",
-        },
-        {
-          rel_pos: 21,
-          text: "ハ",
-        },
-        {
-          rel_pos: 25,
-          text: "イヤ",
-        },
-      ],
-      hits: [
-        {
-          rel_pos: 4,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 16,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 18,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 20,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 22,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 26,
-          timing: "on",
-          te: "ta",
-        },
       ],
     },
   },
@@ -2413,32 +2414,32 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ヤ ア ー",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
         {
           rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
           timing: "on",
           te: "po",
         },
@@ -2454,18 +2455,18 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "slightly_late",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
@@ -2481,19 +2482,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
         {
-          rel_pos: 7,
+          rel_pos: 5,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 4,
@@ -2502,11 +2508,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -2522,24 +2523,29 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
         {
-          rel_pos: 11,
+          rel_pos: 9,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "ta",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 8,
@@ -2548,11 +2554,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
           timing: "on",
           te: "po",
         },
@@ -2569,17 +2570,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "イヤ",
         },
         {
-          rel_pos: 7,
+          rel_pos: 5,
           text: "ア",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 4,
           timing: "on",
           te: "ta",
         },
@@ -2588,16 +2594,11 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "ta",
         },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "ta",
-        },
       ],
       guides: [
         {
-          from_pos: 6,
-          to_pos: 8,
+          from_pos: 4,
+          to_pos: 6,
           shape: "bent",
         },
       ],
@@ -2612,32 +2613,32 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "イヤ",
         },
         {
-          rel_pos: 11,
+          rel_pos: 9,
           text: "ア",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 8,
           timing: "on",
           te: "ta",
         },
         {
           rel_pos: 10,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 12,
           timing: "on",
           te: "ta",
         },
@@ -2653,27 +2654,27 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           text: "ヤ ア ー",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ハ ア ー",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
           te: "ta",
         },
@@ -2689,32 +2690,32 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ヤ ア ー",
         },
         {
-          rel_pos: 10,
+          rel_pos: 8,
           text: "ハ ア ー",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 12,
+          rel_pos: 10,
           timing: "on",
           te: "ta",
         },
@@ -2730,19 +2731,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 10,
+          rel_pos: 8,
           text: "ハ ア ー",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "chi",
         },
         {
           rel_pos: 4,
@@ -2752,15 +2758,10 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 6,
           timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
           te: "po",
         },
         {
-          rel_pos: 12,
+          rel_pos: 10,
           timing: "on",
           te: "ta",
         },
@@ -2776,15 +2777,20 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ハ ア ー",
         },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
         {
           rel_pos: 0,
           timing: "on",
@@ -2793,15 +2799,10 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           rel_pos: 2,
           timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 4,
-          timing: "on",
           te: "po",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
           te: "ta",
         },
@@ -2817,15 +2818,258 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ハ ア ー",
         },
       ],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           timing: "on",
           te: "po",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "ta",
+        },
+      ],
+      guides: [
+        {
+          from_pos: -1,
+          to_pos: 0,
+          shape: "straight",
+        },
+        {
+          from_pos: 0,
+          to_pos: 2,
+          shape: "bent",
+        },
+      ],
+    },
+  },
+  {
+    uid: "f36dd767-1f62-434c-ba7d-29efd1fb7859",
+    te_id: "torikaeshi",
+    label: "取返",
+    instrument: "kotsuzumi",
+    internal_pattern: {
+      length: 5,
+      kakegoe: [
+        {
+          rel_pos: -1,
+          text: "ハ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
+        },
+      ],
+      hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 3,
+          timing: "on",
+          te: "pu",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
+          timing: "on",
+          te: "po",
+        },
+      ],
+      guides: [
+        {
+          from_pos: 3,
+          to_pos: 4,
+          shape: "straight",
+        },
+        {
+          from_pos: 4,
+          to_pos: 6,
+          shape: "bent",
+        },
+      ],
+    },
+  },
+  {
+    uid: "acd445b0-1492-47f9-84fc-9b52df2d5955",
+    te_id: "kashira-torikaeshi",
+    label: "頭取返",
+    instrument: "kotsuzumi",
+    internal_pattern: {
+      length: 5,
+      kakegoe: [
+        {
+          rel_pos: -1,
+          text: "ハ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
+        },
+      ],
+      hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 3,
+          timing: "on",
+          te: "pu",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
+          timing: "on",
+          te: "po",
+        },
+      ],
+      guides: [
+        {
+          from_pos: 3,
+          to_pos: 4,
+          shape: "straight",
+        },
+        {
+          from_pos: 4,
+          to_pos: 6,
+          shape: "bent",
+        },
+      ],
+    },
+  },
+  {
+    uid: "27df650d-3860-4a31-9110-05de817a7eed",
+    te_id: "uchioroshi",
+    label: "打下",
+    instrument: "kotsuzumi",
+    internal_pattern: {
+      length: 5,
+      kakegoe: [
+        {
+          rel_pos: -1,
+          text: "イヤ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
+        },
+      ],
+      hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 3,
+          timing: "on",
+          te: "pu",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 8,
+          timing: "on",
+          te: "po",
+        },
+      ],
+      guides: [
+        {
+          from_pos: 3,
+          to_pos: 4,
+          shape: "straight",
+        },
+        {
+          from_pos: 4,
+          to_pos: 6,
+          shape: "bent",
+        },
+      ],
+    },
+  },
+  {
+    uid: "0e3089fd-7d5a-4022-b8f1-d0d9966e613b",
+    te_id: "te_1",
+    label: "打出打下",
+    instrument: "kotsuzumi",
+    internal_pattern: {
+      length: 4,
+      kakegoe: [
+        {
+          rel_pos: 5,
+          text: "ハ",
+        },
+      ],
+      hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 1,
+          timing: "on",
+          te: "pu",
         },
         {
           rel_pos: 2,
@@ -2838,9 +3082,9 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
-          te: "ta",
+          te: "po",
         },
       ],
       guides: [
@@ -2858,212 +3102,36 @@ export const kotsuzumiTeMaster: TeMaster = [
     },
   },
   {
-    uid: "f36dd767-1f62-434c-ba7d-29efd1fb7859",
-    te_id: "torikaeshi",
-    label: "取返",
+    uid: "a2070e7f-c25e-4b07-bd00-dc9e9e32d45e",
+    te_id: "torikaeshi-uchitsume",
+    label: "取返打ツメ",
     instrument: "kotsuzumi",
     internal_pattern: {
-      length: 5,
+      length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
-        {
-          rel_pos: 9,
-          text: "ハ",
-        },
-      ],
-      hits: [
-        {
-          rel_pos: 0,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 2,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 5,
-          timing: "on",
-          te: "pu",
-        },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-      ],
-      guides: [
-        {
-          from_pos: 5,
-          to_pos: 6,
-          shape: "straight",
-        },
-        {
-          from_pos: 6,
-          to_pos: 8,
-          shape: "bent",
-        },
-      ],
-    },
-  },
-  {
-    uid: "acd445b0-1492-47f9-84fc-9b52df2d5955",
-    te_id: "kashira-torikaeshi",
-    label: "頭取返",
-    instrument: "kotsuzumi",
-    internal_pattern: {
-      length: 5,
-      kakegoe: [
-        {
-          rel_pos: 1,
-          text: "ハ",
-        },
-        {
-          rel_pos: 9,
-          text: "ハ",
-        },
-      ],
-      hits: [
-        {
-          rel_pos: 0,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 2,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 5,
-          timing: "on",
-          te: "pu",
-        },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-      ],
-      guides: [
-        {
-          from_pos: 5,
-          to_pos: 6,
-          shape: "straight",
-        },
-        {
-          from_pos: 6,
-          to_pos: 8,
-          shape: "bent",
-        },
-      ],
-    },
-  },
-  {
-    uid: "27df650d-3860-4a31-9110-05de817a7eed",
-    te_id: "uchioroshi",
-    label: "打下",
-    instrument: "kotsuzumi",
-    internal_pattern: {
-      length: 5,
-      kakegoe: [
-        {
-          rel_pos: 1,
-          text: "イヤ",
-        },
-        {
-          rel_pos: 9,
-          text: "ハ",
-        },
-      ],
-      hits: [
-        {
-          rel_pos: 0,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 2,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 5,
-          timing: "on",
-          te: "pu",
-        },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-      ],
-      guides: [
-        {
-          from_pos: 5,
-          to_pos: 6,
-          shape: "straight",
-        },
-        {
-          from_pos: 6,
-          to_pos: 8,
-          shape: "bent",
-        },
-      ],
-    },
-  },
-  {
-    uid: "0e3089fd-7d5a-4022-b8f1-d0d9966e613b",
-    te_id: "te_1",
-    label: "打出打下",
-    instrument: "kotsuzumi",
-    internal_pattern: {
-      length: 4,
-      kakegoe: [
         {
           rel_pos: 7,
           text: "ハ",
         },
+        {
+          rel_pos: 9,
+          text: "ハ",
+        },
       ],
       hits: [
         {
+          rel_pos: -2,
+          timing: "on",
+          te: "po",
+        },
+        {
           rel_pos: 0,
           timing: "on",
-          te: "ta",
+          te: "po",
         },
         {
           rel_pos: 3,
@@ -3085,6 +3153,11 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
+        {
+          rel_pos: 10,
+          timing: "on",
+          te: "po",
+        },
       ],
       guides: [
         {
@@ -3095,78 +3168,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         {
           from_pos: 4,
           to_pos: 6,
-          shape: "bent",
-        },
-      ],
-    },
-  },
-  {
-    uid: "a2070e7f-c25e-4b07-bd00-dc9e9e32d45e",
-    te_id: "torikaeshi-uchitsume",
-    label: "取返打ツメ",
-    instrument: "kotsuzumi",
-    internal_pattern: {
-      length: 6,
-      kakegoe: [
-        {
-          rel_pos: 1,
-          text: "ハ",
-        },
-        {
-          rel_pos: 9,
-          text: "ハ",
-        },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
-      ],
-      hits: [
-        {
-          rel_pos: 0,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 2,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 5,
-          timing: "on",
-          te: "pu",
-        },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
-      ],
-      guides: [
-        {
-          from_pos: 5,
-          to_pos: 6,
-          shape: "straight",
-        },
-        {
-          from_pos: 6,
-          to_pos: 8,
           shape: "bent",
         },
       ],
@@ -3181,33 +3182,38 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 6,
@@ -3224,21 +3230,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 5,
-          to_pos: 6,
+          from_pos: 3,
+          to_pos: 4,
           shape: "straight",
         },
         {
-          from_pos: 6,
-          to_pos: 8,
+          from_pos: 4,
+          to_pos: 6,
           shape: "bent",
         },
       ],
@@ -3253,77 +3254,9 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
-        {
-          rel_pos: 9,
-          text: "ハ",
-        },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
-      ],
-      hits: [
-        {
-          rel_pos: 0,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 2,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 5,
-          timing: "on",
-          te: "pu",
-        },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
-      ],
-      guides: [
-        {
-          from_pos: 5,
-          to_pos: 6,
-          shape: "straight",
-        },
-        {
-          from_pos: 6,
-          to_pos: 8,
-          shape: "bent",
-        },
-      ],
-    },
-  },
-  {
-    uid: "206f7c5a-54c2-4e83-9ae6-fb64fd3d349f",
-    te_id: "uchidashi-uchioroshi-uchitsume",
-    label: "打出打下打ツメ",
-    instrument: "kotsuzumi",
-    internal_pattern: {
-      length: 5,
-      kakegoe: [
         {
           rel_pos: 7,
           text: "ハ",
@@ -3334,6 +3267,11 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
         {
           rel_pos: 0,
           timing: "on",
@@ -3380,23 +3318,32 @@ export const kotsuzumiTeMaster: TeMaster = [
     },
   },
   {
-    uid: "0a5ef981-02bc-4a64-ad89-be25869c1ef8",
-    te_id: "torikaeshi-hikae",
-    label: "取返扣",
+    uid: "206f7c5a-54c2-4e83-9ae6-fb64fd3d349f",
+    te_id: "uchidashi-uchioroshi-uchitsume",
+    label: "打出打下打ツメ",
     instrument: "kotsuzumi",
     internal_pattern: {
-      length: 4,
+      length: 5,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: 5,
+          text: "ハ",
+        },
+        {
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
-          te: "po",
+          te: "ta",
+        },
+        {
+          rel_pos: 1,
+          timing: "on",
+          te: "pu",
         },
         {
           rel_pos: 2,
@@ -3404,9 +3351,9 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 4,
           timing: "on",
-          te: "pu",
+          te: "po",
         },
         {
           rel_pos: 6,
@@ -3421,13 +3368,67 @@ export const kotsuzumiTeMaster: TeMaster = [
       ],
       guides: [
         {
-          from_pos: 5,
-          to_pos: 6,
+          from_pos: 1,
+          to_pos: 2,
           shape: "straight",
         },
         {
-          from_pos: 6,
-          to_pos: 8,
+          from_pos: 2,
+          to_pos: 4,
+          shape: "bent",
+        },
+      ],
+    },
+  },
+  {
+    uid: "0a5ef981-02bc-4a64-ad89-be25869c1ef8",
+    te_id: "torikaeshi-hikae",
+    label: "取返扣",
+    instrument: "kotsuzumi",
+    internal_pattern: {
+      length: 4,
+      kakegoe: [
+        {
+          rel_pos: -1,
+          text: "ハ",
+        },
+      ],
+      hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 3,
+          timing: "on",
+          te: "pu",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "po",
+        },
+      ],
+      guides: [
+        {
+          from_pos: 3,
+          to_pos: 4,
+          shape: "straight",
+        },
+        {
+          from_pos: 4,
+          to_pos: 6,
           shape: "bent",
         },
       ],
@@ -3442,33 +3443,33 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           timing: "on",
           te: "pu",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 8,
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -3484,60 +3485,16 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 4,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
         },
-        {
-          rel_pos: 2,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 5,
-          timing: "on",
-          te: "pu",
-        },
-        {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 8,
-          timing: "on",
-          te: "po",
-        },
-      ],
-      guides: [
-        {
-          from_pos: 5,
-          to_pos: 6,
-          shape: "straight",
-        },
-        {
-          from_pos: 6,
-          to_pos: 8,
-          shape: "bent",
-        },
-      ],
-    },
-  },
-  {
-    uid: "ad2c334c-24f8-48e7-9c01-31a134f6af32",
-    te_id: "uchidashi-uchioroshi-hikae",
-    label: "打出打下扣",
-    instrument: "kotsuzumi",
-    internal_pattern: {
-      length: 3,
-      kakegoe: [],
-      hits: [
         {
           rel_pos: 0,
           timing: "on",
@@ -3574,6 +3531,50 @@ export const kotsuzumiTeMaster: TeMaster = [
     },
   },
   {
+    uid: "ad2c334c-24f8-48e7-9c01-31a134f6af32",
+    te_id: "uchidashi-uchioroshi-hikae",
+    label: "打出打下扣",
+    instrument: "kotsuzumi",
+    internal_pattern: {
+      length: 3,
+      kakegoe: [],
+      hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 1,
+          timing: "on",
+          te: "pu",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 4,
+          timing: "on",
+          te: "po",
+        },
+      ],
+      guides: [
+        {
+          from_pos: 1,
+          to_pos: 2,
+          shape: "straight",
+        },
+        {
+          from_pos: 2,
+          to_pos: 4,
+          shape: "bent",
+        },
+      ],
+    },
+  },
+  {
     uid: "7017731a-3288-4472-acec-da571813846c",
     te_id: "tatamu-kashira",
     label: "タタム頭",
@@ -3582,30 +3583,30 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ア",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "ta",
         },
       ],
       guides: [
         {
-          from_pos: 2,
-          to_pos: 4,
+          from_pos: 0,
+          to_pos: 2,
           shape: "bent",
         },
       ],
@@ -3620,17 +3621,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 7,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "イヤ",
         },
         {
-          rel_pos: 13,
+          rel_pos: 11,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 2,
           timing: "on",
           te: "ta",
         },
@@ -3640,14 +3646,14 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "ta",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 9,
+          rel_pos: 7,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 8,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 10,
@@ -3659,21 +3665,16 @@ export const kotsuzumiTeMaster: TeMaster = [
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 14,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 9,
-          to_pos: 10,
+          from_pos: 7,
+          to_pos: 8,
           shape: "straight",
         },
         {
-          from_pos: 10,
-          to_pos: 12,
+          from_pos: 8,
+          to_pos: 10,
           shape: "bent",
         },
       ],
@@ -3688,13 +3689,18 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
+        {
+          rel_pos: 2,
           timing: "on",
           te: "ta",
         },
@@ -3704,35 +3710,30 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "ta",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 9,
+          rel_pos: 7,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 8,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 10,
           timing: "on",
           te: "po",
         },
-        {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
       ],
       guides: [
         {
-          from_pos: 9,
-          to_pos: 10,
+          from_pos: 7,
+          to_pos: 8,
           shape: "straight",
         },
         {
-          from_pos: 10,
-          to_pos: 12,
+          from_pos: 8,
+          to_pos: 10,
           shape: "bent",
         },
       ],
@@ -3747,23 +3748,23 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -3779,27 +3780,27 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
         {
           rel_pos: 0,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 2,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -3815,42 +3816,47 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 13,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "イヤ",
         },
         {
-          rel_pos: 21,
+          rel_pos: 19,
           text: "ハ",
         },
         {
-          rel_pos: 25,
+          rel_pos: 23,
           text: "イヤ",
         },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "ta",
+        },
         {
           rel_pos: 0,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 2,
+          rel_pos: 4,
           timing: "on",
           te: "ta",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "ta",
-        },
-        {
-          rel_pos: 9,
+          rel_pos: 7,
           timing: "on",
           te: "pu",
+        },
+        {
+          rel_pos: 8,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 10,
@@ -3858,14 +3864,14 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 12,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 16,
+          rel_pos: 14,
           timing: "on",
           te: "ta",
+        },
+        {
+          rel_pos: 18,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 20,
@@ -3873,25 +3879,20 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 22,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 26,
+          rel_pos: 24,
           timing: "on",
           te: "ta",
         },
       ],
       guides: [
         {
-          from_pos: 9,
-          to_pos: 10,
+          from_pos: 7,
+          to_pos: 8,
           shape: "straight",
         },
         {
-          from_pos: 10,
-          to_pos: 12,
+          from_pos: 8,
+          to_pos: 10,
           shape: "bent",
         },
       ],
@@ -3906,19 +3907,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 4,
@@ -3926,12 +3932,7 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "ta",
         },
@@ -3947,22 +3948,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -3978,27 +3979,27 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -4014,18 +4015,18 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
@@ -4041,19 +4042,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "chi",
         },
         {
           rel_pos: 4,
@@ -4061,12 +4067,7 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "chi",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -4082,17 +4083,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
+        {
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
@@ -4102,12 +4108,7 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "chi",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "po",
         },
@@ -4123,27 +4124,27 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
       ],
       hits: [
+        {
+          rel_pos: -2,
+          timing: "on",
+          te: "chi",
+        },
         {
           rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 2,
-          timing: "on",
-          te: "chi",
-        },
-        {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
@@ -4159,13 +4160,13 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 1,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "ta",
         },
@@ -4181,23 +4182,28 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 4,
@@ -4205,12 +4211,7 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "ta",
         },
@@ -4227,42 +4228,42 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ホ",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           text: "ン",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ア",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 12,
+          rel_pos: 10,
           timing: "on",
           te: "po",
         },
@@ -4278,33 +4279,33 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ホ",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           text: "ン",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ヤ",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ア",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "chi",
         },
@@ -4320,25 +4321,30 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ヤ ア ー",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -4349,11 +4355,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
           timing: "on",
           te: "po",
         },
@@ -4369,26 +4370,31 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 6,
       kakegoe: [
         {
-          rel_pos: 6,
+          rel_pos: 4,
           text: "ヤ ア ー",
+        },
+        {
+          rel_pos: 7,
+          text: "ハ",
         },
         {
           rel_pos: 9,
           text: "ハ",
         },
-        {
-          rel_pos: 11,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           timing: "slightly_late",
           te: "po",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
+          timing: "on",
+          te: "po",
+        },
+        {
+          rel_pos: 6,
           timing: "on",
           te: "po",
         },
@@ -4399,11 +4405,6 @@ export const kotsuzumiTeMaster: TeMaster = [
         },
         {
           rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 12,
           timing: "on",
           te: "po",
         },
@@ -4419,22 +4420,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "ta",
         },
@@ -4450,19 +4451,24 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "ハ",
         },
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "ta",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 4,
@@ -4470,12 +4476,7 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "ta",
         },
@@ -4491,24 +4492,29 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 7,
       kakegoe: [
         {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "ハ",
         },
         {
-          rel_pos: 13,
+          rel_pos: 11,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 0,
+          rel_pos: -2,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "ta",
+        },
+        {
+          rel_pos: 6,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 8,
@@ -4516,12 +4522,7 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 10,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 14,
+          rel_pos: 12,
           timing: "on",
           te: "ta",
         },
@@ -4537,22 +4538,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 3,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "ta",
         },
@@ -4568,39 +4569,39 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           text: "ア",
+        },
+        {
+          rel_pos: 1,
+          text: "ハ",
         },
         {
           rel_pos: 3,
           text: "ハ",
         },
         {
-          rel_pos: 5,
-          text: "ハ",
-        },
-        {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "ta",
         },
@@ -4616,39 +4617,39 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 5,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 2,
+          rel_pos: 0,
           text: "ア",
+        },
+        {
+          rel_pos: 1,
+          text: "ハ",
         },
         {
           rel_pos: 3,
           text: "ハ",
         },
         {
-          rel_pos: 5,
-          text: "ハ",
-        },
-        {
-          rel_pos: 9,
+          rel_pos: 7,
           text: "イヤ",
         },
       ],
       hits: [
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 6,
+          rel_pos: 4,
           timing: "on",
           te: "po",
         },
         {
-          rel_pos: 10,
+          rel_pos: 8,
           timing: "on",
           te: "ta",
         },
@@ -4664,22 +4665,22 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 2,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
         {
-          rel_pos: 3,
+          rel_pos: 1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 4,
+          rel_pos: 2,
           timing: "on",
           te: "po",
         },
@@ -4695,13 +4696,13 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 1,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ハ",
         },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
         },
@@ -4717,27 +4718,32 @@ export const kotsuzumiTeMaster: TeMaster = [
       length: 8,
       kakegoe: [
         {
-          rel_pos: 1,
+          rel_pos: -1,
           text: "ヤ",
         },
         {
-          rel_pos: 5,
+          rel_pos: 3,
+          text: "ハ",
+        },
+        {
+          rel_pos: 11,
           text: "ハ",
         },
         {
           rel_pos: 13,
           text: "ハ",
         },
-        {
-          rel_pos: 15,
-          text: "ハ",
-        },
       ],
       hits: [
         {
-          rel_pos: 2,
+          rel_pos: 0,
           timing: "on",
           te: "chi",
+        },
+        {
+          rel_pos: 2,
+          timing: "on",
+          te: "po",
         },
         {
           rel_pos: 4,
@@ -4745,17 +4751,12 @@ export const kotsuzumiTeMaster: TeMaster = [
           te: "po",
         },
         {
-          rel_pos: 6,
-          timing: "on",
-          te: "po",
-        },
-        {
-          rel_pos: 14,
+          rel_pos: 12,
           timing: "on",
           te: "chi",
         },
         {
-          rel_pos: 16,
+          rel_pos: 14,
           timing: "on",
           te: "po",
         },
@@ -4775,13 +4776,13 @@ export const otsuzumiTeMaster: TeMaster = [
     internal_pattern: {
       length: 4,
       kakegoe: [
-        { rel_pos: 1, text: "ヤ" },
-        { rel_pos: 5, text: "ハ" },
+        { rel_pos: -1, text: "ヤ" },
+        { rel_pos: 3, text: "ハ" },
       ],
       hits: [
-        { rel_pos: 2, timing: "on", te: "chon" },
-        { rel_pos: 6, timing: "on", te: "don" },
-        { rel_pos: 8, timing: "on", te: "chon" },
+        { rel_pos: 0, timing: "on", te: "chon" },
+        { rel_pos: 4, timing: "on", te: "don" },
+        { rel_pos: 6, timing: "on", te: "chon" },
       ],
     },
   },
@@ -4793,14 +4794,14 @@ export const otsuzumiTeMaster: TeMaster = [
     internal_pattern: {
       length: 6,
       kakegoe: [
-        { rel_pos: 5, text: "ヤ" },
-        { rel_pos: 9, text: "ハ" },
+        { rel_pos: 3, text: "ヤ" },
+        { rel_pos: 7, text: "ハ" },
       ],
       hits: [
-        { rel_pos: 0, timing: "on", te: "chon" },
-        { rel_pos: 4, timing: "on", te: "don" },
-        { rel_pos: 8, timing: "on", te: "don" },
-        { rel_pos: 12, timing: "on", te: "chon" },
+        { rel_pos: -2, timing: "on", te: "chon" },
+        { rel_pos: 2, timing: "on", te: "don" },
+        { rel_pos: 6, timing: "on", te: "don" },
+        { rel_pos: 10, timing: "on", te: "chon" },
       ],
     },
   },
@@ -4811,12 +4812,12 @@ export const otsuzumiTeMaster: TeMaster = [
     instrument: "otsuzumi",
     internal_pattern: {
       length: 2,
-      kakegoe: [{ rel_pos: 0, text: "イヤ" }],
+      kakegoe: [{ rel_pos: -2, text: "イヤ" }],
       hits: [
-        { rel_pos: 0, timing: "on", te: "don" },
-        { rel_pos: 2, timing: "on", te: "chon" },
+        { rel_pos: -2, timing: "on", te: "don" },
+        { rel_pos: 0, timing: "on", te: "chon" },
       ],
-      guides: [{ from_pos: 0, to_pos: 2, shape: "bent" }],
+      guides: [{ from_pos: -2, to_pos: 0, shape: "bent" }],
     },
   },
 ];

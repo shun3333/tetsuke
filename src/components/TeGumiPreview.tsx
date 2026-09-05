@@ -1,7 +1,7 @@
 // 手組1つ分のプレビュー。
 //
 // 手付の出力画面と同じ描き方で、白地に表拍の横線を引き、
-// その上に手・掛け声・補助線を置く。横線は0拍の表から、
+// その上に手・掛け声・補助線を置く。横線は前のクサリの最後の拍から、
 // 長さ拍の表まで(手組が届く範囲)。
 import type { Instrument, InternalPattern } from "../types";
 import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
@@ -9,6 +9,7 @@ import { VerticalText } from "./score/VerticalText";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
 import { timingOffsetY } from "../logic/timing";
+import { PICKUP_SLOTS } from "../logic/tePattern";
 
 interface Props {
   pattern: InternalPattern;
@@ -38,12 +39,17 @@ export function TeGumiPreview({ pattern, instrument }: Props) {
   const color = INSTRUMENT_COLOR[instrument];
   const glyphs = TE_GLYPH_MASTER[instrument];
 
+  /** 一番上に出す拍(手組の頭より前。負の rel_pos の分) */
+  const firstBeat = -PICKUP_SLOTS / 2;
+  const beatCount = pattern.length - firstBeat;
+
   const width = MARGIN_X * 2 + COL_WIDTH + AXIS_WIDTH;
-  const height = PAD_Y * 2 + pattern.length * BEAT_HEIGHT;
+  const height = PAD_Y * 2 + beatCount * BEAT_HEIGHT;
   const cx = MARGIN_X + COL_WIDTH / 2;
   const axisX = MARGIN_X + COL_WIDTH + AXIS_WIDTH / 2;
   /** 手組の頭からの相対位置(半拍単位) → y座標 */
-  const posY = (relPos: number) => PAD_Y + (relPos / 2) * BEAT_HEIGHT;
+  const posY = (relPos: number) =>
+    PAD_Y + (relPos / 2 - firstBeat) * BEAT_HEIGHT;
 
   return (
     <svg
@@ -54,28 +60,32 @@ export function TeGumiPreview({ pattern, instrument }: Props) {
       role="img"
       aria-label="手組のプレビュー"
     >
-      {/* 表拍の横線。0拍の表から長さ拍の表まで */}
-      {Array.from({ length: pattern.length + 1 }, (_, beat) => (
-        <g key={beat}>
-          <line
-            x1={MARGIN_X}
-            x2={MARGIN_X + COL_WIDTH}
-            y1={posY(beat * 2)}
-            y2={posY(beat * 2)}
-            className="skewer-line"
-          />
-          <text
-            x={axisX}
-            y={posY(beat * 2)}
-            dominantBaseline="middle"
-            textAnchor="middle"
-            fontSize={AXIS_FONT_SIZE}
-            className="beat-axis-text"
-          >
-            {beat}
-          </text>
-        </g>
-      ))}
+      {/* 表拍の横線。前のクサリの最後の拍から、長さ拍の表まで。
+          頭より前の拍は数字ではなく「前」と出す */}
+      {Array.from({ length: beatCount + 1 }, (_, i) => {
+        const beat = firstBeat + i;
+        return (
+          <g key={beat}>
+            <line
+              x1={MARGIN_X}
+              x2={MARGIN_X + COL_WIDTH}
+              y1={posY(beat * 2)}
+              y2={posY(beat * 2)}
+              className={beat < 0 ? "skewer-line pickup" : "skewer-line"}
+            />
+            <text
+              x={axisX}
+              y={posY(beat * 2)}
+              dominantBaseline="middle"
+              textAnchor="middle"
+              fontSize={AXIS_FONT_SIZE}
+              className="beat-axis-text"
+            >
+              {beat < 0 ? "前" : beat}
+            </text>
+          </g>
+        );
+      })}
 
       {/* 補助線は手より先に描き、手と重なる部分は手の下に隠す */}
       {(pattern.guides ?? []).map((guide, i) => (

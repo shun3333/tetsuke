@@ -87,15 +87,16 @@ export function globalPosToBeatRef(
 
 /**
  * 手組の起点となるグローバル位置(拍単位)。
- * 選んだクサリの1拍前(そのクサリが始まる直前の拍)を起点にする。
- * 最初のクサリを選んだ場合、起点は曲の頭より前になり得るが、
- * そこにかかる分は描画されないだけで、置くこと自体は問題ない。
+ * 選んだクサリの1拍目(表)が起点で、rel_pos: 0 がそこに乗る。
+ * 前のクサリの最後の拍を使う手組は rel_pos を負にして表すため、
+ * 起点より前に出ることがある(最初のクサリでは曲の頭より前になり、
+ * その分は描画されないだけで、置くこと自体は問題ない)。
  */
 export function teInstanceStartGlobalPos(
   kusariIndex: number,
   globalStarts: number[],
 ): number {
-  return globalStarts[kusariIndex] - 1;
+  return globalStarts[kusariIndex];
 }
 
 /** グローバル拍番号(0-indexed) → クサリindexとクサリ内の拍番号(1始まり) */
