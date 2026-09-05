@@ -55,7 +55,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kan-mitsuji",
     label: "カン三地",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -96,7 +96,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchidashi",
     label: "打出",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -133,7 +133,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tsukedashi",
     label: "付出",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 1,
       kakegoe: [],
@@ -151,7 +151,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "hikae",
     label: "ヒカエ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -183,7 +183,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kataji",
     label: "片地",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -224,7 +224,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kan-kataji",
     label: "カン片地",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -261,7 +261,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tori",
     label: "トリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -293,7 +293,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kae-tori",
     label: "替トリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -325,7 +325,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "hitotsu-tori",
     label: "一トリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -348,7 +348,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kae-hitotsu-tori",
     label: "替一トリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -371,7 +371,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "mitsu-tori",
     label: "三トリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -408,7 +408,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kan-mitsu-tori",
     label: "カン三トリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -445,7 +445,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "okuri",
     label: "オクリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -477,7 +477,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "otsu-okuri",
     label: "乙オクリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -565,7 +565,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kan-tsuzuke",
     label: "カンツヅケ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -621,7 +621,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kata-tsuzuke",
     label: "片ツヅケ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -672,7 +672,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tsuzuke-hikae",
     label: "ツヅケ扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -719,7 +719,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kan-tsuzuke-hikae",
     label: "カンツヅケ扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -766,7 +766,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kata-tsuzuke-hikae",
     label: "片ツヅケ扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -808,7 +808,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tsuzuke-nakagiri",
     label: "ツヅケ中切",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -859,7 +859,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kan-tsuzuke-nakagiri",
     label: "カンツヅケ中切",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -910,7 +910,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kata-tsuzuke-nakagiri",
     label: "片ツヅケ中切",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -956,7 +956,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "ノベ",
     label: "ノベ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [],
@@ -984,7 +984,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchitsume",
     label: "打ツメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 1,
       kakegoe: [
@@ -1007,7 +1007,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "odori",
     label: "ヲドリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -1057,7 +1057,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "odor-uchitsume",
     label: "ヲドリ打ツメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -1116,7 +1116,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "odor-hikae",
     label: "ヲドリ扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [],
@@ -1156,7 +1156,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "odor-kaeshi",
     label: "ヲドリ返",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [],
@@ -1196,7 +1196,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "otsu-odori",
     label: "乙ヲドリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [],
@@ -1236,7 +1236,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "odoru-tori",
     label: "ヲドルトリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [],
@@ -1276,7 +1276,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "itsutsu-odori",
     label: "五ヲドリ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [],
@@ -1331,7 +1331,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "odoru-te",
     label: "ヲドル手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -1381,7 +1381,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kae-odoru-te",
     label: "替ヲドル手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -1422,7 +1422,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "guai",
     label: "グアイ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -1474,7 +1474,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "itsutsu-no-te",
     label: "五ノ手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -1535,7 +1535,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kizami-otoshi",
     label: "刻落",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -1609,7 +1609,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kae-kizami-otoshi",
     label: "替刻落",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -1683,7 +1683,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kake-otoshi",
     label: "掛落",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -1757,7 +1757,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "iru-te",
     label: "入手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -1827,7 +1827,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kae-iru-te",
     label: "替入手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -1897,7 +1897,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kosu-te",
     label: "コス手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 8,
       kakegoe: [
@@ -1976,7 +1976,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kashira-hashiri1",
     label: "頭走",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -2014,7 +2014,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kashira-hashiri2",
     label: "頭走",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -2047,7 +2047,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kusedome-hashiri1",
     label: "曲止走",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -2102,7 +2102,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kusedome-hashiri2",
     label: "曲止走",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -2152,7 +2152,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kusedome",
     label: "曲止",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 13,
       kakegoe: [
@@ -2259,7 +2259,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tori-ari-kusedome",
     label: "トリ有曲止",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 17,
       kakegoe: [
@@ -2385,7 +2385,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kae-kusedome",
     label: "替曲止",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 13,
       kakegoe: [
@@ -2460,7 +2460,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "yotsu-no-te",
     label: "四ノ手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -2502,7 +2502,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "hajiki",
     label: "ハジキ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -2530,7 +2530,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kosute-gashira",
     label: "コステ頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -2572,7 +2572,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "yukigakari-kosute-gashira",
     label: "行掛コステ頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -2620,7 +2620,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "itsutsu-gashira",
     label: "五頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -2664,7 +2664,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "yukigakari-itsutsu-gashira",
     label: "行掛五頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -2706,7 +2706,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "irechigai",
     label: "入違",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -2743,7 +2743,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "yukigakari-irechigai",
     label: "行掛入違",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -2785,7 +2785,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "ji-no-kashira",
     label: "地ノ頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -2832,7 +2832,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tsukete-ji-no-kashira",
     label: "付テ地ノ頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -2874,7 +2874,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "odoru-kashira",
     label: "ヲドル頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -2924,7 +2924,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "torikaeshi",
     label: "取返",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -2988,7 +2988,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kashira-torikaeshi",
     label: "頭取返",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -3116,7 +3116,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "te_1",
     label: "打出打下",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -3171,7 +3171,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "torikaeshi-uchitsume",
     label: "取返打ツメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -3244,7 +3244,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kashira-torikaeshi-uchitsume",
     label: "頭取返打ツメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -3317,7 +3317,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchioroshi-uchitsume",
     label: "打下打ツメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -3390,7 +3390,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchidashi-uchioroshi-uchitsume",
     label: "打出打下打ツメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -3454,7 +3454,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "torikaeshi-hikae",
     label: "取返扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -3509,7 +3509,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kashira-torikaeshi-hikae",
     label: "頭取返扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -3552,7 +3552,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchiorosh-hikae",
     label: "打下扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 4,
       kakegoe: [
@@ -3607,7 +3607,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchidashi-uchioroshi-hikae",
     label: "打出打下扣",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [],
@@ -3652,7 +3652,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tatamu-kashira",
     label: "タタム頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -3691,7 +3691,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "okuri-kashira",
     label: "オクリ頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 7,
       kakegoe: [
@@ -3760,7 +3760,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kataji-kashira",
     label: "片地頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -3820,7 +3820,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "nakairi-gashira",
     label: "中入頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -3853,7 +3853,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "futatsu-gashira",
     label: "二頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -3890,7 +3890,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tome-gashira",
     label: "止頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 13,
       kakegoe: [
@@ -3982,7 +3982,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "han-dome-gashira",
     label: "半止頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4024,7 +4024,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tome",
     label: "トメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -4056,7 +4056,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "wakinoh-tome",
     label: "脇能トメ",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -4093,7 +4093,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tome-sute",
     label: "トメ捨",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -4121,7 +4121,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "tuzuke-tome",
     label: "ツヅケ止",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4163,7 +4163,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kan-tsuduke-tome",
     label: "カンツヅケ止",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4205,7 +4205,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kata-tsuzuke-tome",
     label: "片ツヅケ止",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -4242,7 +4242,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "ai-gashira",
     label: "合頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 1,
       kakegoe: [
@@ -4265,7 +4265,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchikiri",
     label: "打切",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4312,7 +4312,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchikiri-utaidashi",
     label: "打切謡出",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -4364,7 +4364,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchikiri-utaidashi-hansei",
     label: "打切謡出半声",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4407,7 +4407,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchikiri-utaidashi-kae-no-te1",
     label: "打切謡出替手",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -4457,7 +4457,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchikiri-utaidashi-kae-no-te2",
     label: "打切謡出替手(走ノ手)",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 6,
       kakegoe: [
@@ -4508,7 +4508,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchidashi-uchikiri",
     label: "打出打切",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -4540,7 +4540,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "irite-uchikiri",
     label: "入テ打切",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4582,7 +4582,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "yukigakari-irite-uchikiri",
     label: "行掛入テ打切",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 7,
       kakegoe: [
@@ -4629,7 +4629,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "utai-gashira",
     label: "謡頭",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 3,
       kakegoe: [
@@ -4661,7 +4661,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "joryaku",
     label: "上畧",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4710,7 +4710,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "churyaku",
     label: "中畧",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 5,
       kakegoe: [
@@ -4759,7 +4759,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kizami-kaeshi",
     label: "刻返",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 2,
       kakegoe: [
@@ -4791,7 +4791,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "kizami-kaeshi-hansei",
     label: "刻返半声",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 1,
       kakegoe: [
@@ -4814,7 +4814,7 @@ export const kotsuzumiTeMaster: TeMaster = [
     te_id: "uchikiri-kizami-kaeshi",
     label: "打切刻返",
     instrument: "kotsuzumi",
-    start_beat: null,
+    start_beat: 1,
     internal_pattern: {
       length: 8,
       kakegoe: [
