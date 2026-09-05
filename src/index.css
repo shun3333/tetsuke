@@ -256,20 +256,6 @@ table.timeline-grid {
   color: var(--text);
 }
 
-/* 楽器の行のラベルは、名前の横に手組を追加するボタンを置く */
-.row-label-te {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2px;
-  padding: 0 2px 0 4px;
-}
-
-.row-label-te .chip-remove {
-  padding: 2px 4px;
-  font-size: 12px;
-}
-
 /* 列幅は先頭行(この拍番号の行)の指定で決まる。
    謡の入力欄と同じく、半拍(裏と表の境目)にも区切り線を入れる。
    数字の位置がずれないよう、線は背景として描く */
@@ -344,8 +330,8 @@ table.timeline-grid {
   opacity: 1;
 }
 
-/* 手組が無いクサリ。押せば追加できることが分かるようにしておく */
-.te-chips-empty {
+/* 名札の末尾に置く追加ボタン。手組の有無に関わらず常に出す */
+.te-chips-add {
   border: 1px dashed var(--border);
   background: transparent;
   color: var(--text);
@@ -355,7 +341,7 @@ table.timeline-grid {
   cursor: pointer;
 }
 
-.te-chips-empty:hover {
+.te-chips-add:hover {
   border-color: var(--te-color, var(--accent));
   color: var(--te-color, var(--accent));
 }

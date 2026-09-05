@@ -363,24 +363,7 @@ export function TimelineGrid({
               const placed = placedTe[instrument].get(kusariIndex) ?? [];
               return (
                 <tr key={instrument}>
-                  <th className="row-label row-label-te">
-                    <span>{INSTRUMENT_LABEL[instrument]}</span>
-                    <button
-                      type="button"
-                      className="chip-remove"
-                      title="このクサリに手組を追加"
-                      onClick={(e) =>
-                        setPicker({
-                          instrument,
-                          kusariIndex,
-                          x: e.clientX,
-                          y: e.clientY,
-                        })
-                      }
-                    >
-                      ＋
-                    </button>
-                  </th>
+                  <th className="row-label">{INSTRUMENT_LABEL[instrument]}</th>
                   <td className="te-lane" colSpan={beats.length}>
                     <div
                       className="te-chips"
@@ -390,46 +373,42 @@ export function TimelineGrid({
                         } as React.CSSProperties
                       }
                     >
-                      {placed.length === 0 ? (
-                        <button
-                          type="button"
-                          className="te-chips-empty"
-                          title="このクサリに手組を追加"
-                          onClick={(e) =>
-                            setPicker({
-                              instrument,
-                              kusariIndex,
-                              x: e.clientX,
-                              y: e.clientY,
-                            })
-                          }
-                        >
-                          手組なし
-                        </button>
-                      ) : (
-                        placed.map((te) => (
-                          <span key={te.instanceIndex} className="te-chip">
-                            <span className="te-chip-name">{te.label}</span>
-                            <span className="te-chip-length">
-                              {te.length}拍
-                            </span>
-                            <button
-                              type="button"
-                              className="te-chip-remove"
-                              title={`「${te.label}」を外す`}
-                              onClick={() =>
-                                dispatch({
-                                  type: "REMOVE_TE_INSTANCE",
-                                  instrument,
-                                  instanceIndex: te.instanceIndex,
-                                })
-                              }
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))
-                      )}
+                      {placed.map((te) => (
+                        <span key={te.instanceIndex} className="te-chip">
+                          <span className="te-chip-name">{te.label}</span>
+                          <span className="te-chip-length">{te.length}拍</span>
+                          <button
+                            type="button"
+                            className="te-chip-remove"
+                            title={`「${te.label}」を外す`}
+                            onClick={() =>
+                              dispatch({
+                                type: "REMOVE_TE_INSTANCE",
+                                instrument,
+                                instanceIndex: te.instanceIndex,
+                              })
+                            }
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                      {/* 既に置いてあるかどうかに関わらず、いつでも足せる */}
+                      <button
+                        type="button"
+                        className="te-chips-add"
+                        title="このクサリに手組を追加"
+                        onClick={(e) =>
+                          setPicker({
+                            instrument,
+                            kusariIndex,
+                            x: e.clientX,
+                            y: e.clientY,
+                          })
+                        }
+                      >
+                        手組追加
+                      </button>
                     </div>
                   </td>
                 </tr>
