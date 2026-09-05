@@ -56,9 +56,27 @@ function readTeInstances(value: unknown, where: Instrument): TeInstance[] {
     if (!isRecord(entry)) throw new Error(`${at} がオブジェクトではありません`);
     return {
       te_id: readString(entry.te_id, `${at}.te_id`),
-      start_ref: readBeatRef(entry.start_ref, `${at}.start_ref`),
+      kusari_index: readKusariIndex(entry, at),
     };
   });
+}
+
+/**
+ * 置くクサリのindexを読む。
+ * 以前の形式(start_ref.kusari_index)も読めるようにしてある。
+ * その場合、どの拍から始まっていたかは捨てる(いまはマスタが決める)。
+ */
+function readKusariIndex(entry: Record<string, unknown>, where: string): number {
+  if (entry.kusari_index !== undefined) {
+    return readInteger(entry.kusari_index, `${where}.kusari_index`);
+  }
+  if (isRecord(entry.start_ref)) {
+    return readInteger(
+      entry.start_ref.kusari_index,
+      `${where}.start_ref.kusari_index`,
+    );
+  }
+  throw new Error(`${where}.kusari_index がありません`);
 }
 
 function readUtaiContent(value: unknown, where: string): UtaiContent {

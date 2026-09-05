@@ -11,6 +11,7 @@ import {
   computeGlobalStarts,
   isBeatRefValid,
   teInstanceStartBeat,
+  teInstanceStartRef,
   totalBeats,
 } from "../logic/position";
 import { findTe } from "../logic/tePattern";
@@ -33,7 +34,7 @@ export type SongAction =
       kusariType: KusariType;
       teMaster: Record<Instrument, TeMaster>;
     }
-  | { type: "ADD_TE_INSTANCE"; instrument: Instrument; teId: string; startRef: BeatRef }
+  | { type: "ADD_TE_INSTANCE"; instrument: Instrument; teId: string; kusariIndex: number }
   | { type: "REMOVE_TE_INSTANCE"; instrument: Instrument; instanceIndex: number }
   | {
       type: "SET_UTAI_CHAR";
@@ -45,23 +46,32 @@ function reindexKusari(sequence: SongData["kusari_sequence"]) {
   return sequence.map((k, i) => ({ ...k, index: i }));
 }
 
-/** クサリindexの挿入・削除に伴い、beat_refのkusari_indexを追従させる */
-function shiftBeatRef(
-  ref: BeatRef,
+/** クサリindexの挿入・削除に伴い、参照先を追従させる。消滅した場合はnull */
+function shiftKusariIndex(
+  kusariIndex: number,
   removedIndex: number | null,
   insertedAtIndex: number | null,
-): BeatRef | null {
-  let kusariIndex = ref.kusari_index;
+): number | null {
+  let i = kusariIndex;
   if (removedIndex !== null) {
-    if (kusariIndex === removedIndex) return null; // 削除されたクサリを参照 → 消滅
-    if (kusariIndex > removedIndex) kusariIndex -= 1;
+    if (i === removedIndex) return null; // 削除されたクサリを参照 → 消滅
+    if (i > removedIndex) i -= 1;
   }
-  if (insertedAtIndex !== null && kusariIndex >= insertedAtIndex) {
-    kusariIndex += 1;
+  if (insertedAtIndex !== null && i >= insertedAtIndex) {
+    i += 1;
   }
-  return kusariIndex === ref.kusari_index
-    ? ref
-    : { ...ref, kusari_index: kusariIndex };
+  return i;
+}
+
+/** kusari_indexの付け替え規則を、beat_ref向けに包む */
+function beatRefShifterFrom(
+  shiftIndex: (kusariIndex: number) => number | null,
+): (ref: BeatRef) => BeatRef | null {
+  return (ref) => {
+    const next = shiftIndex(ref.kusari_index);
+    if (next === null) return null;
+    return next === ref.kusari_index ? ref : { ...ref, kusari_index: next };
+  };
 }
 
 export function songReducer(state: SongData, action: SongAction): SongData {
@@ -110,11 +120,7 @@ export function songReducer(state: SongData, action: SongAction): SongData {
       // クサリと一緒に中身も動くよう、参照のkusari_indexを付け替える
       const moved = remapAllRefs(
         { ...state, kusari_sequence: reindexKusari(nextSeq) },
-        (ref) => {
-          const next = movedTo.get(ref.kusari_index);
-          if (next === undefined) return null;
-          return next === ref.kusari_index ? ref : { ...ref, kusari_index: next };
-        },
+        (kusariIndex) => movedTo.get(kusariIndex) ?? null,
       );
       // 並び順が変わると曲の終わりをはみ出す手組が出ることがある
       return dropUnfittableTe(moved, action.teMaster);
@@ -144,7 +150,7 @@ export function songReducer(state: SongData, action: SongAction): SongData {
             ...track,
             te_instances: [
               ...track.te_instances,
-              { te_id: action.teId, start_ref: action.startRef },
+              { te_id: action.teId, kusari_index: action.kusariIndex },
             ],
           },
         },
@@ -214,11 +220,15 @@ function dropUnfittableTe(
     const track = tracks[instrument];
     if (!track) continue;
     const kept = track.te_instances.filter((ti) => {
-      if (!isBeatRefValid(ti.start_ref, state.kusari_sequence)) return false;
+      if (!state.kusari_sequence[ti.kusari_index]) return false;
       const def = findTe(teMaster[instrument], ti.te_id);
       // マスタに無い手組は長さが分からないので、判断せずそのまま残す
       if (!def) return true;
-      const start = teInstanceStartBeat(ti.start_ref, globalStarts);
+      // 配置拍が未設定になった手組は置けない
+      if (def.start_beat === null) return false;
+      const startRef = teInstanceStartRef(ti.kusari_index, def.start_beat);
+      if (!isBeatRefValid(startRef, state.kusari_sequence)) return false;
+      const start = teInstanceStartBeat(startRef, globalStarts);
       return start + def.internal_pattern.length <= total;
     });
     if (kept.length === track.te_instances.length) continue;
@@ -246,37 +256,45 @@ function shiftRefsOf<K extends string, T extends Record<K, BeatRef>>(
   return result;
 }
 
-/** クサリの挿入/削除後、各トラックのbeat_ref/start_refを追従させ、消滅した参照を除去する */
+/** クサリの挿入/削除後、各トラックのbeat_ref/kusari_indexを追従させ、消滅した参照を除去する */
 function remapRefs(
   state: SongData,
   removedIndex: number | null,
   insertedAtIndex: number | null,
 ): SongData {
-  return remapAllRefs(state, (ref) =>
-    shiftBeatRef(ref, removedIndex, insertedAtIndex),
+  return remapAllRefs(state, (kusariIndex) =>
+    shiftKusariIndex(kusariIndex, removedIndex, insertedAtIndex),
   );
 }
 
-/** 全トラックの参照を付け替える。shiftがnullを返した参照は取り除く */
+/**
+ * 全トラックの参照を付け替える。shiftIndexは古いkusari_indexから新しい
+ * kusari_indexを返す(消えた場合はnull)。utaiはbeat_ref、手組トラックは
+ * kusari_indexそのものを持つため、それぞれに合わせて適用する。
+ */
 function remapAllRefs(
   state: SongData,
-  shift: (ref: BeatRef) => BeatRef | null,
+  shiftIndex: (kusariIndex: number) => number | null,
 ): SongData {
   const utai = state.tracks.utai;
   const tracks: SongData["tracks"] = {
     utai: utai && {
       ...utai,
-      chars: shiftRefsOf(utai.chars, "beat_ref", shift),
+      chars: shiftRefsOf(utai.chars, "beat_ref", beatRefShifterFrom(shiftIndex)),
     },
   };
 
   for (const instrument of INSTRUMENTS) {
     const track = state.tracks[instrument];
     if (!track) continue;
-    tracks[instrument] = {
-      ...track,
-      te_instances: shiftRefsOf(track.te_instances, "start_ref", shift),
-    };
+    const kept: typeof track.te_instances = [];
+    for (const ti of track.te_instances) {
+      const next = shiftIndex(ti.kusari_index);
+      if (next !== null) {
+        kept.push(next === ti.kusari_index ? ti : { ...ti, kusari_index: next });
+      }
+    }
+    tracks[instrument] = { ...track, te_instances: kept };
   }
 
   return { ...state, tracks };

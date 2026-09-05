@@ -256,6 +256,20 @@ table.timeline-grid {
   color: var(--text);
 }
 
+/* 楽器の行のラベルは、名前の横に手組を追加するボタンを置く */
+.row-label-te {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  padding: 0 2px 0 4px;
+}
+
+.row-label-te .chip-remove {
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
 /* 列幅は先頭行(この拍番号の行)の指定で決まる。
    謡の入力欄と同じく、半拍(裏と表の境目)にも区切り線を入れる。
    数字の位置がずれないよう、線は背景として描く */
@@ -291,7 +305,8 @@ table.timeline-grid {
   --te-dot-size: 11px;
 }
 
-/* 拍の点。バーの範囲に入る点はバーに覆われて見えなくなる */
+/* 拍の目印。手組の配置拍はマスタが決めるため、クリックはできない。
+   バーの範囲に入る点はバーに覆われて見えなくなる */
 .te-dot {
   position: absolute;
   top: 50%;
@@ -303,12 +318,6 @@ table.timeline-grid {
   border: 1px solid var(--text);
   border-radius: 50%;
   background: var(--panel-bg);
-  cursor: pointer;
-}
-
-.te-dot:hover {
-  border-color: var(--te-color, var(--accent));
-  background: var(--te-color, var(--accent));
 }
 
 /* 手組の範囲。点より後に描いて、範囲内の点を覆い隠す。
@@ -724,6 +733,11 @@ table.timeline-grid {
 .master-list-item .te-length {
   font-size: 11px;
   color: var(--text);
+}
+
+/* 配置する拍が未設定のままだと曲に置けないため、目立たせる */
+.te-unset-warning {
+  color: #cc2222;
 }
 
 .master-empty {

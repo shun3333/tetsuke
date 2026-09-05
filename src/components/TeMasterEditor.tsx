@@ -94,6 +94,7 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
       te_id: nextTeId(entries),
       label: "新しい手組",
       instrument,
+      start_beat: null,
       internal_pattern: { length: 4, kakegoe: [], hits: [] },
     };
     const next = [...entries];
@@ -247,6 +248,9 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                   <span className="te-length">
                     {te.internal_pattern.length}拍
                     {te.te_id === "" ? "" : ` / ${te.te_id}`}
+                    {te.start_beat === null && (
+                      <span className="te-unset-warning"> / 配置拍未設定</span>
+                    )}
                   </span>
                 </button>
                 <div className="master-list-move">
@@ -314,6 +318,23 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                     updateCurrent({ ...current, te_id: e.target.value })
                   }
                   title="曲データが手組を指すのに使うID。変えると、既に置いてある手組は表示されなくなります。空でも、他と同じIDでもかまいません(同じIDのときは上にあるものを使います)"
+                />
+              </label>
+              <label>
+                <span>配置する拍</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={current.start_beat ?? ""}
+                  placeholder="未設定"
+                  onChange={(e) => {
+                    const text = e.target.value;
+                    updateCurrent({
+                      ...current,
+                      start_beat: text === "" ? null : Math.max(1, Number(text)),
+                    });
+                  }}
+                  title="クサリに置いたとき、この手組が始まる拍(N拍目)。未設定の間はタイムラインに置けません"
                 />
               </label>
             </div>

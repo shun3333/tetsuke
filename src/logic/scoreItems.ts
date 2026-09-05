@@ -16,6 +16,7 @@ import {
   globalPosToBeatRef,
   isBeatRefValid,
   slotToLocalOffset,
+  teInstanceStartRef,
 } from "./position";
 import { TIMING_OFFSET_RATIO } from "./timing";
 import { findTe } from "./tePattern";
@@ -115,11 +116,13 @@ function buildTeItems(
 
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, instanceIndex) => {
     const def = findTe(teMaster, ti.te_id);
-    if (!def || !isBeatRefValid(ti.start_ref, song.kusari_sequence)) return;
-    const startGlobalPos = beatRefToGlobalPos(ti.start_ref, globalStarts);
+    if (!def || def.start_beat === null) return;
+    const startRef = teInstanceStartRef(ti.kusari_index, def.start_beat);
+    if (!isBeatRefValid(startRef, song.kusari_sequence)) return;
+    const startGlobalPos = beatRefToGlobalPos(startRef, globalStarts);
 
     // 手組名は、その手組が始まるクサリの枠に表示する
-    pushTo(labelsByKusari, ti.start_ref.kusari_index, {
+    pushTo(labelsByKusari, ti.kusari_index, {
       key: `label-${instanceIndex}`,
       text: def.label,
       instrument: def.instrument,

@@ -18,9 +18,10 @@ import {
 import {
   beatCountOf,
   computeGlobalStarts,
-  globalBeatToTeStartRef,
   globalBeatToKusariBeat,
+  isBeatRefValid,
   teInstanceStartBeat,
+  teInstanceStartRef,
   totalBeats,
 } from "../logic/position";
 import { findTe } from "../logic/tePattern";
@@ -54,9 +55,9 @@ const BEAT_URA_RATIO = 0.25;
 
 /** 手組の一覧(ポップアップ)の表示状態 */
 interface PickerState {
-  /** どの楽器の、どのグローバル拍に置こうとしているか */
+  /** どの楽器の、どのクサリに置こうとしているか */
   instrument: Instrument;
-  g: number;
+  kusariIndex: number;
   x: number;
   y: number;
 }
@@ -104,8 +105,10 @@ function buildOccupancy(
   const occupancy = new Map<number, Occupancy>();
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
     const def = findTe(teMaster, ti.te_id);
-    if (!def) return;
-    const start = teInstanceStartBeat(ti.start_ref, globalStarts);
+    if (!def || def.start_beat === null) return;
+    const startRef = teInstanceStartRef(ti.kusari_index, def.start_beat);
+    if (!isBeatRefValid(startRef, song.kusari_sequence)) return;
+    const start = teInstanceStartBeat(startRef, globalStarts);
     const len = def.internal_pattern.length;
     for (let g = start; g < start + len; g++) {
       occupancy.set(g, {
@@ -147,8 +150,10 @@ function buildTeBars(
   const bars = new Map<number, TeBar[]>();
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
     const def = findTe(teMaster, ti.te_id);
-    if (!def) return;
-    const startG = teInstanceStartBeat(ti.start_ref, globalStarts);
+    if (!def || def.start_beat === null) return;
+    const startRef = teInstanceStartRef(ti.kusari_index, def.start_beat);
+    if (!isBeatRefValid(startRef, song.kusari_sequence)) return;
+    const startG = teInstanceStartBeat(startRef, globalStarts);
     const endG = startG + def.internal_pattern.length;
 
     song.kusari_sequence.forEach((k, kusariIndex) => {
@@ -231,57 +236,41 @@ export function TimelineGrid({
   }, [song, teMaster, globalStarts]);
   const utaiValues = useMemo(() => buildUtaiValues(song), [song]);
 
-  /** その位置に置けない理由。置けるならnull */
+  /**
+   * その手組をこのクサリに置けない理由。置けるならnull。
+   * 何拍目から始まるかは手組マスタ(start_beat)が決めており、ここでは選べない。
+   */
   function placementError(
     instrument: Instrument,
     teId: string,
-    g: number,
+    kusariIndex: number,
   ): string | null {
     // 曲データは手組をIDで指すため、IDが無いものは置けない
     if (teId === "") return "IDが空の手組は置けません";
     const def = findTe(teMaster[instrument], teId);
     if (!def) return "手組が見つかりません";
+    if (def.start_beat === null) return "配置する拍が未設定です";
+    const startRef = teInstanceStartRef(kusariIndex, def.start_beat);
+    if (!isBeatRefValid(startRef, song.kusari_sequence)) {
+      return "配置する拍がこのクサリの拍数を超えています";
+    }
+    const start = teInstanceStartBeat(startRef, globalStarts);
     const len = def.internal_pattern.length;
-    if (g + len > total) return "長さが収まりません";
-    for (let i = g; i < g + len; i++) {
+    if (start + len > total) return "長さが収まりません";
+    for (let i = start; i < start + len; i++) {
       // 重なりは同じ楽器の中だけ見る(楽器が違えば同じ拍に置ける)
       if (occupancy[instrument].has(i)) return "他の手組と重なります";
     }
     return null;
   }
 
-  function placeTe(instrument: Instrument, teId: string, g: number) {
-    const error = placementError(instrument, teId, g);
+  function placeTe(instrument: Instrument, teId: string, kusariIndex: number) {
+    const error = placementError(instrument, teId, kusariIndex);
     if (error) {
       window.alert(error);
       return;
     }
-    const startRef = globalBeatToTeStartRef(
-      g,
-      song.kusari_sequence,
-      globalStarts,
-    );
-    if (!startRef) return;
-    dispatch({ type: "ADD_TE_INSTANCE", instrument, teId, startRef });
-  }
-
-  function handleTeClick(
-    instrument: Instrument,
-    g: number,
-    e: React.MouseEvent,
-  ) {
-    const occ = occupancy[instrument].get(g);
-    if (occ) {
-      // 手組が乗っている点はどこを押しても、その手組を外す
-      dispatch({
-        type: "REMOVE_TE_INSTANCE",
-        instrument,
-        instanceIndex: occ.instanceIndex,
-      });
-      return;
-    }
-    // 空いている点を押したら、その場で手組の一覧から選ぶ
-    setPicker({ instrument, g, x: e.clientX, y: e.clientY });
+    dispatch({ type: "ADD_TE_INSTANCE", instrument, teId, kusariIndex });
   }
 
   function setUtaiValue(kusariIndex: number, beat: number, value: string) {
@@ -469,7 +458,24 @@ export function TimelineGrid({
               const bars = barsOf(instrument);
               return (
                 <tr key={instrument}>
-                  <th className="row-label">{INSTRUMENT_LABEL[instrument]}</th>
+                  <th className="row-label row-label-te">
+                    <span>{INSTRUMENT_LABEL[instrument]}</span>
+                    <button
+                      type="button"
+                      className="chip-remove"
+                      title="このクサリに手組を追加"
+                      onClick={(e) =>
+                        setPicker({
+                          instrument,
+                          kusariIndex,
+                          x: e.clientX,
+                          y: e.clientY,
+                        })
+                      }
+                    >
+                      ＋
+                    </button>
+                  </th>
                   <td className="te-lane" colSpan={beats.length}>
                     <div
                       className="te-lane-inner"
@@ -479,26 +485,16 @@ export function TimelineGrid({
                         } as React.CSSProperties
                       }
                     >
-                      {beats.map((_, i) => {
-                        const g = startG + i;
-                        const occupied = occupancy[instrument].has(g);
-                        return (
-                          <button
-                            key={g}
-                            type="button"
-                            className="te-dot"
-                            style={{
-                              left: `calc(var(--beat-width) * ${i + BEAT_DOT_RATIO})`,
-                            }}
-                            title={
-                              occupied
-                                ? "クリックで削除"
-                                : "クリックで手組を選ぶ"
-                            }
-                            onClick={(e) => handleTeClick(instrument, g, e)}
-                          />
-                        );
-                      })}
+                      {/* 拍の目印。手組はここには連動しておらず、マスタが決めた拍に置かれる */}
+                      {beats.map((_, i) => (
+                        <div
+                          key={i}
+                          className="te-dot"
+                          style={{
+                            left: `calc(var(--beat-width) * ${i + BEAT_DOT_RATIO})`,
+                          }}
+                        />
+                      ))}
                       {/* バーは点より後に描いて、範囲内の点を覆い隠す。
                           端は点の中心ではなく点の外側(半径の分だけ外)まで伸ばす */}
                       {bars.map((bar) => (
@@ -620,7 +616,7 @@ export function TimelineGrid({
               const error = placementError(
                 picker.instrument,
                 def.te_id,
-                picker.g,
+                picker.kusariIndex,
               );
               return (
                 <button
@@ -630,7 +626,7 @@ export function TimelineGrid({
                   disabled={error !== null}
                   title={error ?? undefined}
                   onClick={() => {
-                    placeTe(picker.instrument, def.te_id, picker.g);
+                    placeTe(picker.instrument, def.te_id, picker.kusariIndex);
                     setPicker(null);
                   }}
                 >

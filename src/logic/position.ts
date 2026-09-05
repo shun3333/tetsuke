@@ -98,18 +98,14 @@ export function globalPosToBeatRef(
 }
 
 /**
- * グローバル拍番号(0-indexed の整数拍)を、その拍から始まる手組の start_ref に変換する。
- * 編集グリッドで置いた拍を、手組の起点に直すために使う。
+ * 手組マスタの配置拍(N拍目)と、置くクサリのindexから、手組の起点(start_ref)を作る。
  *   クサリのN拍目に置く → beat = N * 2
  */
-export function globalBeatToTeStartRef(
-  globalBeat: number,
-  kusariSequence: KusariEntry[],
-  globalStarts: number[],
-): BeatRef | null {
-  const local = globalBeatToKusariBeat(globalBeat, kusariSequence, globalStarts);
-  if (!local) return null;
-  return { kusari_index: local.kusariIndex, beat: local.localBeat * 2 };
+export function teInstanceStartRef(
+  kusariIndex: number,
+  startBeat: number,
+): BeatRef {
+  return { kusari_index: kusariIndex, beat: startBeat * 2 };
 }
 
 /** グローバル拍番号(0-indexed) → クサリindexとクサリ内の拍番号(1始まり) */

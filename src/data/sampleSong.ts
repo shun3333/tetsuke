@@ -1,5 +1,7 @@
 // サンプル曲データ(手付本体) — 設計ドキュメントの例をもとに拡張
 // beat は半拍単位の枠番号(1 = 0拍の裏、2 = 1拍の表、3 = 1拍の裏、… 16 = 8拍の表)。
+// 手組をどの拍から始めるかは手組マスタ(TeMasterEntry.start_beat)が決めるため、
+// ここでは te_instances にどのクサリへ置くか(kusari_index)だけを持つ。
 import type { SongData } from "../types";
 
 export const sampleSong: SongData = {
@@ -14,17 +16,17 @@ export const sampleSong: SongData = {
     otsuzumi: {
       instrument: "otsuzumi",
       te_instances: [
-        { te_id: "o_mitsuji", start_ref: { kusari_index: 0, beat: 2 } },
-        { te_id: "o_tsuzuke", start_ref: { kusari_index: 2, beat: 2 } },
-        { te_id: "o_uchikiri", start_ref: { kusari_index: 2, beat: 14 } },
+        { te_id: "o_mitsuji", kusari_index: 0 },
+        { te_id: "o_tsuzuke", kusari_index: 2 },
+        { te_id: "o_uchikiri", kusari_index: 2 },
       ],
     },
     kotsuzumi: {
       instrument: "kotsuzumi",
       te_instances: [
-        { te_id: "mitsuji", start_ref: { kusari_index: 0, beat: 8 } },
-        { te_id: "uchioroshi", start_ref: { kusari_index: 1, beat: 4 } },
-        { te_id: "tsuzuke", start_ref: { kusari_index: 3, beat: 4 } }
+        { te_id: "mitsuji", kusari_index: 0 },
+        { te_id: "uchioroshi", kusari_index: 1 },
+        { te_id: "tsuzuke", kusari_index: 3 }
       ],
     },
     utai: {
