@@ -148,6 +148,30 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
     setSelected(null);
   }
 
+  /**
+   * 「配置する拍」が未設定のまま曲に置けない手組を、まとめて1拍目にする。
+   * 個々の手組の中身は変えず、この項目だけを直す。
+   */
+  function fillUnsetStartBeats() {
+    let count = 0;
+    const next = {} as TeMasterByInstrument;
+    for (const inst of INSTRUMENTS) {
+      next[inst] = teMaster[inst].map((te) => {
+        if (te.start_beat !== null) return te;
+        count++;
+        return { ...te, start_beat: 1 };
+      });
+    }
+    if (count === 0) {
+      window.alert("配置する拍が未設定の手組はありません。");
+      return;
+    }
+    if (!window.confirm(`${count}件の「配置する拍」を1拍目にします。よろしいですか？`)) {
+      return;
+    }
+    onChange(next);
+  }
+
   return (
     <section className="master-pane">
       <div className="master-header">
@@ -184,6 +208,13 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
             }}
           >
             既定に戻す
+          </button>
+          <button
+            type="button"
+            className="toolbar-button"
+            onClick={fillUnsetStartBeats}
+          >
+            未設定の配置拍を1拍目にする
           </button>
         </div>
       </div>
