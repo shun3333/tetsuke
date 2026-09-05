@@ -9,7 +9,6 @@ import {
 } from "../types";
 import {
   computeGlobalStarts,
-  isBeatRefValid,
   teInstanceStartBeat,
   teInstanceStartRef,
   totalBeats,
@@ -224,11 +223,10 @@ function dropUnfittableTe(
       const def = findTe(teMaster[instrument], ti.te_id);
       // マスタに無い手組は長さが分からないので、判断せずそのまま残す
       if (!def) return true;
-      // 配置拍が未設定になった手組は置けない
-      if (def.start_beat === null) return false;
-      const startRef = teInstanceStartRef(ti.kusari_index, def.start_beat);
-      if (!isBeatRefValid(startRef, state.kusari_sequence)) return false;
-      const start = teInstanceStartBeat(startRef, globalStarts);
+      const start = teInstanceStartBeat(
+        teInstanceStartRef(ti.kusari_index),
+        globalStarts,
+      );
       return start + def.internal_pattern.length <= total;
     });
     if (kept.length === track.te_instances.length) continue;

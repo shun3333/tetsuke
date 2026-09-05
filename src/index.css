@@ -735,11 +735,6 @@ table.timeline-grid {
   color: var(--text);
 }
 
-/* 配置する拍が未設定のままだと曲に置けないため、目立たせる */
-.te-unset-warning {
-  color: #cc2222;
-}
-
 .master-empty {
   color: var(--text);
   font-size: 13px;

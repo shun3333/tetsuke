@@ -94,7 +94,6 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
       te_id: nextTeId(entries),
       label: "新しい手組",
       instrument,
-      start_beat: null,
       internal_pattern: { length: 4, kakegoe: [], hits: [] },
     };
     const next = [...entries];
@@ -148,29 +147,6 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
     setSelected(null);
   }
 
-  /**
-   * 「配置する拍」が未設定のまま曲に置けない手組を、まとめて1拍目にする。
-   * 個々の手組の中身は変えず、この項目だけを直す。
-   */
-  function fillUnsetStartBeats() {
-    let count = 0;
-    const next = {} as TeMasterByInstrument;
-    for (const inst of INSTRUMENTS) {
-      next[inst] = teMaster[inst].map((te) => {
-        if (te.start_beat !== null) return te;
-        count++;
-        return { ...te, start_beat: 1 };
-      });
-    }
-    if (count === 0) {
-      window.alert("配置する拍が未設定の手組はありません。");
-      return;
-    }
-    if (!window.confirm(`${count}件の「配置する拍」を1拍目にします。よろしいですか？`)) {
-      return;
-    }
-    onChange(next);
-  }
 
   return (
     <section className="master-pane">
@@ -208,13 +184,6 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
             }}
           >
             既定に戻す
-          </button>
-          <button
-            type="button"
-            className="toolbar-button"
-            onClick={fillUnsetStartBeats}
-          >
-            未設定の配置拍を1拍目にする
           </button>
         </div>
       </div>
@@ -279,9 +248,6 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                   <span className="te-length">
                     {te.internal_pattern.length}拍
                     {te.te_id === "" ? "" : ` / ${te.te_id}`}
-                    {te.start_beat === null && (
-                      <span className="te-unset-warning"> / 配置拍未設定</span>
-                    )}
                   </span>
                 </button>
                 <div className="master-list-move">
@@ -349,23 +315,6 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
                     updateCurrent({ ...current, te_id: e.target.value })
                   }
                   title="曲データが手組を指すのに使うID。変えると、既に置いてある手組は表示されなくなります。空でも、他と同じIDでもかまいません(同じIDのときは上にあるものを使います)"
-                />
-              </label>
-              <label>
-                <span>配置する拍</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={current.start_beat ?? ""}
-                  placeholder="未設定"
-                  onChange={(e) => {
-                    const text = e.target.value;
-                    updateCurrent({
-                      ...current,
-                      start_beat: text === "" ? null : Math.max(1, Number(text)),
-                    });
-                  }}
-                  title="クサリに置いたとき、この手組が始まる拍(N拍目)。未設定の間はタイムラインに置けません"
                 />
               </label>
             </div>

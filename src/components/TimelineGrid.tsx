@@ -19,7 +19,6 @@ import {
   beatCountOf,
   computeGlobalStarts,
   globalBeatToKusariBeat,
-  isBeatRefValid,
   teInstanceStartBeat,
   teInstanceStartRef,
   totalBeats,
@@ -32,14 +31,6 @@ interface Props {
   song: SongData;
   teMaster: Record<Instrument, TeMaster>;
   dispatch: React.Dispatch<SongAction>;
-}
-
-interface Occupancy {
-  instanceIndex: number;
-  isStart: boolean;
-  length: number;
-  /** セルに表示する手組名(手組マスタのlabel) */
-  label: string;
 }
 
 /** 1拍あたりの入力欄の数(裏・表) */
@@ -95,33 +86,6 @@ function buildBeatSlots(
   });
 }
 
-/** 配置済みの手組が占めるグローバル拍を引けるようにする */
-function buildOccupancy(
-  song: SongData,
-  instrument: Instrument,
-  teMaster: TeMaster,
-  globalStarts: number[],
-): Map<number, Occupancy> {
-  const occupancy = new Map<number, Occupancy>();
-  (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
-    const def = findTe(teMaster, ti.te_id);
-    if (!def || def.start_beat === null) return;
-    const startRef = teInstanceStartRef(ti.kusari_index, def.start_beat);
-    if (!isBeatRefValid(startRef, song.kusari_sequence)) return;
-    const start = teInstanceStartBeat(startRef, globalStarts);
-    const len = def.internal_pattern.length;
-    for (let g = start; g < start + len; g++) {
-      occupancy.set(g, {
-        instanceIndex: idx,
-        isStart: g === start,
-        length: len,
-        label: def.label,
-      });
-    }
-  });
-  return occupancy;
-}
-
 /** 小鼓の行に引く、手組1つ分のバー(点から点まで) */
 interface TeBar {
   key: string;
@@ -150,10 +114,11 @@ function buildTeBars(
   const bars = new Map<number, TeBar[]>();
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
     const def = findTe(teMaster, ti.te_id);
-    if (!def || def.start_beat === null) return;
-    const startRef = teInstanceStartRef(ti.kusari_index, def.start_beat);
-    if (!isBeatRefValid(startRef, song.kusari_sequence)) return;
-    const startG = teInstanceStartBeat(startRef, globalStarts);
+    if (!def) return;
+    const startG = teInstanceStartBeat(
+      teInstanceStartRef(ti.kusari_index),
+      globalStarts,
+    );
     const endG = startG + def.internal_pattern.length;
 
     song.kusari_sequence.forEach((k, kusariIndex) => {
@@ -218,15 +183,6 @@ export function TimelineGrid({
     () => buildBeatSlots(song, globalStarts, total),
     [song, globalStarts, total],
   );
-  // 手組まわりは楽器ごとに持つ
-  const occupancy = useMemo(() => {
-    const map = {} as Record<Instrument, Map<number, Occupancy>>;
-    for (const inst of INSTRUMENTS) {
-      map[inst] = buildOccupancy(song, inst, teMaster[inst], globalStarts);
-    }
-    return map;
-  }, [song, teMaster, globalStarts]);
-
   const teBars = useMemo(() => {
     const map = {} as Record<Instrument, Map<number, TeBar[]>>;
     for (const inst of INSTRUMENTS) {
@@ -238,7 +194,8 @@ export function TimelineGrid({
 
   /**
    * その手組をこのクサリに置けない理由。置けるならnull。
-   * 何拍目から始まるかは手組マスタ(start_beat)が決めており、ここでは選べない。
+   * 起点はクサリの一番始めに固定で、ここでは選べない。
+   * 他の手組と重なるかどうかは見ない(重ねて置いてよい)。
    */
   function placementError(
     instrument: Instrument,
@@ -249,18 +206,11 @@ export function TimelineGrid({
     if (teId === "") return "IDが空の手組は置けません";
     const def = findTe(teMaster[instrument], teId);
     if (!def) return "手組が見つかりません";
-    if (def.start_beat === null) return "配置する拍が未設定です";
-    const startRef = teInstanceStartRef(kusariIndex, def.start_beat);
-    if (!isBeatRefValid(startRef, song.kusari_sequence)) {
-      return "配置する拍がこのクサリの拍数を超えています";
-    }
-    const start = teInstanceStartBeat(startRef, globalStarts);
-    const len = def.internal_pattern.length;
-    if (start + len > total) return "長さが収まりません";
-    for (let i = start; i < start + len; i++) {
-      // 重なりは同じ楽器の中だけ見る(楽器が違えば同じ拍に置ける)
-      if (occupancy[instrument].has(i)) return "他の手組と重なります";
-    }
+    const start = teInstanceStartBeat(
+      teInstanceStartRef(kusariIndex),
+      globalStarts,
+    );
+    if (start + def.internal_pattern.length > total) return "長さが収まりません";
     return null;
   }
 
@@ -485,7 +435,7 @@ export function TimelineGrid({
                         } as React.CSSProperties
                       }
                     >
-                      {/* 拍の目印。手組はここには連動しておらず、マスタが決めた拍に置かれる */}
+                      {/* 拍の目印。手組は常にクサリの一番始めから置かれる */}
                       {beats.map((_, i) => (
                         <div
                           key={i}

@@ -104,15 +104,8 @@ function readEntry(
     label: readString(value.label, `${where}.label`),
     // 楽器はどのマスタに入っているかで決まる
     instrument,
-    // 配置する拍(N拍目)。無い(古いデータ)ものは未設定として扱う
-    start_beat: readNullableInteger(value.start_beat, `${where}.start_beat`),
     internal_pattern: readPattern(value.internal_pattern, `${where}.internal_pattern`),
   };
-}
-
-/** 値が無ければ未設定(null)として読む */
-function readNullableInteger(value: unknown, where: string): number | null {
-  return value === undefined || value === null ? null : readInteger(value, where);
 }
 
 /**

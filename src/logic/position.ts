@@ -98,14 +98,12 @@ export function globalPosToBeatRef(
 }
 
 /**
- * 手組マスタの配置拍(N拍目)と、置くクサリのindexから、手組の起点(start_ref)を作る。
- *   クサリのN拍目に置く → beat = N * 2
+ * 手組の起点(start_ref)を作る。
+ * 開始位置はクサリの1拍目(表)に固定で、手組の中身(rel_pos)は
+ * そこからの相対位置としてそのまま乗る(rel_pos: 0 が1拍の表)。
  */
-export function teInstanceStartRef(
-  kusariIndex: number,
-  startBeat: number,
-): BeatRef {
-  return { kusari_index: kusariIndex, beat: startBeat * 2 };
+export function teInstanceStartRef(kusariIndex: number): BeatRef {
+  return { kusari_index: kusariIndex, beat: 2 };
 }
 
 /** グローバル拍番号(0-indexed) → クサリindexとクサリ内の拍番号(1始まり) */

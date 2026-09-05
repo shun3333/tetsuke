@@ -165,13 +165,6 @@ export interface TeMasterEntry {
   /** 画面・手付に表示する名前(日本語) */
   label: string;
   instrument: Instrument;
-  /**
-   * この手組をクサリに置いたときの開始拍(1始まりの「N拍目」)。
-   * どのクサリに置くかは曲データ側(TeInstance.kusari_index)で選ぶが、
-   * その中の何拍目から始まるかはここで固定する。
-   * 未設定(null)の間は、曲に置けない(タイムラインの一覧にも出さない)。
-   */
-  start_beat: number | null;
   internal_pattern: InternalPattern;
 }
 
@@ -196,10 +189,9 @@ export interface BeatRef {
 /**
  * 曲データ内に配置された手組の1インスタンス。
  *
- * 何拍目から始まるかは手組マスタ(TeMasterEntry.start_beat)が決める。
- * 曲データが選ぶのは「どのクサリに置くか」だけ。
- * 手組がクサリの拍数より長い場合、続きは自動的に次のクサリに乗る
- * (手組はクサリをまたいでよい)。
+ * 起点はクサリの一番始め(0拍の裏)に固定で、選べるのは
+ * 「どのクサリに置くか」だけ。手組がクサリの拍数より長い場合、
+ * 続きは自動的に次のクサリに乗る(手組はクサリをまたいでよい)。
  */
 export interface TeInstance {
   te_id: string;
