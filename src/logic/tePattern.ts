@@ -29,26 +29,13 @@ export function findTe(
   return master.find((te) => te.te_id === teId);
 }
 
-/**
- * 手組の頭より前に置ける半拍枠の数。
- * 大鼓を中心に「前のクサリの最後の拍(本地なら8拍目)」から始まる手組が
- * 多いため、その1拍分(表・裏の2枠)を負の rel_pos で表せるようにしている。
- *   rel_pos -2 = 前のクサリの最後の拍の表 / -1 = その裏 / 0 = このクサリの1拍の表
- */
-export const PICKUP_SLOTS = 2;
-
-/** 手組の中身を置ける枠の番号(= rel_pos)の範囲 */
-export function slotRangeOf(length: number): { first: number; last: number } {
-  return { first: -PICKUP_SLOTS, last: length * 2 };
-}
-
 /** 掛け声・手のうち、枠に収まらないものを取り除く(長さを縮めたとき用) */
 export function clampToLength(
   pattern: InternalPattern,
   length: number,
 ): Pick<InternalPattern, "kakegoe" | "hits"> {
-  const { first, last } = slotRangeOf(length);
-  const inRange = (pos: number) => pos >= first && pos <= last;
+  const last = length * 2;
+  const inRange = (pos: number) => pos >= 0 && pos <= last;
   return {
     kakegoe: pattern.kakegoe.filter((k: KakegoeEntry) => inRange(k.rel_pos)),
     hits: pattern.hits.filter((h: HitEntry) => inRange(h.rel_pos)),

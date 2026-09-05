@@ -950,13 +950,6 @@ table.te-timeline {
   width: 34px;
 }
 
-/* 手組の頭より前(前のクサリの最後の拍)の枠。
-   このクサリの分と見分けられるよう、薄く色を敷く */
-.te-timeline-beat.pickup,
-.te-timeline-cell.pickup {
-  background: var(--accent-bg);
-}
-
 .te-timeline-select,
 .te-timeline-input {
   width: 100%;
@@ -1015,9 +1008,4 @@ table.te-timeline {
 
 .te-preview .skewer-line {
   stroke: #000000;
-}
-
-/* 手組の頭より前(前のクサリの最後の拍)の横線は、点線で控えめに引く */
-.te-preview .skewer-line.pickup {
-  stroke-dasharray: 3 3;
 }

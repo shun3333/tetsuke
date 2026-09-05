@@ -2,14 +2,10 @@
 //
 // 手付のタイムラインと同じ発想で、拍数・掛け声・手のレーンを横に並べる。
 // 枠は半拍ごとで、手組の頭からの相対位置(rel_pos)がそのまま枠の番号になる。
-//   rel_pos 0 = 1拍の表 / 1 = 1拍の裏 / 2 = 2拍の表 / …
+//   rel_pos 0 = 0拍の表 / 1 = 0拍の裏 / 2 = 1拍の表 / …
 //
-// 頭より前(負の rel_pos)も1拍分だけ置ける。大鼓を中心に、前のクサリの
-// 最後の拍から始まる手組が多いため、その1拍分の枠を左に足してある。
-//   rel_pos -2 = 前のクサリの最後の拍の表 / -1 = その裏
-//
-// 右端は 長さ×2(= 最後の表拍)まで。既存の手組はそこに手を置いている
-// ため、その1枠を含める。
+// 枠の数は「長さ×2 + 1」。長さ×2 が最後の表拍(= 長さ拍の表)にあたり、
+// 既存の手組はそこに手を置いているため、その1枠を含める。
 import {
   TIMINGS,
   TIMING_LABEL,
@@ -19,7 +15,7 @@ import {
   type TeGlyph,
   type Timing,
 } from "../types";
-import { shiftPattern, slotRangeOf } from "../logic/tePattern";
+import { shiftPattern } from "../logic/tePattern";
 
 interface Props {
   pattern: InternalPattern;
@@ -28,30 +24,22 @@ interface Props {
   onChange: (patch: Partial<InternalPattern>) => void;
 }
 
-/** 枠の番号(= rel_pos)の列。前のクサリの最後の拍から、長さ拍の表まで */
+/** 枠の番号(= rel_pos)の列。0拍の表から、長さ拍の表まで */
 function slotsOf(length: number): number[] {
-  const { first, last } = slotRangeOf(length);
-  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
-}
-
-/** 枠のclass。表拍と、頭より前(前のクサリ)の枠を見分けられるようにする */
-function cellClass(base: string, slot: number): string {
-  return base + (slot % 2 === 0 ? " omote" : "") + (slot < 0 ? " pickup" : "");
+  return Array.from({ length: length * 2 + 1 }, (_, i) => i);
 }
 
 export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
   const slots = slotsOf(pattern.length);
-  const firstSlot = slots[0];
   const lastSlot = slots[slots.length - 1];
 
   const kakegoeAt = new Map(pattern.kakegoe.map((k) => [k.rel_pos, k]));
   const hitAt = new Map(pattern.hits.map((h) => [h.rel_pos, h]));
 
   /** 枠に収まらない位置のものは、ここでは編集できない */
-  const outOfRange = (pos: number) => pos < firstSlot || pos > lastSlot;
   const outside =
-    pattern.kakegoe.filter((k) => outOfRange(k.rel_pos)).length +
-    pattern.hits.filter((h) => outOfRange(h.rel_pos)).length;
+    pattern.kakegoe.filter((k) => k.rel_pos < 0 || k.rel_pos > lastSlot).length +
+    pattern.hits.filter((h) => h.rel_pos < 0 || h.rel_pos > lastSlot).length;
 
   function setKakegoe(relPos: number, text: string) {
     const rest = pattern.kakegoe.filter((k) => k.rel_pos !== relPos);
@@ -104,18 +92,13 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
         <thead>
           <tr>
             <th className="row-label"></th>
-            {/* 拍数。表の枠にだけ数字を出す。頭より前は数字ではなく「前」 */}
+            {/* 拍数。表の枠にだけ数字を出す */}
             {slots.map((slot) => (
               <th
                 key={slot}
-                className={cellClass("te-timeline-beat", slot)}
-                title={
-                  slot < 0
-                    ? "前のクサリの最後の拍(本地なら8拍目)"
-                    : undefined
-                }
+                className={"te-timeline-beat" + (slot % 2 === 0 ? " omote" : "")}
               >
-                {slot % 2 !== 0 ? "" : slot < 0 ? "前" : slot / 2}
+                {slot % 2 === 0 ? slot / 2 : ""}
               </th>
             ))}
           </tr>
@@ -124,7 +107,7 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
           <tr>
             <th className="row-label">手</th>
             {slots.map((slot) => (
-              <td key={slot} className={cellClass("te-timeline-cell", slot)}>
+              <td key={slot} className="te-timeline-cell">
                 <select
                   className="te-timeline-select"
                   value={hitAt.get(slot)?.te ?? ""}
@@ -145,7 +128,7 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
             {slots.map((slot) => {
               const hit = hitAt.get(slot);
               return (
-                <td key={slot} className={cellClass("te-timeline-cell", slot)}>
+                <td key={slot} className="te-timeline-cell">
                   {hit && (
                     <select
                       className="te-timeline-select"
@@ -169,7 +152,7 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
           <tr>
             <th className="row-label">掛け声</th>
             {slots.map((slot) => (
-              <td key={slot} className={cellClass("te-timeline-cell", slot)}>
+              <td key={slot} className="te-timeline-cell">
                 <input
                   className="te-timeline-input"
                   value={kakegoeAt.get(slot)?.text ?? ""}
@@ -180,10 +163,6 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
           </tr>
         </tbody>
       </table>
-      <p className="te-timeline-note hint">
-        左端の「前」は前のクサリの最後の拍(本地なら8拍目)。
-        0が、この手組を置いたクサリの1拍目にあたります。
-      </p>
       <p className="te-timeline-note hint">
         打ち方は {TIMING_SIGN.slightly_early} が{" "}
         {TIMING_LABEL.slightly_early}、{TIMING_SIGN.on} が {TIMING_LABEL.on}、
