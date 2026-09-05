@@ -291,61 +291,73 @@ table.timeline-grid {
   text-align: center;
 }
 
-/* 楽器の行。1クサリで1つの枠にし、拍の表の位置に点を並べる。
-   手組は点から点までのバーで表す。色は --te-color(楽器ごと)で決まる */
+/* 楽器の行。1クサリで1つの枠にし、そのクサリに置かれている手組の
+   名札を置いた順に並べる。どの拍を占めるかはここでは示さない。
+   色は --te-color(楽器ごと)で決まる */
 .timeline-grid .te-lane {
-  padding: 0;
+  padding: 3px 6px;
   height: 34px;
+  text-align: left;
 }
 
-.te-lane-inner {
-  position: relative;
-  height: 34px;
-  /* 点の大きさ。バーが点をちょうど覆いきるため、バー側の計算でも使う */
-  --te-dot-size: 11px;
+.te-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
 }
 
-/* 拍の目印。手組の配置拍はマスタが決めるため、クリックはできない。
-   バーの範囲に入る点はバーに覆われて見えなくなる */
-.te-dot {
-  position: absolute;
-  top: 50%;
-  width: var(--te-dot-size);
-  height: var(--te-dot-size);
-  /* 中心を left/top に合わせる(幅・高さの半分だけ戻す) */
-  margin: calc(var(--te-dot-size) / -2) 0 0 calc(var(--te-dot-size) / -2);
-  padding: 0;
-  border: 1px solid var(--text);
-  border-radius: 50%;
-  background: var(--panel-bg);
-}
-
-/* 手組の範囲。点より後に描いて、範囲内の点を覆い隠す。
-   端は点の中心ではなく点の外側まで伸ばす(下の左右の計算を参照) */
-.te-bar {
-  position: absolute;
-  top: 50%;
-  height: 24px;
-  margin-top: -12px;
-  border-radius: 12px;
+/* 手組1つ分の名札。名前 + 拍数 + 外すボタン */
+.te-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 11px;
   background: var(--te-color, var(--te-box-stroke));
-  cursor: pointer;
-}
-
-.te-bar:hover {
-  opacity: 0.7;
-}
-
-/* バーの中央に重ねて置く。クリックはバーに通す */
-.te-bar-label {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  color: var(--panel-bg);
-  pointer-events: none;
+}
+
+.te-chip-length {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.te-chip-remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 3px;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.te-chip-remove:hover {
+  background: rgba(255, 255, 255, 0.25);
+  opacity: 1;
+}
+
+/* 手組が無いクサリ。押せば追加できることが分かるようにしておく */
+.te-chips-empty {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 11px;
+  padding: 2px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.te-chips-empty:hover {
+  border-color: var(--te-color, var(--accent));
+  color: var(--te-color, var(--accent));
 }
 
 /* 表・裏の2つの入力欄をセルいっぱいに並べる(列幅は--beat-widthで決まる) */

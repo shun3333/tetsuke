@@ -16,7 +16,6 @@ import {
   type TeMaster,
 } from "../types";
 import {
-  beatCountOf,
   computeGlobalStarts,
   globalBeatToKusariBeat,
   teInstanceStartGlobalPos,
@@ -34,14 +33,6 @@ interface Props {
 
 /** 1拍あたりの入力欄の数(裏・表) */
 const SLOTS_PER_BEAT = 2;
-
-/**
- * 1拍の枠の中で「表」「裏」が来る位置(枠の幅に対する比)。
- * 謡の入力欄は左が裏・右が表なので、右半分の中央が表・左半分の中央が裏にあたる。
- * 小鼓の点も拍番号もこの位置に合わせる。
- */
-const BEAT_DOT_RATIO = 0.75;
-const BEAT_URA_RATIO = 0.25;
 
 /** 手組の一覧(ポップアップ)の表示状態 */
 interface PickerState {
@@ -85,56 +76,37 @@ function buildBeatSlots(
   });
 }
 
-/** 小鼓の行に引く、手組1つ分のバー(点から点まで) */
-interface TeBar {
-  key: string;
+/** そのクサリに置かれている手組1つ分の名札 */
+interface PlacedTe {
   instanceIndex: number;
   label: string;
-  /** このクサリ内での開始・終了拍(0始まり) */
-  fromBeat: number;
-  toBeat: number;
-  /** 前のクサリから続いているか */
-  continued: boolean;
+  /** 何拍の手組か(名札の下に小さく添える) */
+  length: number;
 }
 
 /**
- * 配置済みの手組を、クサリごとのバーに割り当てる。
- * バーは開始拍から「長さの分だけ先の拍」までを結ぶ。占有するのは
- * 開始拍から length 拍分だが、バーはその次の拍の点まで届く
- * (N拍目に置いた長さ4の手組なら、N拍表から N+4拍表まで)。
- * 手組はクサリをまたぐことがあるため、はみ出す分はクサリの境目で切る。
+ * 配置済みの手組を、置かれたクサリごとにまとめる。
+ * どの拍を占めるかは画面では扱わないので、名前と長さだけを持つ。
  */
-function buildTeBars(
+function buildPlacedTe(
   song: SongData,
   instrument: Instrument,
   teMaster: TeMaster,
-  globalStarts: number[],
-): Map<number, TeBar[]> {
-  const bars = new Map<number, TeBar[]>();
+): Map<number, PlacedTe[]> {
+  const placed = new Map<number, PlacedTe[]>();
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
     const def = findTe(teMaster, ti.te_id);
     if (!def) return;
-    const startG = teInstanceStartGlobalPos(ti.kusari_index, globalStarts);
-    const endG = startG + def.internal_pattern.length;
-
-    song.kusari_sequence.forEach((k, kusariIndex) => {
-      const kStart = globalStarts[kusariIndex];
-      const kEnd = kStart + beatCountOf(k.type) - 1;
-      if (endG < kStart || startG > kEnd) return;
-      const bar: TeBar = {
-        key: `bar-${idx}-${kusariIndex}`,
-        instanceIndex: idx,
-        label: def.label,
-        fromBeat: Math.max(startG, kStart) - kStart,
-        toBeat: Math.min(endG, kEnd) - kStart,
-        continued: startG < kStart,
-      };
-      const list = bars.get(kusariIndex);
-      if (list) list.push(bar);
-      else bars.set(kusariIndex, [bar]);
-    });
+    const entry: PlacedTe = {
+      instanceIndex: idx,
+      label: def.label,
+      length: def.internal_pattern.length,
+    };
+    const list = placed.get(ti.kusari_index);
+    if (list) list.push(entry);
+    else placed.set(ti.kusari_index, [entry]);
   });
-  return bars;
+  return placed;
 }
 
 /** 入力済みの謡の文字を、半拍枠のkeyで引けるようにする */
@@ -179,13 +151,13 @@ export function TimelineGrid({
     () => buildBeatSlots(song, globalStarts, total),
     [song, globalStarts, total],
   );
-  const teBars = useMemo(() => {
-    const map = {} as Record<Instrument, Map<number, TeBar[]>>;
+  const placedTe = useMemo(() => {
+    const map = {} as Record<Instrument, Map<number, PlacedTe[]>>;
     for (const inst of INSTRUMENTS) {
-      map[inst] = buildTeBars(song, inst, teMaster[inst], globalStarts);
+      map[inst] = buildPlacedTe(song, inst, teMaster[inst]);
     }
     return map;
-  }, [song, teMaster, globalStarts]);
+  }, [song, teMaster]);
   const utaiValues = useMemo(() => buildUtaiValues(song), [song]);
 
   /**
@@ -365,16 +337,6 @@ export function TimelineGrid({
         ? globalStarts[kusariIndex + 1]
         : total;
     const beats = beatSlots.slice(startG, endG);
-    /** 楽器1つ分のバー。左右端は拍の枠を単位とした位置。
-        前のクサリから続く分は、0拍の裏から引き始めて繋がりを示す */
-    const barsOf = (instrument: Instrument) =>
-      (teBars[instrument].get(kusariIndex) ?? []).map((bar) => ({
-        ...bar,
-        from: bar.continued
-          ? bar.fromBeat + BEAT_URA_RATIO
-          : bar.fromBeat + BEAT_DOT_RATIO,
-        to: bar.toBeat + BEAT_DOT_RATIO,
-      }));
 
     return (
       <div key={kusariIndex} className="kusari-block">
@@ -395,10 +357,10 @@ export function TimelineGrid({
             </tr>
           </thead>
           <tbody>
-            {/* 楽器ごとに1行。拍ごとに枠を切らず、1クサリで1つの枠にする。
-                拍の表の位置に点を並べ、手組は点から点までのバーで表す */}
+            {/* 楽器ごとに1行。どの拍を占めるかは示さず、そのクサリに
+                置かれている手組の名札を、置いた順に並べるだけにする */}
             {INSTRUMENTS.map((instrument) => {
-              const bars = barsOf(instrument);
+              const placed = placedTe[instrument].get(kusariIndex) ?? [];
               return (
                 <tr key={instrument}>
                   <th className="row-label row-label-te">
@@ -421,56 +383,52 @@ export function TimelineGrid({
                   </th>
                   <td className="te-lane" colSpan={beats.length}>
                     <div
-                      className="te-lane-inner"
+                      className="te-chips"
                       style={
                         {
                           "--te-color": INSTRUMENT_COLOR[instrument],
                         } as React.CSSProperties
                       }
                     >
-                      {/* 拍の目印。手組は常にこのクサリの1拍前(前のクサリの末尾)から置かれる */}
-                      {beats.map((_, i) => (
-                        <div
-                          key={i}
-                          className="te-dot"
-                          style={{
-                            left: `calc(var(--beat-width) * ${i + BEAT_DOT_RATIO})`,
-                          }}
-                        />
-                      ))}
-                      {/* バーは点より後に描いて、範囲内の点を覆い隠す。
-                          端は点の中心ではなく点の外側(半径の分だけ外)まで伸ばす */}
-                      {bars.map((bar) => (
-                        <div
-                          key={bar.key}
-                          className="te-bar"
-                          style={{
-                            left: `calc(var(--beat-width) * ${bar.from} - var(--te-dot-size) / 2)`,
-                            width: `calc(var(--beat-width) * ${bar.to - bar.from} + var(--te-dot-size))`,
-                          }}
-                          title="クリックで削除"
-                          onClick={() =>
-                            dispatch({
-                              type: "REMOVE_TE_INSTANCE",
+                      {placed.length === 0 ? (
+                        <button
+                          type="button"
+                          className="te-chips-empty"
+                          title="このクサリに手組を追加"
+                          onClick={(e) =>
+                            setPicker({
                               instrument,
-                              instanceIndex: bar.instanceIndex,
+                              kusariIndex,
+                              x: e.clientX,
+                              y: e.clientY,
                             })
                           }
-                        />
-                      ))}
-                      {/* 手組名はバーより後に。前のクサリから続く分には名前を出さない */}
-                      {bars.map((bar) =>
-                        bar.continued ? null : (
-                          <span
-                            key={`${bar.key}-label`}
-                            className="te-bar-label"
-                            style={{
-                              left: `calc(var(--beat-width) * ${(bar.from + bar.to) / 2})`,
-                            }}
-                          >
-                            {bar.label}
+                        >
+                          手組なし
+                        </button>
+                      ) : (
+                        placed.map((te) => (
+                          <span key={te.instanceIndex} className="te-chip">
+                            <span className="te-chip-name">{te.label}</span>
+                            <span className="te-chip-length">
+                              {te.length}拍
+                            </span>
+                            <button
+                              type="button"
+                              className="te-chip-remove"
+                              title={`「${te.label}」を外す`}
+                              onClick={() =>
+                                dispatch({
+                                  type: "REMOVE_TE_INSTANCE",
+                                  instrument,
+                                  instanceIndex: te.instanceIndex,
+                                })
+                              }
+                            >
+                              ×
+                            </button>
                           </span>
-                        ),
+                        ))
                       )}
                     </div>
                   </td>
