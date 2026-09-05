@@ -15,6 +15,7 @@ import {
   type TeGlyph,
   type Timing,
 } from "../types";
+import { shiftPattern } from "../logic/tePattern";
 
 interface Props {
   pattern: InternalPattern;
@@ -68,6 +69,25 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
 
   return (
     <div className="te-timeline-wrap">
+      <div className="te-timeline-shift">
+        <span>手・掛け声・補助線をまとめてずらす</span>
+        <button
+          type="button"
+          className="chip-remove"
+          title="半拍左へずらす"
+          onClick={() => onChange(shiftPattern(pattern, -1))}
+        >
+          ← 半拍
+        </button>
+        <button
+          type="button"
+          className="chip-remove"
+          title="半拍右へずらす"
+          onClick={() => onChange(shiftPattern(pattern, 1))}
+        >
+          半拍 →
+        </button>
+      </div>
       <table className="te-timeline">
         <thead>
           <tr>

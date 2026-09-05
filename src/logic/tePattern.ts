@@ -1,5 +1,6 @@
 // 手組マスタと、その内部パターンを扱う小さな道具。
 import type {
+  GuideEntry,
   HitEntry,
   InternalPattern,
   KakegoeEntry,
@@ -38,5 +39,32 @@ export function clampToLength(
   return {
     kakegoe: pattern.kakegoe.filter((k: KakegoeEntry) => inRange(k.rel_pos)),
     hits: pattern.hits.filter((h: HitEntry) => inRange(h.rel_pos)),
+  };
+}
+
+/**
+ * 手・掛け声・補助線の位置(rel_pos / from_pos / to_pos)を、
+ * まとめて半拍単位でずらす(delta は半拍数。負で左、正で右)。
+ * 枠からはみ出す位置になってもそのまま持たせる(編集欄には出なくなるが、
+ * 長さを伸ばせば編集できる)。
+ */
+export function shiftPattern(
+  pattern: InternalPattern,
+  delta: number,
+): Pick<InternalPattern, "kakegoe" | "hits" | "guides"> {
+  return {
+    kakegoe: pattern.kakegoe.map((k: KakegoeEntry) => ({
+      ...k,
+      rel_pos: k.rel_pos + delta,
+    })),
+    hits: pattern.hits.map((h: HitEntry) => ({
+      ...h,
+      rel_pos: h.rel_pos + delta,
+    })),
+    guides: pattern.guides?.map((g: GuideEntry) => ({
+      ...g,
+      from_pos: g.from_pos + delta,
+      to_pos: g.to_pos + delta,
+    })),
   };
 }
