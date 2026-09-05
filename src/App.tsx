@@ -2,6 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 import { songReducer } from "./state/songReducer";
 import { sampleSong } from "./data/sampleSong";
 import { TeMasterEditor } from "./components/TeMasterEditor";
+import { ShogaMasterEditor } from "./components/ShogaMasterEditor";
 import { TimelineGrid } from "./components/TimelineGrid";
 import { ScoreView } from "./components/ScoreView";
 import { SplitPane } from "./components/SplitPane";
@@ -12,11 +13,16 @@ import {
   loadStoredTeMaster,
   storeTeMaster,
 } from "./logic/masterStorage";
+import {
+  defaultShogaMaster,
+  loadStoredShogaMaster,
+  storeShogaMaster,
+} from "./logic/shogaStorage";
 
 /** 保存が1文字ごとに走らないよう、少し待ってからまとめて書く */
 const SAVE_DELAY_MS = 300;
 
-type View = "score" | "master";
+type View = "score" | "master" | "shoga";
 
 function App() {
   const [view, setView] = useState<View>("score");
@@ -30,6 +36,10 @@ function App() {
   const [teMaster, setTeMaster] = useState(
     () => loadStoredTeMaster() ?? defaultTeMaster(),
   );
+  // 笛の唱歌マスタも同じく保存・復元する
+  const [shogaMaster, setShogaMaster] = useState(
+    () => loadStoredShogaMaster() ?? defaultShogaMaster(),
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => storeSong(song), SAVE_DELAY_MS);
@@ -40,6 +50,11 @@ function App() {
     const timer = setTimeout(() => storeTeMaster(teMaster), SAVE_DELAY_MS);
     return () => clearTimeout(timer);
   }, [teMaster]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => storeShogaMaster(shogaMaster), SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [shogaMaster]);
 
   return (
     <div className="app">
@@ -61,11 +76,20 @@ function App() {
           >
             手組マスタを編集
           </button>
+          <button
+            type="button"
+            className={"tab-button" + (view === "shoga" ? " selected" : "")}
+            onClick={() => setView("shoga")}
+          >
+            唱歌マスタを編集
+          </button>
         </nav>
       </header>
 
       {view === "master" ? (
         <TeMasterEditor teMaster={teMaster} onChange={setTeMaster} />
+      ) : view === "shoga" ? (
+        <ShogaMasterEditor shogaMaster={shogaMaster} onChange={setShogaMaster} />
       ) : (
         <SplitPane
           left={

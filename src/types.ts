@@ -175,6 +175,37 @@ export interface TeMasterEntry {
 export type TeMaster = TeMasterEntry[];
 
 /**
+ * 唱歌(笛)の1文字。
+ * beat は謡と同じ「半拍単位の枠番号」(1始まり)で、まとまりの頭から数える。
+ *   1 = 0拍の裏 / 2 = 1拍の表 / 3 = 1拍の裏 / … / 2N = N拍の表
+ */
+export interface ShogaChar {
+  beat: number;
+  text: string;
+}
+
+/**
+ * 唱歌マスタの1エントリ。
+ * 笛は小鼓・大鼓のような手・掛け声を持たず、代わりに唱歌(文字の羅列)がある。
+ * 唱歌は主に1クサリ単位のまとまりで、そのまとまりを繰り返し使うため、
+ * 手組と同じようにマスタとして持つ。
+ */
+export interface ShogaEntry {
+  /** そのまとまりを一意に指す内部のID。画面には出さない(手組のuidと同じ役割) */
+  uid: string;
+  /** 曲データから参照するためのID。空でも、他と同じでもよい */
+  shoga_id: string;
+  /** 画面・手付に表示する名前 */
+  label: string;
+  /** 何拍分のまとまりか(本地1クサリなら8) */
+  length: number;
+  chars: ShogaChar[];
+}
+
+/** 唱歌のまとまりの一覧。並び順が画面での並び順になる */
+export type ShogaMaster = ShogaEntry[];
+
+/**
  * クサリ内の位置を指す参照。
  * beat は「半拍単位の枠番号」(1始まり)で、表・裏を1つの連番で表す。
  *   1 = 0拍の裏 / 2 = 1拍の表 / 3 = 1拍の裏 / 4 = 2拍の表 / … / 16 = 8拍の表

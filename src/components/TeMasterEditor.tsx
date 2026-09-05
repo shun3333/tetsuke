@@ -20,6 +20,7 @@ import {
 } from "../types";
 import { TE_GLYPH_MASTER } from "../data/instruments";
 import { TeGumiTimeline } from "./TeGumiTimeline";
+import { MasterList } from "./MasterList";
 import { clampToLength, newUid } from "../logic/tePattern";
 import { TeGumiPreview } from "./TeGumiPreview";
 import { downloadJson } from "../logic/exportSong";
@@ -54,9 +55,6 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
   const [instrument, setInstrument] = useState<Instrument>(INSTRUMENTS[0]);
   // te_id は空でも重複してもよく、並び順も変わるので、内部IDで手組を指す
   const [selected, setSelected] = useState<string | null>(null);
-  /** ドラッグ中の手組と、いま重なっている手組(どちらも内部ID) */
-  const [dragUid, setDragUid] = useState<string | null>(null);
-  const [overUid, setOverUid] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const entries = teMaster[instrument];
@@ -109,21 +107,6 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
     const next = [...entries];
     next.splice(to, 0, ...next.splice(from, 1));
     replaceEntries(next);
-  }
-
-  /** ドラッグしていた手組を、重ねた手組の位置へ移す */
-  function dropOn(targetUid: string) {
-    if (dragUid) moveTeTo(dragUid, indexOf(targetUid));
-    setDragUid(null);
-    setOverUid(null);
-  }
-
-  /** 落とす位置を上下どちらで示すか。動かす向きで決まる */
-  function dropClass(uid: string): string {
-    if (!dragUid) return "";
-    if (dragUid === uid) return " dragging";
-    if (overUid !== uid) return "";
-    return indexOf(dragUid) < indexOf(uid) ? " drop-below" : " drop-above";
   }
 
   function removeTe(uid: string) {
@@ -205,78 +188,20 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
       </div>
 
       <div className="master-body">
-        <div className="master-list">
-          {/* 手組が増えても縦に伸び続けないよう、一覧だけスクロールさせる */}
-          <div className="master-list-scroll">
-            {entries.map((te, i, all) => (
-              <div
-                key={te.uid}
-                className={"master-list-row" + dropClass(te.uid)}
-                draggable
-                onDragStart={(e) => {
-                  setDragUid(te.uid);
-                  e.dataTransfer.effectAllowed = "move";
-                  e.dataTransfer.setData("text/plain", te.uid);
-                }}
-                onDragEnd={() => {
-                  setDragUid(null);
-                  setOverUid(null);
-                }}
-                onDragOver={(e) => {
-                  if (!dragUid) return;
-                  // 既定の動作(受け付けない)を止めないと、落とせない
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = "move";
-                  setOverUid(te.uid);
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  dropOn(te.uid);
-                }}
-              >
-                <span className="master-list-handle" title="ドラッグで並べ替え">
-                  ⋮⋮
-                </span>
-                <button
-                  type="button"
-                  className={
-                    "master-list-item" + (i === currentAt ? " selected" : "")
-                  }
-                  onClick={() => setSelected(te.uid)}
-                >
-                  <span className="te-name">{te.label}</span>
-                  <span className="te-length">
-                    {te.internal_pattern.length}拍
-                    {te.te_id === "" ? "" : ` / ${te.te_id}`}
-                  </span>
-                </button>
-                <div className="master-list-move">
-                  <button
-                    type="button"
-                    className="chip-remove"
-                    title="1つ上へ移動"
-                    disabled={i === 0}
-                    onClick={() => moveTeTo(te.uid, i - 1)}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    className="chip-remove"
-                    title="1つ下へ移動"
-                    disabled={i === all.length - 1}
-                    onClick={() => moveTeTo(te.uid, i + 1)}
-                  >
-                    ↓
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button type="button" className="kusari-add" onClick={addTe}>
-            + 手組を追加
-          </button>
-        </div>
+        <MasterList
+          items={entries.map((te) => ({
+            uid: te.uid,
+            label: te.label,
+            sub: `${te.internal_pattern.length}拍${
+              te.te_id === "" ? "" : ` / ${te.te_id}`
+            }`,
+          }))}
+          selectedUid={current?.uid ?? null}
+          onSelect={setSelected}
+          onMove={moveTeTo}
+          addLabel="+ 手組を追加"
+          onAdd={addTe}
+        />
 
         {current === null ? (
           <p className="master-empty">左の一覧から手組を選んでください。</p>

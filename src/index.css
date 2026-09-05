@@ -1024,6 +1024,17 @@ table.te-timeline {
   color: var(--text);
 }
 
+/* 唱歌編集用のタイムライン。作りは手付編集画面の謡の行と同じだが、
+   マスタ編集画面に収まるよう、1拍の幅は狭くしてある */
+.shoga-timeline-wrap {
+  overflow-x: auto;
+}
+
+table.timeline-grid.shoga-timeline {
+  --beat-width: 56px;
+  --row-label-width: 44px;
+}
+
 /* プレビューは手付と同じく、画面のテーマに関わらず白地に黒線で描く。
    入力しながら見えるよう、スクロールしても付いてくるようにする */
 .master-preview {
