@@ -24,6 +24,7 @@ import {
 import { findTe } from "../logic/tePattern";
 import type { SongAction } from "../state/songReducer";
 import { INSTRUMENT_COLOR } from "../data/instruments";
+import { TePicker } from "./TePicker";
 
 interface Props {
   song: SongData;
@@ -42,10 +43,6 @@ interface PickerState {
   x: number;
   y: number;
 }
-
-/** 一覧が画面からはみ出さないように、表示位置を画面内に収める */
-const PICKER_WIDTH = 160;
-const PICKER_MAX_HEIGHT = 240;
 
 /** グローバル拍1つ分の謡入力欄。keyは `クサリindex:半拍枠番号` */
 interface BeatSlots {
@@ -474,51 +471,20 @@ export function TimelineGrid({
       </button>
 
       {picker && (
-        <>
-          {/* 外側をクリックしたら閉じる */}
-          <div className="te-picker-backdrop" onClick={() => setPicker(null)} />
-          <div
-            className="te-picker"
-            style={{
-              left: Math.min(picker.x, window.innerWidth - PICKER_WIDTH - 8),
-              top: Math.min(
-                picker.y,
-                window.innerHeight - PICKER_MAX_HEIGHT - 8,
-              ),
-              width: PICKER_WIDTH,
-              maxHeight: PICKER_MAX_HEIGHT,
-            }}
-          >
-            <div className="te-picker-title">
-              {INSTRUMENT_LABEL[picker.instrument]}の手組を選ぶ
-            </div>
-            {teMaster[picker.instrument].map((def) => {
-              const error = placementError(
-                picker.instrument,
-                def.te_id,
-                picker.kusariIndex,
-              );
-              return (
-                <button
-                  key={def.uid}
-                  type="button"
-                  className="te-picker-item"
-                  disabled={error !== null}
-                  title={error ?? undefined}
-                  onClick={() => {
-                    placeTe(picker.instrument, def.te_id, picker.kusariIndex);
-                    setPicker(null);
-                  }}
-                >
-                  <span className="te-name">{def.label}</span>
-                  <span className="te-length">
-                    {error ?? `${def.internal_pattern.length}拍`}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </>
+        <TePicker
+          instrument={picker.instrument}
+          entries={teMaster[picker.instrument]}
+          errorOf={(teId) =>
+            placementError(picker.instrument, teId, picker.kusariIndex)
+          }
+          onPick={(teId) => {
+            placeTe(picker.instrument, teId, picker.kusariIndex);
+            setPicker(null);
+          }}
+          onClose={() => setPicker(null)}
+          x={picker.x}
+          y={picker.y}
+        />
       )}
     </div>
   );
