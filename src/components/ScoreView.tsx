@@ -108,6 +108,12 @@ const BOTTOM_PAD = BEAT_HEIGHT;
 /** 名前(手組名・唱歌の名前)の上下に空ける余白 */
 const LABEL_BAND_PAD = 6;
 
+/**
+ * 曲名を書き出す位置(拍単位オフセット。0 = 1拍目の線)。
+ * 一番上に詰めず、2拍目の線のあたりから書き下ろす。
+ */
+const TITLE_START_OFFSET = 1;
+
 /** 掛け声を列の中心から右にずらす量(補助線と重ならないように) */
 const KAKEGOE_DX = 6;
 
@@ -426,15 +432,15 @@ function ShogaColumn({ cells, cx }: { cells: ShogaCell[]; cx: number }) {
 
 /**
  * 曲名の列。手付の1列目(一番右)の枠を丸ごと使い、
- * 拍の枠の一番上から縦書きで書き下ろす。
+ * 2拍目の線のあたりから縦書きで書き下ろす。
  */
 function TitleColumn({ slot, title }: { slot: SlotLayout; title: string }) {
   const chars = countCharUnits(title);
   return (
     <VerticalText
       cx={slot.utaiColX + SLOT_WIDTH / 2}
-      // 1音目が一番上の拍の線に来るよう、全体の中心をずらす
-      cy={offsetY(0) + ((chars - 1) * TITLE_CHAR_HEIGHT) / 2}
+      // 1音目が書き出しの拍の線に来るよう、全体の中心をずらす
+      cy={offsetY(TITLE_START_OFFSET) + ((chars - 1) * TITLE_CHAR_HEIGHT) / 2}
       text={title}
       color={INK_COLOR}
       fontSize={TITLE_FONT_SIZE}
