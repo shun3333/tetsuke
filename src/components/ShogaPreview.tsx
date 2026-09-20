@@ -4,7 +4,7 @@
 // その上に唱歌の文字を縦に並べる。横線は謡の列と同じく1拍から拍数分まで
 // (一番上の枠である0拍の裏は、1拍の線の半拍上に来る)。
 //
-// 文字ごとの調整(小文字・縦幅・ずらし)も当てはめて描く。
+// 文字ごとの調整(小文字・縦幅・間隔・ずらし)も当てはめて描く。
 // ずらした文字が切れないよう、余白は1文字分より広く取ってある。
 import type { ShogaChar } from "../types";
 import { VerticalText } from "./score/VerticalText";
@@ -94,6 +94,7 @@ export function ShogaPreview({ length, chars }: Props) {
               color={INK_COLOR}
               fontSize={at.fontSize}
               charHeight={at.charHeight}
+              step={at.step}
             />
           </g>
         );

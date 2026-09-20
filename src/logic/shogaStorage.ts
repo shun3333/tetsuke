@@ -6,7 +6,7 @@
 import type { ShogaChar, ShogaEntry, ShogaMaster } from "../types";
 import { SHOGA_MASTER } from "../data/shogaMaster";
 import { newUid } from "./tePattern";
-import { clampHeightScale, clampShift } from "./shogaChar";
+import { clampHeightScale, clampShift, clampSpacing } from "./shogaChar";
 import {
   isRecord,
   parseJson,
@@ -34,6 +34,9 @@ function readChar(value: unknown, where: string): ShogaChar {
     char.height_scale = clampHeightScale(
       readNumber(value.height_scale, `${where}.height_scale`),
     );
+  }
+  if (value.spacing !== undefined) {
+    char.spacing = clampSpacing(readNumber(value.spacing, `${where}.spacing`));
   }
   if (value.dx !== undefined) {
     char.dx = clampShift(readNumber(value.dx, `${where}.dx`));

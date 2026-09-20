@@ -6,7 +6,7 @@
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。8拍なら16枠。
 //
-// 枠を選ぶと、その文字の見た目(小文字・縦幅・縦横のずらし)を
+// 枠を選ぶと、その文字の見た目(小文字・縦幅・字間・縦横のずらし)を
 // 表の下で調整できる。調整済みの枠には印を付ける。
 import { useRef, useState } from "react";
 import type { ShogaChar } from "../types";
@@ -14,12 +14,16 @@ import {
   SHOGA_HEIGHT_MAX,
   SHOGA_HEIGHT_MIN,
   SHOGA_SHIFT_LIMIT,
+  SHOGA_SPACING_MAX,
+  SHOGA_SPACING_MIN,
   clampHeightScale,
   clampShift,
+  clampSpacing,
   hasShogaAdjust,
   tidyShogaChar,
   withoutShogaAdjust,
 } from "../logic/shogaChar";
+import { countCharUnits } from "../logic/charUnits";
 
 interface Props {
   /** 何拍分のまとまりか */
@@ -236,6 +240,20 @@ function ShogaAdjust({
         onChange={(v) => onPatch({ height_scale: clampHeightScale(v) })}
       />
       <AdjustNumber
+        label="字間"
+        value={char.spacing ?? 1}
+        min={SHOGA_SPACING_MIN}
+        max={SHOGA_SPACING_MAX}
+        // 1音しか入っていない枠では間隔の出番がないので、触れないようにする
+        disabled={countCharUnits(char.text) < 2}
+        title={
+          countCharUnits(char.text) < 2
+            ? "この枠は1音なので、字間は効きません"
+            : "1が既定。小さくすると文字どうしが詰まり、大きくすると離れます"
+        }
+        onChange={(v) => onPatch({ spacing: clampSpacing(v) })}
+      />
+      <AdjustNumber
         label="横ずらし"
         value={char.dx ?? 0}
         min={-SHOGA_SHIFT_LIMIT}
@@ -276,6 +294,7 @@ function AdjustNumber({
   min,
   max,
   title,
+  disabled,
   onChange,
 }: {
   label: string;
@@ -283,6 +302,7 @@ function AdjustNumber({
   min: number;
   max: number;
   title: string;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }) {
   const [text, setText] = useState(() => String(value));
@@ -294,13 +314,17 @@ function AdjustNumber({
   }
 
   return (
-    <label className="shoga-adjust-field" title={title}>
+    <label
+      className={"shoga-adjust-field" + (disabled ? " disabled" : "")}
+      title={title}
+    >
       <span>{label}</span>
       <input
         type="number"
         step={ADJUST_STEP}
         min={min}
         max={max}
+        disabled={disabled}
         value={text}
         onChange={(e) => {
           setText(e.target.value);

@@ -1045,7 +1045,7 @@ table.timeline-grid.shoga-timeline {
   box-shadow: inset 0 -2px 0 var(--accent);
 }
 
-/* 選んだ枠の文字の見た目(小文字・縦幅・ずらし)を整える欄 */
+/* 選んだ枠の文字の見た目(小文字・縦幅・字間・ずらし)を整える欄 */
 .shoga-adjust {
   display: flex;
   flex-wrap: wrap;
@@ -1075,6 +1075,11 @@ table.timeline-grid.shoga-timeline {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 今は効かない項目(1音の枠の字間など)は薄くして触れないことを示す */
+.shoga-adjust-field.disabled {
+  opacity: 0.4;
 }
 
 .shoga-adjust-field input {
