@@ -158,6 +158,8 @@ export function parseSongJson(text: string): ImportResult {
     if (!isRecord(raw)) throw new Error("中身がオブジェクトではありません");
     return {
       song_id: readString(raw.song_id, "song_id"),
+      // 曲名は無くてもよい(古いデータには入っていない)
+      title: raw.title === undefined ? undefined : readString(raw.title, "title"),
       kusari_sequence: readKusariSequence(raw.kusari_sequence),
       text_track: readTextTrack(raw.text_track),
       tracks: readTracks(raw.tracks),

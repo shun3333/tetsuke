@@ -27,6 +27,10 @@ export const AXIS_FONT_SIZE = 11;
 /** 紙の下に入れるページ番号 */
 export const PAGE_NUMBER_FONT_SIZE = 10;
 
+/** 曲名(手付の1列目に縦書きで入れる)。謡より一回り大きく書く */
+export const TITLE_FONT_SIZE = 22;
+export const TITLE_CHAR_HEIGHT = 24;
+
 /** クサリ枠のヘッダー行に入れる名前(手組名・唱歌の名前) */
 export const LABEL_FONT_SIZE = 9;
 /** 名前を縦書きにしたときの1文字あたりの高さ */

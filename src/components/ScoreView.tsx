@@ -46,9 +46,12 @@ import {
   PAGE_NUMBER_FONT_SIZE,
   SHOGA_CHAR_HEIGHT,
   SHOGA_FONT_SIZE,
+  TITLE_CHAR_HEIGHT,
+  TITLE_FONT_SIZE,
   UTAI_CHAR_HEIGHT,
   UTAI_FONT_SIZE,
 } from "./score/metrics";
+import { countCharUnits } from "../logic/charUnits";
 
 interface Props {
   song: SongData;
@@ -116,9 +119,18 @@ const TIMING_Y_OFFSET: Record<Timing, number> = Object.fromEntries(
 const offsetY = (offset: number) => GRID_TOP + TOP_PAD + offset * BEAT_HEIGHT;
 const GRID_BOTTOM = offsetY(ROWS_PER_PAGE - 1) + BOTTOM_PAD;
 
+/**
+ * 1つの枠の中身。
+ * 曲名は1列目(一番右)の枠を丸ごと使う。クサリの入らない枠は空白。
+ */
+type SlotContent =
+  | { kind: "title" }
+  | { kind: "kusari"; index: number }
+  | { kind: "empty" };
+
 /** 1クサリ枠 = 謡1列 + 楽器の列(右)のセット。データが無い枠も同じ幅で確保する。 */
 interface SlotLayout {
-  kusariIndex: number | null;
+  content: SlotContent;
   beatCount: number;
   /** 謡列の左端(= 枠の左端) */
   utaiColX: number;
@@ -130,21 +142,23 @@ interface SlotLayout {
 
 /** 1ページ分のレイアウトを計算する */
 function computePageLayout(
-  slotKusariIndices: (number | null)[],
+  slotContents: SlotContent[],
   kusariSequence: KusariEntry[],
 ) {
   const width =
-    MARGIN_LEFT + slotKusariIndices.length * SLOT_WIDTH + AXIS_COL_WIDTH + MARGIN_RIGHT;
+    MARGIN_LEFT + slotContents.length * SLOT_WIDTH + AXIS_COL_WIDTH + MARGIN_RIGHT;
   const height = GRID_BOTTOM + MARGIN_BOTTOM;
   const axisX = width - MARGIN_RIGHT - AXIS_COL_WIDTH;
 
-  const slots: SlotLayout[] = slotKusariIndices.map((kusariIndex, i) => {
-    // クサリは右から左へ並ぶ
+  const slots: SlotLayout[] = slotContents.map((content, i) => {
+    // 枠は右から左へ並ぶ
     const utaiColX = axisX - (i + 1) * SLOT_WIDTH;
     return {
-      kusariIndex,
+      content,
       beatCount:
-        kusariIndex === null ? 0 : KUSARI_BEAT_COUNT[kusariSequence[kusariIndex].type],
+        content.kind === "kusari"
+          ? KUSARI_BEAT_COUNT[kusariSequence[content.index].type]
+          : 0,
       utaiColX,
       teColX: SCORE_INSTRUMENTS.map(
         (_, j) => utaiColX + UTAI_COL_WIDTH + j * TE_COL_WIDTH,
@@ -180,10 +194,14 @@ function PageGrid({
           className={THICK_BEATS.has(r + 1) ? "skewer-line thick" : "skewer-line"}
         />
       ))}
-      {/* 列の縦罫線(謡列の左端・謡と小鼓の境目)。手組名の行も含めて通す */}
+      {/* 列の縦罫線(謡列の左端・謡と小鼓の境目)。手組名の行も含めて通す。
+          曲名の枠は中を区切らないので、枠の左端だけ引く */}
       {slots.map((slot, i) => (
         <g key={i}>
-          {[slot.utaiColX, ...slot.teColX].map((x, j) => (
+          {(slot.content.kind === "title"
+            ? [slot.utaiColX]
+            : [slot.utaiColX, ...slot.teColX]
+          ).map((x, j) => (
             <line
               key={j}
               x1={x}
@@ -406,6 +424,25 @@ function ShogaColumn({ cells, cx }: { cells: ShogaCell[]; cx: number }) {
   );
 }
 
+/**
+ * 曲名の列。手付の1列目(一番右)の枠を丸ごと使い、
+ * 拍の枠の一番上から縦書きで書き下ろす。
+ */
+function TitleColumn({ slot, title }: { slot: SlotLayout; title: string }) {
+  const chars = countCharUnits(title);
+  return (
+    <VerticalText
+      cx={slot.utaiColX + SLOT_WIDTH / 2}
+      // 1音目が一番上の拍の線に来るよう、全体の中心をずらす
+      cy={offsetY(0) + ((chars - 1) * TITLE_CHAR_HEIGHT) / 2}
+      text={title}
+      color={INK_COLOR}
+      fontSize={TITLE_FONT_SIZE}
+      charHeight={TITLE_CHAR_HEIGHT}
+    />
+  );
+}
+
 /** 1クサリ枠の中身(謡または唱歌 + 楽器ごとの列) */
 function KusariSlot({
   slot,
@@ -457,19 +494,21 @@ function KusariSlot({
 interface ScorePageProps {
   kusariSequence: KusariEntry[];
   items: ScoreItems;
-  slotKusariIndices: (number | null)[];
+  slotContents: SlotContent[];
+  title: string;
   pageNumber: number;
 }
 
 function ScorePage({
   kusariSequence,
   items,
-  slotKusariIndices,
+  slotContents,
+  title,
   pageNumber,
 }: ScorePageProps) {
   const { slots, width, height, axisX, left } = useMemo(
-    () => computePageLayout(slotKusariIndices, kusariSequence),
-    [slotKusariIndices, kusariSequence],
+    () => computePageLayout(slotContents, kusariSequence),
+    [slotContents, kusariSequence],
   );
 
   return (
@@ -484,18 +523,23 @@ function ScorePage({
       >
         <PageGrid slots={slots} left={left} axisX={axisX} />
         <BeatAxis axisX={axisX} />
-        {slots.map((slot) =>
-          slot.kusariIndex === null ? null : (
+        {slots.map((slot, i) => {
+          if (slot.content.kind === "title") {
+            return <TitleColumn key="title" slot={slot} title={title} />;
+          }
+          if (slot.content.kind === "empty") return null;
+          const kusariIndex = slot.content.index;
+          return (
             <KusariSlot
-              key={slot.kusariIndex}
+              key={i}
               slot={slot}
-              kusariIndex={slot.kusariIndex}
-              utai={items.utaiByKusari.get(slot.kusariIndex) ?? []}
-              shoga={items.shogaByKusari.get(slot.kusariIndex) ?? []}
+              kusariIndex={kusariIndex}
+              utai={items.utaiByKusari.get(kusariIndex) ?? []}
+              shoga={items.shogaByKusari.get(kusariIndex) ?? []}
               byInstrument={items.byInstrument}
             />
-          ),
-        )}
+          );
+        })}
         <PageNumber width={width} height={height} pageNumber={pageNumber} />
       </svg>
     </div>
@@ -508,26 +552,42 @@ export function ScoreView({ song, masters }: Props) {
     return buildScoreItems(song, masters, globalStarts);
   }, [song, masters]);
 
-  /** クサリをページごとに分ける。足りない枠はnull(空欄)で埋める */
+  const title = (song.title ?? "").trim();
+
+  /**
+   * クサリをページごとに分ける。足りない枠は空白で埋める。
+   * 曲名があるときは、1ページ目の1列目(一番右)を曲名に使うので、
+   * そのページに入るクサリが1つ減る。
+   */
   const pages = useMemo(() => {
     const total = song.kusari_sequence.length;
-    const pageCount = Math.max(1, Math.ceil(total / KUSARI_PER_PAGE));
-    return Array.from({ length: pageCount }, (_, p) =>
-      Array.from({ length: KUSARI_PER_PAGE }, (_, i) => {
-        const kusariIndex = p * KUSARI_PER_PAGE + i;
-        return kusariIndex < total ? kusariIndex : null;
-      }),
-    );
-  }, [song.kusari_sequence.length]);
+    const firstPageSlots = KUSARI_PER_PAGE - (title === "" ? 0 : 1);
+    const result: SlotContent[][] = [];
+
+    let next = 0;
+    // 最後のクサリを置き終わるまでページを作る(0クサリでも1ページは出す)
+    do {
+      const isFirst = result.length === 0;
+      const kusariSlots = isFirst ? firstPageSlots : KUSARI_PER_PAGE;
+      const slots: SlotContent[] = isFirst && title !== "" ? [{ kind: "title" }] : [];
+      for (let i = 0; i < kusariSlots; i++, next++) {
+        slots.push(next < total ? { kind: "kusari", index: next } : { kind: "empty" });
+      }
+      result.push(slots);
+    } while (next < total);
+
+    return result;
+  }, [song.kusari_sequence.length, title]);
 
   return (
     <div className="score-pages">
-      {pages.map((slotKusariIndices, i) => (
+      {pages.map((slotContents, i) => (
         <ScorePage
           key={i}
           kusariSequence={song.kusari_sequence}
           items={items}
-          slotKusariIndices={slotKusariIndices}
+          slotContents={slotContents}
+          title={title}
           pageNumber={i + 1}
         />
       ))}

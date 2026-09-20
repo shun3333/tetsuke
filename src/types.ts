@@ -316,6 +316,11 @@ export const TEXT_TRACK_LABEL: Record<TextTrackKind, string> = {
 /** 曲データ(手付本体) */
 export interface SongData {
   song_id: string;
+  /**
+   * 手付に書く曲名。手付の1列目(一番右)に縦書きで出す。
+   * 空にすると列ごと作らない。song_id は中で曲を指すためのIDなので別物。
+   */
+  title?: string;
   kusari_sequence: KusariEntry[];
   /**
    * 謡と唱歌のどちらを書くか。省略したときは謡。

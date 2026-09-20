@@ -603,6 +603,18 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
     <div className="timeline-grid-wrap">
       <h2>タイムライン</h2>
 
+      {/* 曲名。手付の1列目(一番右)に縦書きで出る */}
+      <label className="song-title-field">
+        <span>タイトル</span>
+        <input
+          value={song.title ?? ""}
+          placeholder="曲名(空にすると手付に出しません)"
+          onChange={(e) =>
+            dispatch({ type: "SET_TITLE", title: e.target.value })
+          }
+        />
+      </label>
+
       {/* 謡と唱歌は同時に書かないので、どちらを書くかをここで選ぶ。
           選んでいない側の中身は消さずに残るので、戻せば元のまま */}
       <div className="text-track-switch">

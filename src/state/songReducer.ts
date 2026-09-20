@@ -35,6 +35,7 @@ export type SongAction =
   | { type: "ADD_SHOGA_INSTANCE"; shogaId: string; kusariIndex: number }
   | { type: "REMOVE_SHOGA_INSTANCE"; instanceIndex: number }
   | { type: "SET_TEXT_TRACK"; textTrack: TextTrackKind }
+  | { type: "SET_TITLE"; title: string }
   | {
       type: "SET_UTAI_CHAR";
       beatRef: BeatRef;
@@ -209,6 +210,9 @@ export function songReducer(state: SongData, action: SongAction): SongData {
         },
       };
     }
+
+    case "SET_TITLE":
+      return { ...state, title: action.title };
 
     case "SET_TEXT_TRACK":
       // 書かないほうの中身は消さずに残す(戻したときにそのまま使える)

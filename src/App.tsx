@@ -67,7 +67,7 @@ function App() {
       <header className="app-header">
         <h1>能楽 手付アプリ</h1>
         <p className="app-subtitle">
-          大鼓 × 小鼓 × 謡/笛 — {song.song_id}
+          大鼓 × 小鼓 × 謡/笛 — {song.title?.trim() || song.song_id}
         </p>
         <nav className="app-tabs">
           <button
