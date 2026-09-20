@@ -14,12 +14,12 @@ function safeFileName(name: string): string {
 
 /**
  * 保存するときのファイル名。
- * タイトルがあれば「{タイトル}手付.json」、無ければ「手付.json」。
+ * タイトルがあれば「{タイトル}手付.{拡張子}」、無ければ「手付.{拡張子}」。
  * 前後の空白は落とす。
  */
-export function songFileName(song: SongData): string {
+export function songFileName(song: SongData, extension: string): string {
   const title = safeFileName((song.title ?? "").trim()).trim();
-  return `${title}${FILE_SUFFIX}.json`;
+  return `${title}${FILE_SUFFIX}.${extension}`;
 }
 
 /** 曲データをJSONの文字列にする */
@@ -44,5 +44,5 @@ export function downloadJson(content: string, filename: string): void {
 
 /** 曲データをJSONファイルとして保存する */
 export function saveSongAsJson(song: SongData): void {
-  downloadJson(songToJson(song), songFileName(song));
+  downloadJson(songToJson(song), songFileName(song, "json"));
 }

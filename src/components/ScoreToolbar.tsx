@@ -1,18 +1,18 @@
-// 手付の操作(新規作成・サンプルに戻す・JSONの読み込み/保存・PDF出力)。
+// 手付の操作(新規作成・サンプルに戻す・JSONの読み込み/保存・PDF保存・印刷)。
 //
-// PDFはブラウザの印刷機能に任せる。手付は縦書き・筆書き風フォント・
-// 図形が混ざるため、ブラウザにそのまま組ませたほうが画面と同じものが出る。
+// PDFはアプリの中で組み立てて保存する。ブラウザの印刷ダイアログを通すと
+// 用紙の大きさ・向き・余白がプリンタドライバの設定に左右されるため
+// (OSのPDFプリンタを選ぶと縦向きの紙に載ってしまう等)、
+// 送り先によらず同じものが出るようにしてある。
 //
-// 用紙はCSSの @page で A4横 を指定しているが、これが効くのは
-// 送り先が「PDFに保存」のときだけ。OSのPDFプリンタ(Microsoft Print to PDF等)を
-// 選ぶと用紙の向きはドライバ側の設定が優先され、縦向きの紙に横向きの
-// 内容が回転して載ってしまう。
-import { useRef } from "react";
+// 紙に直接刷りたいときのために、ブラウザの印刷も残してある。
+import { useRef, useState } from "react";
 import type { SongData } from "../types";
 import type { SongAction } from "../state/songReducer";
 import { createEmptySong } from "../data/newSong";
 import { sampleSong } from "../data/sampleSong";
 import { saveSongAsJson, songFileName } from "../logic/exportSong";
+import { saveScoreAsPdf } from "../logic/exportPdf";
 import { parseSongJson } from "../logic/importSong";
 
 interface Props {
@@ -22,6 +22,24 @@ interface Props {
 
 export function ScoreToolbar({ song, dispatch }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  /** PDFを組み立てている間。何ページもあると少し待つので、その間を示す */
+  const [makingPdf, setMakingPdf] = useState(false);
+
+  async function handleSavePdf() {
+    const pages = [
+      ...document.querySelectorAll<SVGSVGElement>(".score-pages .score-view"),
+    ];
+    setMakingPdf(true);
+    try {
+      await saveScoreAsPdf(pages, songFileName(song, "pdf"));
+    } catch (e) {
+      window.alert(
+        `PDFを作れませんでした。\n${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setMakingPdf(false);
+    }
+  }
 
   /** 今の内容を捨てて別の曲データに差し替える。戻せないので確認してから */
   function replaceSong(next: SongData, what: string) {
@@ -80,23 +98,32 @@ export function ScoreToolbar({ song, dispatch }: Props) {
         type="button"
         className="toolbar-button"
         onClick={() => saveSongAsJson(song)}
-        title={`作った手付のデータ(クサリ列・手組・謡)を「${songFileName(song)}」として保存します`}
+        title={`作った手付のデータ(クサリ列・手組・謡)を「${songFileName(song, "json")}」として保存します`}
       >
         JSONで保存
       </button>
       <button
         type="button"
         className="toolbar-button"
+        disabled={makingPdf}
+        onClick={handleSavePdf}
+        title={`A4横のPDFを「${songFileName(song, "pdf")}」として保存します(印刷ダイアログは出ません)`}
+      >
+        {makingPdf ? "PDFを作成中…" : "PDFで保存"}
+      </button>
+      <button
+        type="button"
+        className="toolbar-button"
         onClick={() => window.print()}
         title={
-          "印刷ダイアログで送り先に「PDFに保存」を選んでください(A4横で出力されます)。\n" +
+          "ブラウザの印刷ダイアログを開きます(A4横)。\n" +
           "OSのPDFプリンタを選ぶと縦向きの紙になるため、その場合はレイアウトを「横」にしてください。"
         }
       >
-        PDFで出力
+        印刷
       </button>
       <p className="toolbar-hint">
-        PDFは送り先に「PDFに保存」を選ぶとA4横で出力されます
+        PDFはブラウザによらず、A4横・1ページ1枚で出力されます
       </p>
     </div>
   );
