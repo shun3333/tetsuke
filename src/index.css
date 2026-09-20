@@ -568,13 +568,6 @@ table.timeline-grid {
   gap: 6px;
 }
 
-.score-page-label {
-  font-size: 12px;
-  color: var(--text);
-  background: var(--accent-bg);
-  border-radius: 4px;
-  padding: 2px 8px;
-}
 
 /* 手付は印刷物なので、画面のテーマ(ダークモード)に関わらず
    常に「白地に黒線」で描く。ここでは意図的にテーマ変数を使わない。 */
@@ -590,7 +583,8 @@ table.timeline-grid {
   font-family: var(--serif-ja);
 }
 
-.score-view .beat-axis-text {
+.score-view .beat-axis-text,
+.score-view .page-number-text {
   fill: #000000;
 }
 
@@ -623,8 +617,7 @@ table.timeline-grid {
   .app-header,
   .editor-pane,
   .pane-resizer,
-  .score-pane-header,
-  .score-page-label {
+  .score-pane-header {
     display: none;
   }
 

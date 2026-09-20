@@ -24,6 +24,9 @@ export const SHOGA_CHAR_HEIGHT = UTAI_CHAR_HEIGHT;
 /** 拍数の軸 */
 export const AXIS_FONT_SIZE = 11;
 
+/** 紙の下に入れるページ番号 */
+export const PAGE_NUMBER_FONT_SIZE = 10;
+
 /** クサリ枠のヘッダー行に入れる名前(手組名・唱歌の名前) */
 export const LABEL_FONT_SIZE = 9;
 /** 名前を縦書きにしたときの1文字あたりの高さ */

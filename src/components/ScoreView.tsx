@@ -44,6 +44,7 @@ import {
   KAKEGOE_FONT_SIZE,
   LABEL_CHAR_HEIGHT,
   LABEL_FONT_SIZE,
+  PAGE_NUMBER_FONT_SIZE,
   SHOGA_CHAR_HEIGHT,
   SHOGA_FONT_SIZE,
   UTAI_CHAR_HEIGHT,
@@ -202,6 +203,33 @@ function PageGrid({
       {/* 枠の下端 */}
       <line x1={left} x2={axisX} y1={GRID_BOTTOM} y2={GRID_BOTTOM} className="skewer-line" />
     </>
+  );
+}
+
+/**
+ * ページ番号。紙の下の余白の中央に置く。
+ * 手付そのものの一部として描くので、PDFにもそのまま出る。
+ */
+function PageNumber({
+  width,
+  height,
+  pageNumber,
+}: {
+  width: number;
+  height: number;
+  pageNumber: number;
+}) {
+  return (
+    <text
+      x={width / 2}
+      y={height - MARGIN_BOTTOM / 2}
+      dominantBaseline="middle"
+      textAnchor="middle"
+      fontSize={PAGE_NUMBER_FONT_SIZE}
+      className="page-number-text"
+    >
+      {pageNumber}
+    </text>
   );
 }
 
@@ -473,7 +501,6 @@ function ScorePage({
 
   return (
     <div className="score-page">
-      <div className="score-page-label">{pageNumber}</div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         width={width}
@@ -497,6 +524,7 @@ function ScorePage({
             />
           ),
         )}
+        <PageNumber width={width} height={height} pageNumber={pageNumber} />
       </svg>
     </div>
   );
