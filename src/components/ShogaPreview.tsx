@@ -30,7 +30,7 @@ const PAD_TOP = BEAT_HEIGHT;
 /** 一番下の線の下に空ける余白。下へずらした文字が切れないだけ取る */
 const PAD_BOTTOM = BEAT_HEIGHT;
 
-const FONT_SIZE = 14;
+const FONT_SIZE = 16;
 const CHAR_HEIGHT = 15;
 const AXIS_FONT_SIZE = 11;
 
