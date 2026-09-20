@@ -1035,6 +1035,80 @@ table.timeline-grid.shoga-timeline {
   --row-label-width: 44px;
 }
 
+/* 選んでいる枠。下の調整欄がどの文字のものか分かるようにする */
+.shoga-timeline .utai-input.selected {
+  background: var(--accent-bg);
+}
+
+/* 何か調整が入っている枠。文字の下に細い線を引いて知らせる */
+.shoga-timeline .utai-input.adjusted {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* 選んだ枠の文字の見た目(小文字・縦幅・ずらし)を整える欄 */
+.shoga-adjust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-bg);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.shoga-adjust-target {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.shoga-adjust-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shoga-adjust-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shoga-adjust-field input {
+  width: 62px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 12px;
+  padding: 3px 4px;
+}
+
+.shoga-adjust-reset {
+  margin-left: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.shoga-adjust-reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 空の枠を選んだときの案内。調整欄と同じ位置に出す */
+.shoga-adjust-empty {
+  margin: 8px 0 0;
+  font-size: 11px;
+}
+
 /* プレビューは手付と同じく、画面のテーマに関わらず白地に黒線で描く。
    入力しながら見えるよう、スクロールしても付いてくるようにする */
 .master-preview {

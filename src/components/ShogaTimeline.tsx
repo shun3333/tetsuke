@@ -5,8 +5,21 @@
 //   左 = 2b-1((b-1)拍の裏 / b=1なら0拍の裏)
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。8拍なら16枠。
-import { useRef } from "react";
+//
+// 枠を選ぶと、その文字の見た目(小文字・縦幅・縦横のずらし)を
+// 表の下で調整できる。調整済みの枠には印を付ける。
+import { useRef, useState } from "react";
 import type { ShogaChar } from "../types";
+import {
+  SHOGA_HEIGHT_MAX,
+  SHOGA_HEIGHT_MIN,
+  SHOGA_SHIFT_LIMIT,
+  clampHeightScale,
+  clampShift,
+  hasShogaAdjust,
+  tidyShogaChar,
+  withoutShogaAdjust,
+} from "../logic/shogaChar";
 
 interface Props {
   /** 何拍分のまとまりか */
@@ -18,19 +31,56 @@ interface Props {
 /** 1拍あたりの入力欄の数(裏・表) */
 const SLOTS_PER_BEAT = 2;
 
+/** 調整の入力欄の刻み。細かく合わせられるよう小さめにする */
+const ADJUST_STEP = 0.1;
+
+/** 半拍単位の枠番号 → 「2拍の表」のような読み方 */
+function slotLabel(slot: number): string {
+  return `${Math.floor(slot / 2)}拍の${slot % 2 === 0 ? "表" : "裏"}`;
+}
+
 export function ShogaTimeline({ length, chars, onChange }: Props) {
   const inputRefs = useRef(new Map<number, HTMLInputElement>());
-  const textAt = new Map(chars.map((c) => [c.beat, c.text]));
+  // 調整する枠。入力欄を選ぶと切り替わり、そのままにしておくと選ばれ続ける
+  const [selected, setSelected] = useState<number | null>(null);
+  const charAt = new Map(chars.map((c) => [c.beat, c]));
   const beats = Array.from({ length }, (_, i) => i + 1);
 
   /** 枠に収まらない位置のものは、ここでは編集できない */
   const lastBeat = length * SLOTS_PER_BEAT;
   const outside = chars.filter((c) => c.beat < 1 || c.beat > lastBeat).length;
 
+  // 拍数を縮めて表から消えた枠は、選ばれたままにしない
+  const selectedSlot =
+    selected !== null && selected >= 1 && selected <= lastBeat ? selected : null;
+  const selectedChar = selectedSlot === null ? undefined : charAt.get(selectedSlot);
+
   function setText(beat: number, text: string) {
     const rest = chars.filter((c) => c.beat !== beat);
-    const next = text === "" ? rest : [...rest, { beat, text }];
+    // 文字を書き替えても、その枠に付けた調整はそのまま残す
+    const next =
+      text === "" ? rest : [...rest, { ...charAt.get(beat), beat, text }];
     onChange(next.sort((a, b) => a.beat - b.beat));
+  }
+
+  /** 選んでいる枠の文字の見た目を変える */
+  function patchSelected(patch: Partial<ShogaChar>) {
+    if (!selectedChar) return;
+    onChange(
+      chars.map((c) =>
+        c.beat === selectedChar.beat ? tidyShogaChar({ ...c, ...patch }) : c,
+      ),
+    );
+  }
+
+  /** 選んでいる枠の調整をすべて外す */
+  function resetSelected() {
+    if (!selectedChar) return;
+    onChange(
+      chars.map((c) =>
+        c.beat === selectedChar.beat ? withoutShogaAdjust(c) : c,
+      ),
+    );
   }
 
   /** 左右の枠へ移る。端まで来たらそこで止まる */
@@ -97,20 +147,28 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
               return (
                 <td key={beat} className="utai-cell">
                   <div className="utai-cell-inner">
-                    {[omote - 1, omote].map((slot) => (
-                      <input
-                        key={slot}
-                        ref={(el) => {
-                          if (el) inputRefs.current.set(slot, el);
-                          else inputRefs.current.delete(slot);
-                        }}
-                        className="utai-input"
-                        title={`${Math.floor(slot / 2)}拍の${slot % 2 === 0 ? "表" : "裏"}`}
-                        value={textAt.get(slot) ?? ""}
-                        onChange={(e) => setText(slot, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, slot)}
-                      />
-                    ))}
+                    {[omote - 1, omote].map((slot) => {
+                      const char = charAt.get(slot);
+                      return (
+                        <input
+                          key={slot}
+                          ref={(el) => {
+                            if (el) inputRefs.current.set(slot, el);
+                            else inputRefs.current.delete(slot);
+                          }}
+                          className={
+                            "utai-input" +
+                            (slot === selectedSlot ? " selected" : "") +
+                            (char && hasShogaAdjust(char) ? " adjusted" : "")
+                          }
+                          title={slotLabel(slot)}
+                          value={char?.text ?? ""}
+                          onChange={(e) => setText(slot, e.target.value)}
+                          onFocus={() => setSelected(slot)}
+                          onKeyDown={(e) => handleKeyDown(e, slot)}
+                        />
+                      );
+                    })}
                   </div>
                 </td>
               );
@@ -126,6 +184,134 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
           この表に収まらない位置のものが{outside}件あります。拍数を伸ばすと編集できます。
         </p>
       )}
+
+      {selectedSlot !== null &&
+        (selectedChar ? (
+          <ShogaAdjust
+            key={selectedSlot}
+            char={selectedChar}
+            onPatch={patchSelected}
+            onReset={resetSelected}
+          />
+        ) : (
+          <p className="shoga-adjust-empty hint">
+            {slotLabel(selectedSlot)}は空です。文字を入れると、大きさや位置を調整できます。
+          </p>
+        ))}
     </div>
+  );
+}
+
+/** 選んでいる枠の文字の見た目を整える欄 */
+function ShogaAdjust({
+  char,
+  onPatch,
+  onReset,
+}: {
+  char: ShogaChar;
+  onPatch: (patch: Partial<ShogaChar>) => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="shoga-adjust">
+      <span className="shoga-adjust-target">
+        {slotLabel(char.beat)}「{char.text}」
+      </span>
+
+      <label className="shoga-adjust-check">
+        <input
+          type="checkbox"
+          checked={char.small === true}
+          onChange={(e) => onPatch({ small: e.target.checked })}
+        />
+        <span>小文字</span>
+      </label>
+
+      <AdjustNumber
+        label="縦幅"
+        value={char.height_scale ?? 1}
+        min={SHOGA_HEIGHT_MIN}
+        max={SHOGA_HEIGHT_MAX}
+        title="1が既定。小さくすると平たく、大きくすると縦長になります"
+        onChange={(v) => onPatch({ height_scale: clampHeightScale(v) })}
+      />
+      <AdjustNumber
+        label="横ずらし"
+        value={char.dx ?? 0}
+        min={-SHOGA_SHIFT_LIMIT}
+        max={SHOGA_SHIFT_LIMIT}
+        title="右が+。1で文字1つ分ずれます"
+        onChange={(v) => onPatch({ dx: clampShift(v) })}
+      />
+      <AdjustNumber
+        label="縦ずらし"
+        value={char.dy ?? 0}
+        min={-SHOGA_SHIFT_LIMIT}
+        max={SHOGA_SHIFT_LIMIT}
+        title="下が+。1で文字1つ分ずれます"
+        onChange={(v) => onPatch({ dy: clampShift(v) })}
+      />
+
+      <button
+        type="button"
+        className="shoga-adjust-reset"
+        title="この文字の調整をなくす"
+        disabled={!hasShogaAdjust(char)}
+        onClick={onReset}
+      >
+        調整をなくす
+      </button>
+    </div>
+  );
+}
+
+/**
+ * 調整の数を入れる欄。
+ * 打ち込んでいる途中は空にもできるよう、入力欄の文字は別に持ち、
+ * 数として読める間だけ外の値を書き換える(勝手に0を入れない)。
+ */
+function AdjustNumber({
+  label,
+  value,
+  min,
+  max,
+  title,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  title: string;
+  onChange: (value: number) => void;
+}) {
+  const [text, setText] = useState(() => String(value));
+  const [shown, setShown] = useState(value);
+  if (shown !== value) {
+    // 外から値が変わったときは、そちらに合わせる
+    setShown(value);
+    setText(String(value));
+  }
+
+  return (
+    <label className="shoga-adjust-field" title={title}>
+      <span>{label}</span>
+      <input
+        type="number"
+        step={ADJUST_STEP}
+        min={min}
+        max={max}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          const next = Number(e.target.value);
+          if (e.target.value.trim() !== "" && Number.isFinite(next)) {
+            setShown(next);
+            onChange(next);
+          }
+        }}
+        onBlur={() => setText(String(value))}
+      />
+    </label>
   );
 }

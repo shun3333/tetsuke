@@ -3,8 +3,12 @@
 // 手付の出力画面と同じ描き方で、白地に表拍の横線を引き、
 // その上に唱歌の文字を縦に並べる。横線は謡の列と同じく1拍から拍数分まで
 // (一番上の枠である0拍の裏は、1拍の線の半拍上に来る)。
+//
+// 文字ごとの調整(小文字・縦幅・ずらし)も当てはめて描く。
+// ずらした文字が切れないよう、余白は1文字分より広く取ってある。
 import type { ShogaChar } from "../types";
 import { VerticalText } from "./score/VerticalText";
+import { heightScaleTransform, shogaCharLayout } from "../logic/shogaChar";
 
 interface Props {
   length: number;
@@ -20,11 +24,11 @@ const SCALE = 1.8;
 const BEAT_HEIGHT = 44;
 const COL_WIDTH = 44;
 const AXIS_WIDTH = 22;
-const MARGIN_X = 10;
+const MARGIN_X = 18;
 /** 1拍の線の上に空ける余白。0拍の裏(半拍上)の文字が入るだけ取る */
 const PAD_TOP = BEAT_HEIGHT;
-/** 一番下の線の下に空ける余白(半拍分) */
-const PAD_BOTTOM = BEAT_HEIGHT / 2;
+/** 一番下の線の下に空ける余白。下へずらした文字が切れないだけ取る */
+const PAD_BOTTOM = BEAT_HEIGHT;
 
 const FONT_SIZE = 14;
 const CHAR_HEIGHT = 15;
@@ -79,17 +83,21 @@ export function ShogaPreview({ length, chars }: Props) {
         );
       })}
 
-      {chars.map((c, i) => (
-        <VerticalText
-          key={i}
-          cx={cx}
-          cy={posY(c.beat)}
-          text={c.text}
-          color={INK_COLOR}
-          fontSize={FONT_SIZE}
-          charHeight={CHAR_HEIGHT}
-        />
-      ))}
+      {chars.map((c, i) => {
+        const at = shogaCharLayout(c, cx, posY(c.beat), FONT_SIZE, CHAR_HEIGHT);
+        return (
+          <g key={i} transform={heightScaleTransform(at.cy, at.heightScale)}>
+            <VerticalText
+              cx={at.cx}
+              cy={at.cy}
+              text={c.text}
+              color={INK_COLOR}
+              fontSize={at.fontSize}
+              charHeight={at.charHeight}
+            />
+          </g>
+        );
+      })}
     </svg>
   );
 }

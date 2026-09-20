@@ -6,11 +6,14 @@
 import type { ShogaChar, ShogaEntry, ShogaMaster } from "../types";
 import { SHOGA_MASTER } from "../data/shogaMaster";
 import { newUid } from "./tePattern";
+import { clampHeightScale, clampShift } from "./shogaChar";
 import {
   isRecord,
   parseJson,
   readArray,
+  readBoolean,
   readInteger,
+  readNumber,
   readString,
   type ParseResult,
 } from "./jsonRead";
@@ -19,10 +22,26 @@ const STORAGE_KEY = "tetsuke:shoga-master";
 
 function readChar(value: unknown, where: string): ShogaChar {
   if (!isRecord(value)) throw new Error(`${where} がオブジェクトではありません`);
-  return {
+  const char: ShogaChar = {
     beat: readInteger(value.beat, `${where}.beat`),
     text: readString(value.text, `${where}.text`),
   };
+  // 見た目の調整はどれも任意。付いているものだけ読む
+  if (value.small !== undefined) {
+    char.small = readBoolean(value.small, `${where}.small`);
+  }
+  if (value.height_scale !== undefined) {
+    char.height_scale = clampHeightScale(
+      readNumber(value.height_scale, `${where}.height_scale`),
+    );
+  }
+  if (value.dx !== undefined) {
+    char.dx = clampShift(readNumber(value.dx, `${where}.dx`));
+  }
+  if (value.dy !== undefined) {
+    char.dy = clampShift(readNumber(value.dy, `${where}.dy`));
+  }
+  return char;
 }
 
 /**

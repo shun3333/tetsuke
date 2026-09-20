@@ -178,10 +178,22 @@ export type TeMaster = TeMasterEntry[];
  * 唱歌(笛)の1文字。
  * beat は謡と同じ「半拍単位の枠番号」(1始まり)で、まとまりの頭から数える。
  *   1 = 0拍の裏 / 2 = 1拍の表 / 3 = 1拍の裏 / … / 2N = N拍の表
+ *
+ * small / height_scale / dx / dy は見た目の微調整で、どれも省いてよい。
+ * ずらし幅は文字の大きさに対する比で持つ(1 = 1文字分)。
+ * こうしておくと、小文字にしたときのずれ幅も一緒に小さくなる。
  */
 export interface ShogaChar {
   beat: number;
   text: string;
+  /** 拗音のように、1回り小さく書く */
+  small?: boolean;
+  /** 縦幅の倍率(既定1)。1より小さいと平たく、大きいと縦長になる */
+  height_scale?: number;
+  /** 横のずらし(右が+) */
+  dx?: number;
+  /** 縦のずらし(下が+) */
+  dy?: number;
 }
 
 /**

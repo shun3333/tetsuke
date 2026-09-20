@@ -12,6 +12,21 @@ export function readInteger(value: unknown, where: string): number {
   return value;
 }
 
+/** 小数でもよい数。大きさやずらし幅のように、細かく決めるものに使う */
+export function readNumber(value: unknown, where: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${where} が数ではありません`);
+  }
+  return value;
+}
+
+export function readBoolean(value: unknown, where: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`${where} が true / false ではありません`);
+  }
+  return value;
+}
+
 export function readString(value: unknown, where: string): string {
   if (typeof value !== "string" || value === "") {
     throw new Error(`${where} が文字列ではありません`);
