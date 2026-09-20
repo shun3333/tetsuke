@@ -107,7 +107,8 @@ export function shogaCharLayout(
     charHeight,
     step: charHeight * clampSpacing(char.spacing ?? 1),
     cx: cx + (char.dx ?? 0) * fontSize,
-    cy: cy + (char.dy ?? 0) * fontSize,
+    // dy は上が+。画面のy座標は下ほど大きいので、向きを逆にして足す
+    cy: cy - (char.dy ?? 0) * fontSize,
     heightScale: clampHeightScale(char.height_scale ?? 1),
   };
 }

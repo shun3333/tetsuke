@@ -197,7 +197,7 @@ export interface ShogaChar {
   spacing?: number;
   /** 横のずらし(右が+) */
   dx?: number;
-  /** 縦のずらし(下が+) */
+  /** 縦のずらし(上が+)。縦書きなので、進む向きと逆の「上」を+にしてある */
   dy?: number;
 }
 

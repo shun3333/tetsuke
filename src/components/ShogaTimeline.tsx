@@ -6,7 +6,7 @@
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。8拍なら16枠。
 //
-// 枠を選ぶと、その文字の見た目(小文字・縦幅・字間・縦横のずらし)を
+// 枠を選ぶと、その文字の見た目(字間・縦幅・縦横のずらし・小文字)を
 // 表の下で調整できる。調整済みの枠には印を付ける。
 import { useRef, useState } from "react";
 import type { ShogaChar } from "../types";
@@ -222,23 +222,6 @@ function ShogaAdjust({
         {slotLabel(char.beat)}「{char.text}」
       </span>
 
-      <label className="shoga-adjust-check">
-        <input
-          type="checkbox"
-          checked={char.small === true}
-          onChange={(e) => onPatch({ small: e.target.checked })}
-        />
-        <span>小文字</span>
-      </label>
-
-      <AdjustNumber
-        label="縦幅"
-        value={char.height_scale ?? 1}
-        min={SHOGA_HEIGHT_MIN}
-        max={SHOGA_HEIGHT_MAX}
-        title="1が既定。小さくすると平たく、大きくすると縦長になります"
-        onChange={(v) => onPatch({ height_scale: clampHeightScale(v) })}
-      />
       <AdjustNumber
         label="字間"
         value={char.spacing ?? 1}
@@ -254,6 +237,22 @@ function ShogaAdjust({
         onChange={(v) => onPatch({ spacing: clampSpacing(v) })}
       />
       <AdjustNumber
+        label="縦幅"
+        value={char.height_scale ?? 1}
+        min={SHOGA_HEIGHT_MIN}
+        max={SHOGA_HEIGHT_MAX}
+        title="1が既定。小さくすると平たく、大きくすると縦長になります"
+        onChange={(v) => onPatch({ height_scale: clampHeightScale(v) })}
+      />
+      <AdjustNumber
+        label="縦ずらし"
+        value={char.dy ?? 0}
+        min={-SHOGA_SHIFT_LIMIT}
+        max={SHOGA_SHIFT_LIMIT}
+        title="上が+。1で文字1つ分ずれます"
+        onChange={(v) => onPatch({ dy: clampShift(v) })}
+      />
+      <AdjustNumber
         label="横ずらし"
         value={char.dx ?? 0}
         min={-SHOGA_SHIFT_LIMIT}
@@ -261,14 +260,15 @@ function ShogaAdjust({
         title="右が+。1で文字1つ分ずれます"
         onChange={(v) => onPatch({ dx: clampShift(v) })}
       />
-      <AdjustNumber
-        label="縦ずらし"
-        value={char.dy ?? 0}
-        min={-SHOGA_SHIFT_LIMIT}
-        max={SHOGA_SHIFT_LIMIT}
-        title="下が+。1で文字1つ分ずれます"
-        onChange={(v) => onPatch({ dy: clampShift(v) })}
-      />
+
+      <label className="shoga-adjust-check">
+        <input
+          type="checkbox"
+          checked={char.small === true}
+          onChange={(e) => onPatch({ small: e.target.checked })}
+        />
+        <span>小文字</span>
+      </label>
 
       <button
         type="button"
