@@ -549,10 +549,25 @@ table.timeline-grid {
   cursor: default;
 }
 
+/* 手付は画面に貼り付けておく。クサリが増えて左の編集欄が長くなっても、
+   下のほうを編集しているときに手付が見えなくならないようにするため。
+   枠の高さを画面に収めたうえで、中身(この .score-scroll)をスクロールさせる */
+.score-pane {
+  position: sticky;
+  /* 上に少しだけ余白を残して貼り付ける */
+  top: 12px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+}
+
 .score-scroll {
   overflow-x: auto;
   overflow-y: auto;
-  max-height: 80vh;
+  /* 高さは上の .score-pane の枠で決まる。
+     flexの子は既定で縮まないので、min-height:0 で縮めるようにする */
+  flex: 1;
+  min-height: 0;
 }
 
 .score-pages {
@@ -632,11 +647,15 @@ table.timeline-grid {
     display: block;
   }
 
+  /* 紙の上では貼り付ける必要がないので、高さの制限ごと解く */
   section.score-pane {
     background: none;
     border: none;
     border-radius: 0;
     padding: 0;
+    position: static;
+    display: block;
+    max-height: none;
   }
 
   .score-scroll {
