@@ -20,6 +20,7 @@ import {
   clampShift,
   clampSpacing,
   hasShogaAdjust,
+  isEmptyShogaChar,
   tidyShogaChar,
   withoutShogaAdjust,
 } from "../logic/shogaChar";
@@ -59,32 +60,35 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
     selected !== null && selected >= 1 && selected <= lastBeat ? selected : null;
   const selectedChar = selectedSlot === null ? undefined : charAt.get(selectedSlot);
 
-  function setText(beat: number, text: string) {
+  /**
+   * 1つの枠の中身を差し替える。
+   * 文字も○も無くなった枠は、持っていても仕方がないので落とす。
+   */
+  function replaceAt(beat: number, char: ShogaChar) {
     const rest = chars.filter((c) => c.beat !== beat);
-    // 文字を書き替えても、その枠に付けた調整はそのまま残す
-    const next =
-      text === "" ? rest : [...rest, { ...charAt.get(beat), beat, text }];
+    const next = isEmptyShogaChar(char) ? rest : [...rest, char];
     onChange(next.sort((a, b) => a.beat - b.beat));
   }
 
-  /** 選んでいる枠の文字の見た目を変える */
+  function setText(beat: number, text: string) {
+    // 文字を書き替えても、その枠に付けた調整はそのまま残す
+    replaceAt(beat, { ...charAt.get(beat), beat, text });
+  }
+
+  /**
+   * 選んでいる枠の見た目を変える。
+   * ○は文字が無い枠にも付けられるので、まだ何も無ければここで作る。
+   */
   function patchSelected(patch: Partial<ShogaChar>) {
-    if (!selectedChar) return;
-    onChange(
-      chars.map((c) =>
-        c.beat === selectedChar.beat ? tidyShogaChar({ ...c, ...patch }) : c,
-      ),
-    );
+    if (selectedSlot === null) return;
+    const current = selectedChar ?? { beat: selectedSlot, text: "" };
+    replaceAt(selectedSlot, tidyShogaChar({ ...current, ...patch }));
   }
 
   /** 選んでいる枠の調整をすべて外す */
   function resetSelected() {
     if (!selectedChar) return;
-    onChange(
-      chars.map((c) =>
-        c.beat === selectedChar.beat ? withoutShogaAdjust(c) : c,
-      ),
-    );
+    replaceAt(selectedChar.beat, withoutShogaAdjust(selectedChar));
   }
 
   /** 左右の枠へ移る。端まで来たらそこで止まる */
@@ -166,6 +170,8 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
                             (char && hasShogaAdjust(char) ? " adjusted" : "")
                           }
                           title={slotLabel(slot)}
+                          // ○だけを置いた枠は文字が空なので、印として○を薄く出す
+                          placeholder={char?.circle ? "○" : ""}
                           value={char?.text ?? ""}
                           onChange={(e) => setText(slot, e.target.value)}
                           onFocus={() => setSelected(slot)}
@@ -189,82 +195,115 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
         </p>
       )}
 
-      {selectedSlot !== null &&
-        (selectedChar ? (
-          <ShogaAdjust
-            key={selectedSlot}
-            char={selectedChar}
-            onPatch={patchSelected}
-            onReset={resetSelected}
-          />
-        ) : (
-          <p className="shoga-adjust-empty hint">
-            {slotLabel(selectedSlot)}は空です。文字を入れると、大きさや位置を調整できます。
-          </p>
-        ))}
+      {/* ○は文字が無い枠にも置けるので、空の枠でも調整欄を出す */}
+      {selectedSlot !== null && (
+        <ShogaAdjust
+          key={selectedSlot}
+          beat={selectedSlot}
+          char={selectedChar}
+          onPatch={patchSelected}
+          onReset={resetSelected}
+        />
+      )}
     </div>
   );
 }
 
-/** 選んでいる枠の文字の見た目を整える欄 */
+/**
+ * 選んでいる枠の見た目を整える欄。
+ *
+ * ○は文字の代わりに置くもので、文字が無い枠にも付けられるため、
+ * char が無い(空の枠)ときも○だけは触れるようにしてある。
+ */
 function ShogaAdjust({
+  beat,
   char,
   onPatch,
   onReset,
 }: {
-  char: ShogaChar;
+  beat: number;
+  char: ShogaChar | undefined;
   onPatch: (patch: Partial<ShogaChar>) => void;
   onReset: () => void;
 }) {
+  const text = char?.text ?? "";
+  const circle = char?.circle === true;
+  /** ○の枠では文字を書かないので、文字向けの調整は触れないようにする */
+  const noText = circle || text === "";
+  /** 字間は2音以上並んでいるときだけ効く */
+  const oneUnit = countCharUnits(text) < 2;
+
   return (
     <div className="shoga-adjust">
       <span className="shoga-adjust-target">
-        {slotLabel(char.beat)}「{char.text}」
+        {slotLabel(beat)}
+        {circle ? "の○" : text === "" ? "(空)" : `「${text}」`}
       </span>
+
+      <label className="shoga-adjust-check" title="文字の代わりに○を書きます">
+        <input
+          type="checkbox"
+          checked={circle}
+          onChange={(e) => onPatch({ circle: e.target.checked })}
+        />
+        <span>○にする</span>
+      </label>
 
       <AdjustNumber
         label="字間"
-        value={char.spacing ?? 1}
+        value={char?.spacing ?? 1}
         min={SHOGA_SPACING_MIN}
         max={SHOGA_SPACING_MAX}
-        // 1音しか入っていない枠では間隔の出番がないので、触れないようにする
-        disabled={countCharUnits(char.text) < 2}
+        disabled={noText || oneUnit}
         title={
-          countCharUnits(char.text) < 2
-            ? "この枠は1音なので、字間は効きません"
-            : "1が既定。小さくすると文字どうしが詰まり、大きくすると離れます"
+          circle
+            ? "○の枠では字間は効きません"
+            : oneUnit
+              ? "この枠は1音なので、字間は効きません"
+              : "1が既定。小さくすると文字どうしが詰まり、大きくすると離れます"
         }
         onChange={(v) => onPatch({ spacing: clampSpacing(v) })}
       />
       <AdjustNumber
         label="縦幅"
-        value={char.height_scale ?? 1}
+        value={char?.height_scale ?? 1}
         min={SHOGA_HEIGHT_MIN}
         max={SHOGA_HEIGHT_MAX}
-        title="1が既定。小さくすると平たく、大きくすると縦長になります"
+        disabled={!char}
+        title={
+          circle
+            ? "1が既定。小さくすると平たい○、大きくすると縦長の○になります"
+            : "1が既定。小さくすると平たく、大きくすると縦長になります"
+        }
         onChange={(v) => onPatch({ height_scale: clampHeightScale(v) })}
       />
       <AdjustNumber
         label="縦ずらし"
-        value={char.dy ?? 0}
+        value={char?.dy ?? 0}
         min={-SHOGA_SHIFT_LIMIT}
         max={SHOGA_SHIFT_LIMIT}
+        disabled={!char}
         title="上が+。1で文字1つ分ずれます"
         onChange={(v) => onPatch({ dy: clampShift(v) })}
       />
       <AdjustNumber
         label="横ずらし"
-        value={char.dx ?? 0}
+        value={char?.dx ?? 0}
         min={-SHOGA_SHIFT_LIMIT}
         max={SHOGA_SHIFT_LIMIT}
+        disabled={!char}
         title="右が+。1で文字1つ分ずれます"
         onChange={(v) => onPatch({ dx: clampShift(v) })}
       />
 
-      <label className="shoga-adjust-check">
+      <label
+        className={"shoga-adjust-check" + (noText ? " disabled" : "")}
+        title={circle ? "○の枠では効きません" : "拗音のように1回り小さく書きます"}
+      >
         <input
           type="checkbox"
-          checked={char.small === true}
+          checked={char?.small === true}
+          disabled={noText}
           onChange={(e) => onPatch({ small: e.target.checked })}
         />
         <span>小文字</span>
@@ -273,8 +312,8 @@ function ShogaAdjust({
       <button
         type="button"
         className="shoga-adjust-reset"
-        title="この文字の調整をなくす"
-        disabled={!hasShogaAdjust(char)}
+        title="この枠の調整をなくす(○も外します)"
+        disabled={!char || !hasShogaAdjust(char)}
         onClick={onReset}
       >
         調整をなくす

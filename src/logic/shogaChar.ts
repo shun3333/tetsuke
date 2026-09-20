@@ -47,9 +47,18 @@ export function clampShift(value: number): number {
   return Math.min(SHOGA_SHIFT_LIMIT, Math.max(-SHOGA_SHIFT_LIMIT, value));
 }
 
+/**
+ * その枠に何も残らないか。
+ * 文字が空で○も付いていなければ、持っておく意味がない。
+ */
+export function isEmptyShogaChar(char: ShogaChar): boolean {
+  return char.text === "" && char.circle !== true;
+}
+
 /** 何か調整が入っているか(入力欄に印を付けるのに使う) */
 export function hasShogaAdjust(char: ShogaChar): boolean {
   return (
+    char.circle === true ||
     char.small === true ||
     (char.height_scale !== undefined && char.height_scale !== 1) ||
     (char.spacing !== undefined && char.spacing !== 1) ||
@@ -69,6 +78,7 @@ export function withoutShogaAdjust(char: ShogaChar): ShogaChar {
  */
 export function tidyShogaChar(char: ShogaChar): ShogaChar {
   const tidied = withoutShogaAdjust(char);
+  if (char.circle) tidied.circle = true;
   if (char.small) tidied.small = true;
   if (char.height_scale !== undefined && char.height_scale !== 1) {
     tidied.height_scale = char.height_scale;

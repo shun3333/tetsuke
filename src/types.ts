@@ -179,13 +179,20 @@ export type TeMaster = TeMasterEntry[];
  * beat は謡と同じ「半拍単位の枠番号」(1始まり)で、まとまりの頭から数える。
  *   1 = 0拍の裏 / 2 = 1拍の表 / 3 = 1拍の裏 / … / 2N = N拍の表
  *
- * small / height_scale / spacing / dx / dy は見た目の微調整で、どれも省いてよい。
+ * circle / small / height_scale / spacing / dx / dy は見た目の微調整で、
+ * どれも省いてよい。
  * ずらし幅は文字の大きさに対する比で持つ(1 = 1文字分)。
  * こうしておくと、小文字にしたときのずれ幅も一緒に小さくなる。
  */
 export interface ShogaChar {
   beat: number;
   text: string;
+  /**
+   * 文字の代わりに○を書く。
+   * text はそのまま持っておくので、外せば元の文字に戻る。
+   * ○だけを置きたい枠は text が空のままでよい。
+   */
+  circle?: boolean;
   /** 拗音のように、1回り小さく書く */
   small?: boolean;
   /** 縦幅の倍率(既定1)。1より小さいと平たく、大きいと縦長になる */

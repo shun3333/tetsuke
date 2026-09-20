@@ -31,9 +31,9 @@ import {
   type TeLabel,
   type UtaiCell,
 } from "../logic/scoreItems";
-import { heightScaleTransform, shogaCharLayout } from "../logic/shogaChar";
 import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 import { VerticalText } from "./score/VerticalText";
+import { ShogaGlyph } from "./score/ShogaGlyph";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
 import { timingOffsetY } from "../logic/timing";
@@ -378,37 +378,24 @@ function InstrumentColumn({
 
 /**
  * 唱歌の列の中身。
- * 文字ごとの調整(小文字・縦幅・字間・ずらし)はマスタ編集画面の
- * プレビューと同じ関数で当てはめるので、見た目はそちらと一致する。
+ * 1枠分の描き方はマスタ編集画面のプレビューと同じ ShogaGlyph に任せて
+ * いるので、文字ごとの調整(○・小文字・縦幅・字間・ずらし)の見え方は
+ * そちらと一致する。
  */
 function ShogaColumn({ cells, cx }: { cells: ShogaCell[]; cx: number }) {
   return (
     <>
-      {cells.map((cell) => {
-        const at = shogaCharLayout(
-          cell.char,
-          cx,
-          offsetY(cell.offset),
-          SHOGA_FONT_SIZE,
-          SHOGA_CHAR_HEIGHT,
-        );
-        return (
-          <g
-            key={cell.key}
-            transform={heightScaleTransform(at.cy, at.heightScale)}
-          >
-            <VerticalText
-              cx={at.cx}
-              cy={at.cy}
-              text={cell.char.text}
-              color={INK_COLOR}
-              fontSize={at.fontSize}
-              charHeight={at.charHeight}
-              step={at.step}
-            />
-          </g>
-        );
-      })}
+      {cells.map((cell) => (
+        <ShogaGlyph
+          key={cell.key}
+          char={cell.char}
+          cx={cx}
+          cy={offsetY(cell.offset)}
+          fontSize={SHOGA_FONT_SIZE}
+          charHeight={SHOGA_CHAR_HEIGHT}
+          color={INK_COLOR}
+        />
+      ))}
     </>
   );
 }

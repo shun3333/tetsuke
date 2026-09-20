@@ -3,7 +3,8 @@
 // 唱歌は1クサリ単位のまとまりで、そのまとまりを繰り返し使う。
 // beat は謡と同じ半拍単位の枠番号(1始まり)で、まとまりの頭から数える。
 //   1 = 0拍の裏 / 2 = 1拍の表 / 3 = 1拍の裏 / … / 16 = 8拍の表
-// small / height_scale / spacing / dx / dy は文字ごとの見た目の微調整(省略可)。
+// circle / small / height_scale / spacing / dx / dy は
+// 文字ごとの見た目の微調整(省略可)。circle は文字の代わりに○を書く。
 //
 // 中身は画面の動きを確かめるための仮の値なので、
 // 実際の唱歌に合わせて手組マスタと同じように直すこと。
@@ -52,6 +53,8 @@ export const SHOGA_MASTER: ShogaMaster = [
       { beat: 4, text: "ヒ" },
       { beat: 5, text: "ャ", small: true },
       { beat: 8, text: "ー", height_scale: 1.4 },
+      // 文字ではなく○を置く枠(文字は入れなくてよい)
+      { beat: 1, text: "", circle: true },
     ],
   },
 ];

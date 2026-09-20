@@ -1105,8 +1105,10 @@ table.timeline-grid.shoga-timeline {
   gap: 4px;
 }
 
-/* 今は効かない項目(1音の枠の字間など)は薄くして触れないことを示す */
-.shoga-adjust-field.disabled {
+/* 今は効かない項目(1音の枠の字間、○の枠の小文字など)は
+   薄くして触れないことを示す */
+.shoga-adjust-field.disabled,
+.shoga-adjust-check.disabled {
   opacity: 0.4;
 }
 

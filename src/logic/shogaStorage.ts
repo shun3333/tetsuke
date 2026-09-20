@@ -27,6 +27,9 @@ function readChar(value: unknown, where: string): ShogaChar {
     text: readString(value.text, `${where}.text`),
   };
   // 見た目の調整はどれも任意。付いているものだけ読む
+  if (value.circle !== undefined) {
+    char.circle = readBoolean(value.circle, `${where}.circle`);
+  }
   if (value.small !== undefined) {
     char.small = readBoolean(value.small, `${where}.small`);
   }
