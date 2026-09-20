@@ -9,6 +9,12 @@
 import type { ShogaChar } from "../types";
 import { VerticalText } from "./score/VerticalText";
 import { heightScaleTransform, shogaCharLayout } from "../logic/shogaChar";
+import {
+  AXIS_FONT_SIZE,
+  INK_COLOR,
+  SHOGA_CHAR_HEIGHT,
+  SHOGA_FONT_SIZE,
+} from "./score/metrics";
 
 interface Props {
   length: number;
@@ -29,13 +35,6 @@ const MARGIN_X = 18;
 const PAD_TOP = BEAT_HEIGHT;
 /** 一番下の線の下に空ける余白。下へずらした文字が切れないだけ取る */
 const PAD_BOTTOM = BEAT_HEIGHT;
-
-const FONT_SIZE = 16;
-const CHAR_HEIGHT = 15;
-const AXIS_FONT_SIZE = 11;
-
-/** 唱歌の色。手付では墨で書くので黒 */
-const INK_COLOR = "#000000";
 
 export function ShogaPreview({ length, chars }: Props) {
   const width = MARGIN_X * 2 + COL_WIDTH + AXIS_WIDTH;
@@ -84,7 +83,13 @@ export function ShogaPreview({ length, chars }: Props) {
       })}
 
       {chars.map((c, i) => {
-        const at = shogaCharLayout(c, cx, posY(c.beat), FONT_SIZE, CHAR_HEIGHT);
+        const at = shogaCharLayout(
+          c,
+          cx,
+          posY(c.beat),
+          SHOGA_FONT_SIZE,
+          SHOGA_CHAR_HEIGHT,
+        );
         return (
           <g key={i} transform={heightScaleTransform(at.cy, at.heightScale)}>
             <VerticalText

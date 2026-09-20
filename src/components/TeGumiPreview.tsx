@@ -9,6 +9,11 @@ import { VerticalText } from "./score/VerticalText";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
 import { timingOffsetY } from "../logic/timing";
+import {
+  AXIS_FONT_SIZE,
+  KAKEGOE_CHAR_HEIGHT,
+  KAKEGOE_FONT_SIZE,
+} from "./score/metrics";
 
 interface Props {
   pattern: InternalPattern;
@@ -28,9 +33,6 @@ const MARGIN_X = 10;
 /** 上下に空ける余白(半拍分) */
 const PAD_Y = BEAT_HEIGHT / 2;
 
-const KAKEGOE_FONT_SIZE = 10;
-const KAKEGOE_CHAR_HEIGHT = 11;
-const AXIS_FONT_SIZE = 11;
 /** 掛け声を列の中心から右にずらす量(補助線と重ならないように) */
 const KAKEGOE_DX = 6;
 

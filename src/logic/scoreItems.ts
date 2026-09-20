@@ -3,8 +3,12 @@
 // までを解決する。実際のx/y座標への変換は描画側(ScoreView)が行う。
 import {
   INSTRUMENTS,
+  textTrackOf,
   type GuideShape,
   type Instrument,
+  type Masters,
+  type ShogaChar,
+  type ShogaMaster,
   type SongData,
   type TeMaster,
   type TeName,
@@ -14,16 +18,31 @@ import {
   beatCountOf,
   globalPosToBeatRef,
   isBeatRefValid,
+  shogaInstanceStartGlobalPos,
   slotToLocalOffset,
   teInstanceStartGlobalPos,
 } from "./position";
 import { TIMING_OFFSET_RATIO } from "./timing";
 import { findTe } from "./tePattern";
+import { findShoga } from "./shogaChar";
 
 /** 謡の1枠 */
 export interface UtaiCell {
   offset: number;
   value: string;
+}
+
+/** 唱歌の1文字。文字ごとの調整は描画側で当てはめるので、そのまま持つ */
+export interface ShogaCell {
+  key: string;
+  offset: number;
+  char: ShogaChar;
+}
+
+/** クサリ枠のヘッダー行に表示する唱歌のまとまりの名前 */
+export interface ShogaLabel {
+  key: string;
+  text: string;
 }
 
 /** 掛け声または手の1つ。描画先のクサリと位置は解決済み */
@@ -63,7 +82,11 @@ export interface InstrumentItems {
 }
 
 export interface ScoreItems {
+  /** 謡の列の中身。唱歌を選んでいる曲では空になる */
   utaiByKusari: Map<number, UtaiCell[]>;
+  /** 唱歌の列の中身。謡を選んでいる曲では空になる */
+  shogaByKusari: Map<number, ShogaCell[]>;
+  shogaLabelsByKusari: Map<number, ShogaLabel[]>;
   /** 楽器ごとの列の中身 */
   byInstrument: Record<Instrument, InstrumentItems>;
 }
@@ -97,6 +120,51 @@ function buildUtaiItems(song: SongData): Map<number, UtaiCell[]> {
     });
   }
   return map;
+}
+
+/**
+ * 唱歌トラックをクサリごとの描画アイテムに展開する。
+ * 唱歌はクサリの頭を起点に置かれ、クサリの拍数より長ければ
+ * 手組と同じく続きが次のクサリの枠に乗る。
+ */
+function buildShogaItems(
+  song: SongData,
+  shogaMaster: ShogaMaster,
+  globalStarts: number[],
+): { cells: Map<number, ShogaCell[]>; labels: Map<number, ShogaLabel[]> } {
+  const cells = new Map<number, ShogaCell[]>();
+  const labels = new Map<number, ShogaLabel[]>();
+
+  (song.tracks.shoga?.instances ?? []).forEach((si, instanceIndex) => {
+    const def = findShoga(shogaMaster, si.shoga_id);
+    if (!def || !song.kusari_sequence[si.kusari_index]) return;
+    const startGlobalPos = shogaInstanceStartGlobalPos(
+      si.kusari_index,
+      globalStarts,
+    );
+
+    // まとまりの名前は、始まるクサリの枠に表示する(手組名と同じ扱い)
+    pushTo(labels, si.kusari_index, {
+      key: `shoga-label-${instanceIndex}`,
+      text: def.label,
+    });
+
+    def.chars.forEach((char, i) => {
+      const ref = globalPosToBeatRef(
+        startGlobalPos + slotToLocalOffset(char.beat),
+        song.kusari_sequence,
+        globalStarts,
+      );
+      if (!ref) return;
+      pushTo(cells, ref.kusari_index, {
+        key: `shoga-${instanceIndex}-${i}`,
+        offset: slotToLocalOffset(ref.beat),
+        char,
+      });
+    });
+  });
+
+  return { cells, labels };
 }
 
 /**
@@ -240,7 +308,7 @@ function splitAcrossKusari(
 /** 曲データ全体を、クサリごとの描画アイテムに展開する */
 export function buildScoreItems(
   song: SongData,
-  teMaster: Record<Instrument, TeMaster>,
+  masters: Masters,
   globalStarts: number[],
 ): ScoreItems {
   const byInstrument = {} as Record<Instrument, InstrumentItems>;
@@ -248,9 +316,23 @@ export function buildScoreItems(
     byInstrument[instrument] = buildTeItems(
       song,
       instrument,
-      teMaster[instrument],
+      masters.te[instrument],
       globalStarts,
     );
   }
-  return { utaiByKusari: buildUtaiItems(song), byInstrument };
+
+  // 謡と唱歌は同じ列に書くので、選んでいるほうだけを展開する。
+  // 選んでいない側の中身は曲データには残っている
+  const shoga =
+    textTrackOf(song) === "shoga"
+      ? buildShogaItems(song, masters.shoga, globalStarts)
+      : { cells: new Map(), labels: new Map() };
+
+  return {
+    utaiByKusari:
+      textTrackOf(song) === "utai" ? buildUtaiItems(song) : new Map(),
+    shogaByKusari: shoga.cells,
+    shogaLabelsByKusari: shoga.labels,
+    byInstrument,
+  };
 }

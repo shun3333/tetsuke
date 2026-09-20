@@ -98,6 +98,18 @@ export function teInstanceStartGlobalPos(
   return globalStarts[kusariIndex] - 1;
 }
 
+/**
+ * 唱歌の起点となるグローバル位置(拍単位)。
+ * 唱歌の beat はクサリの中の位置をそのまま指す(beat: 1 = そのクサリの0拍の裏)
+ * ので、手組と違って1拍前にずらさず、クサリの頭をそのまま起点にする。
+ */
+export function shogaInstanceStartGlobalPos(
+  kusariIndex: number,
+  globalStarts: number[],
+): number {
+  return globalStarts[kusariIndex];
+}
+
 /** グローバル拍番号(0-indexed) → クサリindexとクサリ内の拍番号(1始まり) */
 export function globalBeatToKusariBeat(
   globalBeat: number,

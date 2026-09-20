@@ -2,7 +2,20 @@
 //
 // 文字を置く側(プレビュー・手付の描画)で同じ読み方をするよう、
 // 調整の値から実際の大きさ・位置を出すところをここにまとめる。
-import type { ShogaChar } from "../types";
+import type { ShogaChar, ShogaEntry, ShogaMaster } from "../types";
+
+/**
+ * IDから唱歌のまとまりを探す。手組(findTe)と同じ決まりで、
+ * IDは重複してもよく、先に並んでいるものを使う。
+ * 空のIDは曲データから参照できないため、見つからない扱いにする。
+ */
+export function findShoga(
+  master: ShogaMaster,
+  shogaId: string,
+): ShogaEntry | undefined {
+  if (shogaId === "") return undefined;
+  return master.find((s) => s.shoga_id === shogaId);
+}
 
 /** 「小文字」にしたときの縮め方。拗音の小書き文字と同じ比率 */
 export const SHOGA_SMALL_SCALE = 0.85;

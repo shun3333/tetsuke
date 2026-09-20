@@ -1,7 +1,10 @@
 // 描画ビュー: 手付をA4用紙相当のページ単位に分割して描画する。
 // 1ページ = 固定8クサリ枠(データが無い枠は空白)。クサリは右→左、
-// 各クサリ枠内は左に謡・右に楽器ごとの手組の列(小鼓 → 大鼓)を配置し、
-// 拍数の軸はページ右端に1つだけ表示する。
+// 各クサリ枠内は左に謡(または唱歌)・右に楽器ごとの手組の列(小鼓 → 大鼓)を
+// 配置し、拍数の軸はページ右端に1つだけ表示する。
+//
+// 謡と唱歌は同じ列に書く。曲ごとにどちらを書くかが決まっていて、
+// 同時に出ることはない。
 //
 // 曲データ → クサリごとの描画アイテムへの展開は logic/scoreItems.ts が担い、
 // ここではそれを座標に落として組み立てるだけにしている。
@@ -11,9 +14,9 @@ import {
   KUSARI_BEAT_COUNT,
   type Instrument,
   type KusariEntry,
+  type Masters,
   TIMINGS,
   type SongData,
-  type TeMaster,
   type Timing,
 } from "../types";
 import { computeGlobalStarts } from "../logic/position";
@@ -23,18 +26,33 @@ import {
   type GuideRenderItem,
   type InstrumentItems,
   type ScoreItems,
+  type ShogaCell,
+  type ShogaLabel,
   type TeLabel,
   type UtaiCell,
 } from "../logic/scoreItems";
+import { heightScaleTransform, shogaCharLayout } from "../logic/shogaChar";
 import { INSTRUMENT_COLOR, TE_GLYPH_MASTER } from "../data/instruments";
 import { VerticalText } from "./score/VerticalText";
 import { TeMark } from "./score/TeMark";
 import { GuideMark } from "./score/GuideMark";
 import { timingOffsetY } from "../logic/timing";
+import {
+  AXIS_FONT_SIZE,
+  INK_COLOR,
+  KAKEGOE_CHAR_HEIGHT,
+  KAKEGOE_FONT_SIZE,
+  LABEL_CHAR_HEIGHT,
+  LABEL_FONT_SIZE,
+  SHOGA_CHAR_HEIGHT,
+  SHOGA_FONT_SIZE,
+  UTAI_CHAR_HEIGHT,
+  UTAI_FONT_SIZE,
+} from "./score/metrics";
 
 interface Props {
   song: SongData;
-  teMaster: Record<Instrument, TeMaster>;
+  masters: Masters;
 }
 
 // --- レイアウト定数 ---
@@ -84,18 +102,8 @@ const TOP_PAD = BEAT_HEIGHT;
 /** 最終拍の横線の下に確保する余白 */
 const BOTTOM_PAD = BEAT_HEIGHT;
 
-// --- 文字の大きさ ---
-const INK_COLOR = "#000000";
-const KAKEGOE_FONT_SIZE = 10;
-const KAKEGOE_CHAR_HEIGHT = 11;
-const UTAI_FONT_SIZE = 16;
-const UTAI_CHAR_HEIGHT = 15;
-const AXIS_FONT_SIZE = 11;
-const TE_LABEL_FONT_SIZE = 9;
-/** 手組名を縦書きにしたときの1文字あたりの高さ */
-const TE_LABEL_CHAR_HEIGHT = 10;
-/** 手組名の上下に空ける余白 */
-const TE_LABEL_BAND_PAD = 6;
+/** 名前(手組名・唱歌の名前)の上下に空ける余白 */
+const LABEL_BAND_PAD = 6;
 
 /** 掛け声を列の中心から右にずらす量(補助線と重ならないように) */
 const KAKEGOE_DX = 6;
@@ -240,11 +248,18 @@ function UnusedBeatsMark({ slot }: { slot: SlotLayout }) {
   );
 }
 
+/** ヘッダー行に並べる名前1つ分 */
+interface HeaderLabel {
+  key: string;
+  text: string;
+  color: string;
+}
+
 /**
- * 手組名(8拍の領域の上の専用の行)。
+ * 名前の行(8拍の領域の上の専用の行)。手組名と唱歌の名前で共通。
  * 日本語なので文字を回転させず、1文字ずつ上から縦に積む。
  */
-function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
+function HeaderLabels({ labels, cx }: { labels: HeaderLabel[]; cx: number }) {
   const band = HEADER_ROW_HEIGHT / Math.max(1, labels.length);
   return (
     <>
@@ -252,8 +267,8 @@ function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
         const chars = Array.from(label.text);
         // 帯に収まらない長い名前は行間を詰める
         const charHeight = Math.min(
-          TE_LABEL_CHAR_HEIGHT,
-          (band - TE_LABEL_BAND_PAD) / chars.length,
+          LABEL_CHAR_HEIGHT,
+          (band - LABEL_BAND_PAD) / chars.length,
         );
         const centerY = MARGIN_TOP + (i + 0.5) * band;
         const firstY = centerY - ((chars.length - 1) * charHeight) / 2;
@@ -264,10 +279,10 @@ function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
                 key={c}
                 x={cx}
                 y={firstY + c * charHeight}
-                fontSize={TE_LABEL_FONT_SIZE}
+                fontSize={LABEL_FONT_SIZE}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill={INSTRUMENT_COLOR[label.instrument]}
+                fill={label.color}
               >
                 {ch}
               </text>
@@ -276,6 +291,20 @@ function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
         );
       })}
     </>
+  );
+}
+
+/** 手組名。色は楽器ごとに決まる */
+function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
+  return (
+    <HeaderLabels
+      cx={cx}
+      labels={labels.map((label) => ({
+        key: label.key,
+        text: label.text,
+        color: INSTRUMENT_COLOR[label.instrument],
+      }))}
+    />
   );
 }
 
@@ -347,16 +376,57 @@ function InstrumentColumn({
   );
 }
 
-/** 1クサリ枠の中身(謡 + 楽器ごとの列) */
+/**
+ * 唱歌の列の中身。
+ * 文字ごとの調整(小文字・縦幅・字間・ずらし)はマスタ編集画面の
+ * プレビューと同じ関数で当てはめるので、見た目はそちらと一致する。
+ */
+function ShogaColumn({ cells, cx }: { cells: ShogaCell[]; cx: number }) {
+  return (
+    <>
+      {cells.map((cell) => {
+        const at = shogaCharLayout(
+          cell.char,
+          cx,
+          offsetY(cell.offset),
+          SHOGA_FONT_SIZE,
+          SHOGA_CHAR_HEIGHT,
+        );
+        return (
+          <g
+            key={cell.key}
+            transform={heightScaleTransform(at.cy, at.heightScale)}
+          >
+            <VerticalText
+              cx={at.cx}
+              cy={at.cy}
+              text={cell.char.text}
+              color={INK_COLOR}
+              fontSize={at.fontSize}
+              charHeight={at.charHeight}
+              step={at.step}
+            />
+          </g>
+        );
+      })}
+    </>
+  );
+}
+
+/** 1クサリ枠の中身(謡または唱歌 + 楽器ごとの列) */
 function KusariSlot({
   slot,
   kusariIndex,
   utai,
+  shoga,
+  shogaLabels,
   byInstrument,
 }: {
   slot: SlotLayout;
   kusariIndex: number;
   utai: UtaiCell[];
+  shoga: ShogaCell[];
+  shogaLabels: ShogaLabel[];
   byInstrument: Record<Instrument, InstrumentItems>;
 }) {
   const utaiCx = slot.utaiColX + UTAI_COL_WIDTH / 2;
@@ -364,7 +434,7 @@ function KusariSlot({
     <g>
       {slot.beatCount < ROWS_PER_PAGE && <UnusedBeatsMark slot={slot} />}
 
-      {/* 謡(表は横線の上、裏は線と線の間) */}
+      {/* 謡(表は横線の上、裏は線と線の間)。唱歌を選んだ曲では空になる */}
       {utai.map((cell, i) => (
         <VerticalText
           key={i}
@@ -376,6 +446,13 @@ function KusariSlot({
           charHeight={UTAI_CHAR_HEIGHT}
         />
       ))}
+
+      {/* 唱歌。謡と同じ列に、同じ大きさで書く */}
+      <HeaderLabels
+        cx={utaiCx}
+        labels={shogaLabels.map((label) => ({ ...label, color: INK_COLOR }))}
+      />
+      <ShogaColumn cells={shoga} cx={utaiCx} />
 
       {SCORE_INSTRUMENTS.map((instrument, j) => (
         <InstrumentColumn
@@ -427,6 +504,8 @@ function ScorePage({
               slot={slot}
               kusariIndex={slot.kusariIndex}
               utai={items.utaiByKusari.get(slot.kusariIndex) ?? []}
+              shoga={items.shogaByKusari.get(slot.kusariIndex) ?? []}
+              shogaLabels={items.shogaLabelsByKusari.get(slot.kusariIndex) ?? []}
               byInstrument={items.byInstrument}
             />
           ),
@@ -436,11 +515,11 @@ function ScorePage({
   );
 }
 
-export function ScoreView({ song, teMaster }: Props) {
+export function ScoreView({ song, masters }: Props) {
   const items = useMemo(() => {
     const globalStarts = computeGlobalStarts(song.kusari_sequence);
-    return buildScoreItems(song, teMaster, globalStarts);
-  }, [song, teMaster]);
+    return buildScoreItems(song, masters, globalStarts);
+  }, [song, masters]);
 
   /** クサリをページごとに分ける。足りない枠はnull(空欄)で埋める */
   const pages = useMemo(() => {

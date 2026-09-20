@@ -4,36 +4,37 @@ import {
   type BeatRef,
   type Instrument,
   type KusariType,
+  type Masters,
   type SongData,
-  type TeMaster,
+  type TextTrackKind,
 } from "../types";
 import {
   computeGlobalStarts,
+  shogaInstanceStartGlobalPos,
   teInstanceStartGlobalPos,
   totalBeats,
 } from "../logic/position";
 import { findTe } from "../logic/tePattern";
+import { findShoga } from "../logic/shogaChar";
 
-// クサリが短くなると、配置済みの手組が収まらなくなることがある。
-// 収まらなくなった手組を落とすために、手組の長さ(手組マスタ)を受け取る。
+// クサリが短くなると、配置済みの手組・唱歌が収まらなくなることがある。
+// 収まらなくなったものを落とすために、長さの分かるマスタ一式を受け取る。
 export type SongAction =
   | { type: "LOAD_SONG"; song: SongData }
   | { type: "INSERT_KUSARI"; atIndex: number; kusariType: KusariType }
-  | { type: "REMOVE_KUSARI"; index: number; teMaster: Record<Instrument, TeMaster> }
-  | {
-      type: "MOVE_KUSARI";
-      from: number;
-      to: number;
-      teMaster: Record<Instrument, TeMaster>;
-    }
+  | { type: "REMOVE_KUSARI"; index: number; masters: Masters }
+  | { type: "MOVE_KUSARI"; from: number; to: number; masters: Masters }
   | {
       type: "SET_KUSARI_TYPE";
       index: number;
       kusariType: KusariType;
-      teMaster: Record<Instrument, TeMaster>;
+      masters: Masters;
     }
   | { type: "ADD_TE_INSTANCE"; instrument: Instrument; teId: string; kusariIndex: number }
   | { type: "REMOVE_TE_INSTANCE"; instrument: Instrument; instanceIndex: number }
+  | { type: "ADD_SHOGA_INSTANCE"; shogaId: string; kusariIndex: number }
+  | { type: "REMOVE_SHOGA_INSTANCE"; instanceIndex: number }
+  | { type: "SET_TEXT_TRACK"; textTrack: TextTrackKind }
   | {
       type: "SET_UTAI_CHAR";
       beatRef: BeatRef;
@@ -97,9 +98,9 @@ export function songReducer(state: SongData, action: SongAction): SongData {
       const nextSeq = reindexKusari(
         state.kusari_sequence.filter((_, i) => i !== index),
       );
-      return dropUnfittableTe(
+      return dropUnfittable(
         remapRefs({ ...state, kusari_sequence: nextSeq }, index, null),
-        action.teMaster,
+        action.masters,
       );
     }
 
@@ -120,18 +121,18 @@ export function songReducer(state: SongData, action: SongAction): SongData {
         { ...state, kusari_sequence: reindexKusari(nextSeq) },
         (kusariIndex) => movedTo.get(kusariIndex) ?? null,
       );
-      // 並び順が変わると曲の終わりをはみ出す手組が出ることがある
-      return dropUnfittableTe(moved, action.teMaster);
+      // 並び順が変わると曲の終わりをはみ出す手組・唱歌が出ることがある
+      return dropUnfittable(moved, action.masters);
     }
 
     case "SET_KUSARI_TYPE": {
       const nextSeq = state.kusari_sequence.map((k, i) =>
         i === action.index ? { ...k, type: action.kusariType } : k,
       );
-      // 拍数が減った場合、収まらなくなった手組はここで取り除かれる
-      return dropUnfittableTe(
+      // 拍数が減った場合、収まらなくなった手組・唱歌はここで取り除かれる
+      return dropUnfittable(
         { ...state, kusari_sequence: nextSeq },
-        action.teMaster,
+        action.masters,
       );
     }
 
@@ -172,6 +173,47 @@ export function songReducer(state: SongData, action: SongAction): SongData {
       };
     }
 
+    case "ADD_SHOGA_INSTANCE": {
+      const track = state.tracks.shoga ?? {
+        track_type: "shoga" as const,
+        instances: [],
+      };
+      return {
+        ...state,
+        tracks: {
+          ...state.tracks,
+          shoga: {
+            ...track,
+            instances: [
+              ...track.instances,
+              { shoga_id: action.shogaId, kusari_index: action.kusariIndex },
+            ],
+          },
+        },
+      };
+    }
+
+    case "REMOVE_SHOGA_INSTANCE": {
+      const track = state.tracks.shoga;
+      if (!track) return state;
+      return {
+        ...state,
+        tracks: {
+          ...state.tracks,
+          shoga: {
+            ...track,
+            instances: track.instances.filter(
+              (_, i) => i !== action.instanceIndex,
+            ),
+          },
+        },
+      };
+    }
+
+    case "SET_TEXT_TRACK":
+      // 書かないほうの中身は消さずに残す(戻したときにそのまま使える)
+      return { ...state, text_track: action.textTrack };
+
     case "SET_UTAI_CHAR": {
       const track = state.tracks.utai ?? {
         track_type: "utai" as const,
@@ -202,13 +244,10 @@ export function songReducer(state: SongData, action: SongAction): SongData {
 }
 
 /**
- * クサリが短くなった結果、収まらなくなった手組を取り除く。
+ * クサリが短くなった結果、収まらなくなった手組・唱歌を取り除く。
  * 「開始位置がクサリの拍数を超えた」「末尾が曲の終わりをはみ出した」の2つを見る。
  */
-function dropUnfittableTe(
-  state: SongData,
-  teMaster: Record<Instrument, TeMaster>,
-): SongData {
+function dropUnfittable(state: SongData, masters: Masters): SongData {
   const globalStarts = computeGlobalStarts(state.kusari_sequence);
   const total = totalBeats(state.kusari_sequence);
   const tracks = { ...state.tracks };
@@ -219,7 +258,7 @@ function dropUnfittableTe(
     if (!track) continue;
     const kept = track.te_instances.filter((ti) => {
       if (!state.kusari_sequence[ti.kusari_index]) return false;
-      const def = findTe(teMaster[instrument], ti.te_id);
+      const def = findTe(masters.te[instrument], ti.te_id);
       // マスタに無い手組は長さが分からないので、判断せずそのまま残す
       if (!def) return true;
       const start = teInstanceStartGlobalPos(ti.kusari_index, globalStarts);
@@ -228,6 +267,21 @@ function dropUnfittableTe(
     if (kept.length === track.te_instances.length) continue;
     tracks[instrument] = { ...track, te_instances: kept };
     changed = true;
+  }
+
+  const shoga = tracks.shoga;
+  if (shoga) {
+    const kept = shoga.instances.filter((si) => {
+      if (!state.kusari_sequence[si.kusari_index]) return false;
+      const def = findShoga(masters.shoga, si.shoga_id);
+      if (!def) return true;
+      const start = shogaInstanceStartGlobalPos(si.kusari_index, globalStarts);
+      return start + def.length <= total;
+    });
+    if (kept.length !== shoga.instances.length) {
+      tracks.shoga = { ...shoga, instances: kept };
+      changed = true;
+    }
   }
 
   return changed ? { ...state, tracks } : state;
@@ -271,12 +325,25 @@ function remapAllRefs(
   shiftIndex: (kusariIndex: number) => number | null,
 ): SongData {
   const utai = state.tracks.utai;
+  const shoga = state.tracks.shoga;
   const tracks: SongData["tracks"] = {
     utai: utai && {
       ...utai,
       chars: shiftRefsOf(utai.chars, "beat_ref", beatRefShifterFrom(shiftIndex)),
     },
   };
+
+  // 唱歌は手組と同じく、クサリそのものを指している
+  if (shoga) {
+    const kept: typeof shoga.instances = [];
+    for (const si of shoga.instances) {
+      const next = shiftIndex(si.kusari_index);
+      if (next !== null) {
+        kept.push(next === si.kusari_index ? si : { ...si, kusari_index: next });
+      }
+    }
+    tracks.shoga = { ...shoga, instances: kept };
+  }
 
   for (const instrument of INSTRUMENTS) {
     const track = state.tracks[instrument];

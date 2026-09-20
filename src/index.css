@@ -201,6 +201,28 @@ section.editor-pane,
   gap: 10px;
 }
 
+/* 謡と唱歌のどちらを書くかを選ぶところ。
+   選んでいない側の中身は消えないので、いつでも戻せる */
+.text-track-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.text-track-switch-label {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.text-track-switch label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* クサリ1つ分(操作バー + 表) */
 .kusari-block {
   display: flex;
@@ -344,6 +366,12 @@ table.timeline-grid {
 .te-chips-add:hover {
   border-color: var(--te-color, var(--accent));
   color: var(--te-color, var(--accent));
+}
+
+/* 唱歌の名札。小鼓・大鼓と見分けがつくよう、楽器の色は使わない
+   (--te-color を指定しないので、既定の色のままになる) */
+.shoga-chips {
+  --te-color: var(--te-box-stroke);
 }
 
 /* 表・裏の2つの入力欄をセルいっぱいに並べる(列幅は--beat-widthで決まる) */

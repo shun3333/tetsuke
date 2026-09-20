@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { songReducer } from "./state/songReducer";
 import { sampleSong } from "./data/sampleSong";
 import { TeMasterEditor } from "./components/TeMasterEditor";
@@ -56,11 +56,19 @@ function App() {
     return () => clearTimeout(timer);
   }, [shogaMaster]);
 
+  // 曲データから参照するマスタ一式。手付の編集・描画の両方で使う
+  const masters = useMemo(
+    () => ({ te: teMaster, shoga: shogaMaster }),
+    [teMaster, shogaMaster],
+  );
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>能楽 手付アプリ</h1>
-        <p className="app-subtitle">大鼓 × 小鼓 × 謡 — {song.song_id}</p>
+        <p className="app-subtitle">
+          大鼓 × 小鼓 × 謡/笛 — {song.song_id}
+        </p>
         <nav className="app-tabs">
           <button
             type="button"
@@ -94,7 +102,7 @@ function App() {
         <SplitPane
           left={
             <section className="editor-pane">
-              <TimelineGrid song={song} teMaster={teMaster} dispatch={dispatch} />
+              <TimelineGrid song={song} masters={masters} dispatch={dispatch} />
             </section>
           }
           right={
@@ -104,7 +112,7 @@ function App() {
                 <ScoreToolbar song={song} dispatch={dispatch} />
               </div>
               <div className="score-scroll">
-                <ScoreView song={song} teMaster={teMaster} />
+                <ScoreView song={song} masters={masters} />
               </div>
             </section>
           }

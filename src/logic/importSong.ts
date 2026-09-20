@@ -5,12 +5,15 @@
 import {
   INSTRUMENTS,
   KUSARI_TYPES,
+  TEXT_TRACK_KINDS,
   type BeatRef,
   type Instrument,
   type KusariEntry,
   type KusariType,
+  type ShogaInstance,
   type SongData,
   type TeInstance,
+  type TextTrackKind,
   type UtaiChar,
   type UtaiContent,
 } from "../types";
@@ -100,12 +103,37 @@ function readUtaiChars(value: unknown): UtaiChar[] {
   });
 }
 
+function readShogaInstances(value: unknown): ShogaInstance[] {
+  return readArray(value, "shoga.instances").map((entry, i) => {
+    const at = `shoga.instances[${i}]`;
+    if (!isRecord(entry)) throw new Error(`${at} がオブジェクトではありません`);
+    return {
+      shoga_id: readString(entry.shoga_id, `${at}.shoga_id`),
+      kusari_index: readInteger(entry.kusari_index, `${at}.kusari_index`),
+    };
+  });
+}
+
+/** 謡と唱歌のどちらを書くか。書いていない古いデータは謡とみなす */
+function readTextTrack(value: unknown): TextTrackKind | undefined {
+  if (value === undefined) return undefined;
+  if (!TEXT_TRACK_KINDS.includes(value as TextTrackKind)) {
+    throw new Error(
+      `text_track が不正です(${TEXT_TRACK_KINDS.join(" / ")} のいずれか)`,
+    );
+  }
+  return value as TextTrackKind;
+}
+
 function readTracks(value: unknown): SongData["tracks"] {
   if (!isRecord(value)) throw new Error("tracks がオブジェクトではありません");
 
   const tracks: SongData["tracks"] = {
     utai: isRecord(value.utai)
       ? { track_type: "utai", chars: readUtaiChars(value.utai.chars) }
+      : undefined,
+    shoga: isRecord(value.shoga)
+      ? { track_type: "shoga", instances: readShogaInstances(value.shoga.instances) }
       : undefined,
   };
 
@@ -131,6 +159,7 @@ export function parseSongJson(text: string): ImportResult {
     return {
       song_id: readString(raw.song_id, "song_id"),
       kusari_sequence: readKusariSequence(raw.kusari_sequence),
+      text_track: readTextTrack(raw.text_track),
       tracks: readTracks(raw.tracks),
     };
   });

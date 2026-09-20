@@ -4,41 +4,55 @@
 //   左 = 2b-1((b-1)拍の裏 / b=1なら0拍の裏)
 //   右 = 2b  (b拍の表)
 // となり、左から右へ 1, 2, 3, … と連続する。
+//
+// 謡と唱歌(笛)は同じ列に書くもので、同時に使うことはない。
+// どちらを書くかは曲ごとに選び、選んだほうの行だけを出す。
+// 唱歌は謡と違って1文字ずつ打ち込むのではなく、唱歌マスタの
+// まとまりをクサリに置く(手組と同じ置き方)。
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   INSTRUMENTS,
   INSTRUMENT_LABEL,
   KUSARI_LABEL,
   KUSARI_TYPES,
+  TEXT_TRACK_KINDS,
+  TEXT_TRACK_LABEL,
+  textTrackOf,
   type Instrument,
   type KusariType,
+  type Masters,
+  type ShogaMaster,
   type SongData,
   type TeMaster,
 } from "../types";
 import {
   computeGlobalStarts,
   globalBeatToKusariBeat,
+  shogaInstanceStartGlobalPos,
   teInstanceStartGlobalPos,
   totalBeats,
 } from "../logic/position";
 import { findTe } from "../logic/tePattern";
+import { findShoga } from "../logic/shogaChar";
 import type { SongAction } from "../state/songReducer";
 import { INSTRUMENT_COLOR } from "../data/instruments";
-import { TePicker } from "./TePicker";
+import { MasterPicker, type PickerEntry } from "./MasterPicker";
 
 interface Props {
   song: SongData;
-  teMaster: Record<Instrument, TeMaster>;
+  masters: Masters;
   dispatch: React.Dispatch<SongAction>;
 }
 
 /** 1拍あたりの入力欄の数(裏・表) */
 const SLOTS_PER_BEAT = 2;
 
-/** 手組の一覧(ポップアップ)の表示状態 */
+/**
+ * 一覧(ポップアップ)の表示状態。
+ * instrument が null なら唱歌(笛)を選んでいる。
+ */
 interface PickerState {
-  /** どの楽器の、どのクサリに置こうとしているか */
-  instrument: Instrument;
+  instrument: Instrument | null;
   kusariIndex: number;
   x: number;
   y: number;
@@ -73,12 +87,25 @@ function buildBeatSlots(
   });
 }
 
-/** そのクサリに置かれている手組1つ分の名札 */
-interface PlacedTe {
+/** そのクサリに置かれている手組・唱歌1つ分の名札 */
+interface Placed {
   instanceIndex: number;
   label: string;
-  /** 何拍の手組か(名札の下に小さく添える) */
+  /** 何拍分か(名札の横に小さく添える) */
   length: number;
+}
+
+/** 名札を、置かれたクサリごとにまとめる */
+function groupByKusari(
+  items: { kusariIndex: number; entry: Placed }[],
+): Map<number, Placed[]> {
+  const placed = new Map<number, Placed[]>();
+  for (const { kusariIndex, entry } of items) {
+    const list = placed.get(kusariIndex);
+    if (list) list.push(entry);
+    else placed.set(kusariIndex, [entry]);
+  }
+  return placed;
 }
 
 /**
@@ -89,21 +116,38 @@ function buildPlacedTe(
   song: SongData,
   instrument: Instrument,
   teMaster: TeMaster,
-): Map<number, PlacedTe[]> {
-  const placed = new Map<number, PlacedTe[]>();
+): Map<number, Placed[]> {
+  const items: { kusariIndex: number; entry: Placed }[] = [];
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
     const def = findTe(teMaster, ti.te_id);
     if (!def) return;
-    const entry: PlacedTe = {
-      instanceIndex: idx,
-      label: def.label,
-      length: def.internal_pattern.length,
-    };
-    const list = placed.get(ti.kusari_index);
-    if (list) list.push(entry);
-    else placed.set(ti.kusari_index, [entry]);
+    items.push({
+      kusariIndex: ti.kusari_index,
+      entry: {
+        instanceIndex: idx,
+        label: def.label,
+        length: def.internal_pattern.length,
+      },
+    });
   });
-  return placed;
+  return groupByKusari(items);
+}
+
+/** 配置済みの唱歌を、置かれたクサリごとにまとめる */
+function buildPlacedShoga(
+  song: SongData,
+  shogaMaster: ShogaMaster,
+): Map<number, Placed[]> {
+  const items: { kusariIndex: number; entry: Placed }[] = [];
+  (song.tracks.shoga?.instances ?? []).forEach((si, idx) => {
+    const def = findShoga(shogaMaster, si.shoga_id);
+    if (!def) return;
+    items.push({
+      kusariIndex: si.kusari_index,
+      entry: { instanceIndex: idx, label: def.label, length: def.length },
+    });
+  });
+  return groupByKusari(items);
 }
 
 /** 入力済みの謡の文字を、半拍枠のkeyで引けるようにする */
@@ -119,11 +163,9 @@ function buildUtaiValues(song: SongData): Map<string, string> {
   return values;
 }
 
-export function TimelineGrid({
-  song,
-  teMaster,
-  dispatch,
-}: Props) {
+export function TimelineGrid({ song, masters, dispatch }: Props) {
+  const teMaster = masters.te;
+  const textTrack = textTrackOf(song);
   const utaiInputRefs = useRef(new Map<string, HTMLInputElement>());
   /** 手組の一覧を出す位置(クリックしたグローバル拍と画面座標) */
   const [picker, setPicker] = useState<PickerState | null>(null);
@@ -149,12 +191,16 @@ export function TimelineGrid({
     [song, globalStarts, total],
   );
   const placedTe = useMemo(() => {
-    const map = {} as Record<Instrument, Map<number, PlacedTe[]>>;
+    const map = {} as Record<Instrument, Map<number, Placed[]>>;
     for (const inst of INSTRUMENTS) {
       map[inst] = buildPlacedTe(song, inst, teMaster[inst]);
     }
     return map;
   }, [song, teMaster]);
+  const placedShoga = useMemo(
+    () => buildPlacedShoga(song, masters.shoga),
+    [song, masters.shoga],
+  );
   const utaiValues = useMemo(() => buildUtaiValues(song), [song]);
 
   /**
@@ -176,13 +222,67 @@ export function TimelineGrid({
     return null;
   }
 
-  function placeTe(instrument: Instrument, teId: string, kusariIndex: number) {
-    const error = placementError(instrument, teId, kusariIndex);
+  /**
+   * その唱歌をこのクサリに置けない理由。置けるならnull。
+   * 唱歌はクサリの頭を起点にし、手組と同じくクサリをまたいでよい。
+   */
+  function shogaPlacementError(
+    shogaId: string,
+    kusariIndex: number,
+  ): string | null {
+    if (shogaId === "") return "IDが空の唱歌は置けません";
+    const def = findShoga(masters.shoga, shogaId);
+    if (!def) return "唱歌が見つかりません";
+    const start = shogaInstanceStartGlobalPos(kusariIndex, globalStarts);
+    if (start + def.length > total) return "長さが収まりません";
+    return null;
+  }
+
+  /** 一覧を出しているところに置けるか(手組・唱歌で見るものが違う) */
+  function pickerError(state: PickerState, id: string): string | null {
+    return state.instrument === null
+      ? shogaPlacementError(id, state.kusariIndex)
+      : placementError(state.instrument, id, state.kusariIndex);
+  }
+
+  function place(state: PickerState, id: string) {
+    const error = pickerError(state, id);
     if (error) {
       window.alert(error);
       return;
     }
-    dispatch({ type: "ADD_TE_INSTANCE", instrument, teId, kusariIndex });
+    if (state.instrument === null) {
+      dispatch({
+        type: "ADD_SHOGA_INSTANCE",
+        shogaId: id,
+        kusariIndex: state.kusariIndex,
+      });
+    } else {
+      dispatch({
+        type: "ADD_TE_INSTANCE",
+        instrument: state.instrument,
+        teId: id,
+        kusariIndex: state.kusariIndex,
+      });
+    }
+  }
+
+  /** 一覧に出す中身。手組は楽器ごと、唱歌は1つのマスタから作る */
+  function pickerEntries(state: PickerState): PickerEntry[] {
+    if (state.instrument === null) {
+      return masters.shoga.map((s) => ({
+        uid: s.uid,
+        id: s.shoga_id,
+        label: s.label,
+        note: `${s.length}拍`,
+      }));
+    }
+    return teMaster[state.instrument].map((t) => ({
+      uid: t.uid,
+      id: t.te_id,
+      label: t.label,
+      note: `${t.internal_pattern.length}拍`,
+    }));
   }
 
   function setUtaiValue(kusariIndex: number, beat: number, value: string) {
@@ -255,7 +355,7 @@ export function TimelineGrid({
               type: "SET_KUSARI_TYPE",
               index: kusariIndex,
               kusariType: e.target.value as KusariType,
-              teMaster,
+              masters,
             })
           }
         >
@@ -275,7 +375,7 @@ export function TimelineGrid({
               type: "MOVE_KUSARI",
               from: kusariIndex,
               to: kusariIndex - 1,
-              teMaster,
+              masters,
             })
           }
         >
@@ -291,7 +391,7 @@ export function TimelineGrid({
               type: "MOVE_KUSARI",
               from: kusariIndex,
               to: kusariIndex + 1,
-              teMaster,
+              masters,
             })
           }
         >
@@ -317,7 +417,7 @@ export function TimelineGrid({
           title="このクサリを削除"
           disabled={song.kusari_sequence.length <= 1}
           onClick={() =>
-            dispatch({ type: "REMOVE_KUSARI", index: kusariIndex, teMaster })
+            dispatch({ type: "REMOVE_KUSARI", index: kusariIndex, masters })
           }
         >
           ×
@@ -411,41 +511,88 @@ export function TimelineGrid({
                 </tr>
               );
             })}
-            <tr>
-              <th className="row-label">謡</th>
-              {beats.map((entry, i) => {
-                const g = startG + i;
-                if (!entry) return <td key={g} className="utai-cell" />;
-                return (
-                  <td key={g} className="utai-cell">
-                    <div className="utai-cell-inner">
-                      {entry.slots.map((slot, si) => (
-                        <input
-                          key={slot.key}
-                          ref={(el) => {
-                            if (el) utaiInputRefs.current.set(slot.key, el);
-                            else utaiInputRefs.current.delete(slot.key);
-                          }}
-                          className="utai-input"
-                          title={`${entry.kusariIndex + 1}つ目のクサリ / beat ${slot.beat}`}
-                          value={utaiValues.get(slot.key) ?? ""}
-                          onChange={(e) =>
-                            setUtaiValue(
-                              entry.kusariIndex,
-                              slot.beat,
-                              e.target.value,
-                            )
+
+            {/* 謡と唱歌は同じ列に書くので、選んでいるほうだけを出す */}
+            {textTrack === "utai" ? (
+              <tr>
+                <th className="row-label">謡</th>
+                {beats.map((entry, i) => {
+                  const g = startG + i;
+                  if (!entry) return <td key={g} className="utai-cell" />;
+                  return (
+                    <td key={g} className="utai-cell">
+                      <div className="utai-cell-inner">
+                        {entry.slots.map((slot, si) => (
+                          <input
+                            key={slot.key}
+                            ref={(el) => {
+                              if (el) utaiInputRefs.current.set(slot.key, el);
+                              else utaiInputRefs.current.delete(slot.key);
+                            }}
+                            className="utai-input"
+                            title={`${entry.kusariIndex + 1}つ目のクサリ / beat ${slot.beat}`}
+                            value={utaiValues.get(slot.key) ?? ""}
+                            onChange={(e) =>
+                              setUtaiValue(
+                                entry.kusariIndex,
+                                slot.beat,
+                                e.target.value,
+                              )
+                            }
+                            onKeyDown={(e) =>
+                              handleUtaiKeyDown(e, g * SLOTS_PER_BEAT + si)
+                            }
+                          />
+                        ))}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ) : (
+              <tr>
+                <th className="row-label">唱歌</th>
+                <td className="te-lane" colSpan={beats.length}>
+                  {/* 唱歌は手組と同じく、マスタのまとまりをクサリに置く */}
+                  <div className="te-chips shoga-chips">
+                    {(placedShoga.get(kusariIndex) ?? []).map((item) => (
+                      <span key={item.instanceIndex} className="te-chip">
+                        <span className="te-chip-name">{item.label}</span>
+                        <span className="te-chip-length">{item.length}拍</span>
+                        <button
+                          type="button"
+                          className="te-chip-remove"
+                          title={`「${item.label}」を外す`}
+                          onClick={() =>
+                            dispatch({
+                              type: "REMOVE_SHOGA_INSTANCE",
+                              instanceIndex: item.instanceIndex,
+                            })
                           }
-                          onKeyDown={(e) =>
-                            handleUtaiKeyDown(e, g * SLOTS_PER_BEAT + si)
-                          }
-                        />
-                      ))}
-                    </div>
-                  </td>
-                );
-              })}
-            </tr>
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      className="te-chips-add"
+                      title="このクサリに唱歌を追加"
+                      onClick={(e) =>
+                        setPicker({
+                          instrument: null,
+                          kusariIndex,
+                          x: e.clientX,
+                          y: e.clientY,
+                        })
+                      }
+                    >
+                      唱歌追加
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -455,6 +602,31 @@ export function TimelineGrid({
   return (
     <div className="timeline-grid-wrap">
       <h2>タイムライン</h2>
+
+      {/* 謡と唱歌は同時に書かないので、どちらを書くかをここで選ぶ。
+          選んでいない側の中身は消さずに残るので、戻せば元のまま */}
+      <div className="text-track-switch">
+        <span className="text-track-switch-label">文字の列</span>
+        {TEXT_TRACK_KINDS.map((kind) => (
+          <label key={kind}>
+            <input
+              type="radio"
+              name="text-track"
+              checked={textTrack === kind}
+              onChange={() =>
+                dispatch({ type: "SET_TEXT_TRACK", textTrack: kind })
+              }
+            />
+            <span>{TEXT_TRACK_LABEL[kind]}</span>
+          </label>
+        ))}
+        <span className="hint">
+          {textTrack === "utai"
+            ? "謡は1文字ずつ打ち込みます"
+            : "唱歌は唱歌マスタのまとまりをクサリに置きます"}
+        </span>
+      </div>
+
       {song.kusari_sequence.map((_, i) => renderKusari(i))}
       <button
         type="button"
@@ -471,14 +643,16 @@ export function TimelineGrid({
       </button>
 
       {picker && (
-        <TePicker
-          instrument={picker.instrument}
-          entries={teMaster[picker.instrument]}
-          errorOf={(teId) =>
-            placementError(picker.instrument, teId, picker.kusariIndex)
+        <MasterPicker
+          title={
+            picker.instrument === null
+              ? "唱歌を選ぶ"
+              : `${INSTRUMENT_LABEL[picker.instrument]}の手組を選ぶ`
           }
-          onPick={(teId) => {
-            placeTe(picker.instrument, teId, picker.kusariIndex);
+          entries={pickerEntries(picker)}
+          errorOf={(id) => pickerError(picker, id)}
+          onPick={(id) => {
+            place(picker, id);
             setPicker(null);
           }}
           onClose={() => setPicker(null)}

@@ -222,6 +222,12 @@ export interface ShogaEntry {
 /** 唱歌のまとまりの一覧。並び順が画面での並び順になる */
 export type ShogaMaster = ShogaEntry[];
 
+/** 曲データから参照するマスタ一式。クサリを縮めたときの整理などに使う */
+export interface Masters {
+  te: Record<Instrument, TeMaster>;
+  shoga: ShogaMaster;
+}
+
 /**
  * クサリ内の位置を指す参照。
  * beat は「半拍単位の枠番号」(1始まり)で、表・裏を1つの連番で表す。
@@ -268,14 +274,57 @@ export interface UtaiTrack {
   chars: UtaiChar[];
 }
 
+/**
+ * 曲データに置いた唱歌(笛)の1つ。
+ *
+ * 手組は「クサリの1拍前」を起点にするが、唱歌の beat はクサリの中の
+ * 位置をそのまま指す(beat: 1 がそのクサリの0拍の裏)ため、起点は
+ * クサリの頭になる。クサリの拍数より長い唱歌を置いた場合、
+ * はみ出した分は手組と同じく次のクサリに乗る。
+ */
+export interface ShogaInstance {
+  shoga_id: string;
+  kusari_index: number;
+}
+
+/** 唱歌トラック(笛) */
+export interface ShogaTrack {
+  track_type: "shoga";
+  instances: ShogaInstance[];
+}
+
+/**
+ * 謡の列に何を書くか。
+ * 謡と唱歌を同時に書くことはないので、曲ごとにどちらかを選ぶ。
+ */
+export type TextTrackKind = "utai" | "shoga";
+
+export const TEXT_TRACK_KINDS: TextTrackKind[] = ["utai", "shoga"];
+
+export const TEXT_TRACK_LABEL: Record<TextTrackKind, string> = {
+  utai: "謡",
+  shoga: "唱歌(笛)",
+};
+
 /** 曲データ(手付本体) */
 export interface SongData {
   song_id: string;
   kusari_sequence: KusariEntry[];
+  /**
+   * 謡と唱歌のどちらを書くか。省略したときは謡。
+   * 選んでいない側の中身は消さずに残すので、切り替えても戻せる。
+   */
+  text_track?: TextTrackKind;
   tracks: {
     /** 楽器ごとの手組トラック */
     otsuzumi?: TeTrack;
     kotsuzumi?: TeTrack;
     utai?: UtaiTrack;
+    shoga?: ShogaTrack;
   };
+}
+
+/** その曲が謡と唱歌のどちらを書くか(省略時は謡) */
+export function textTrackOf(song: SongData): TextTrackKind {
+  return song.text_track ?? "utai";
 }

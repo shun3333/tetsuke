@@ -1,18 +1,29 @@
-// 手組を選ぶポップアップ。
+// マスタから1つ選ぶポップアップ。手組(小鼓・大鼓)と唱歌(笛)で共通。
 //
 // 手組は楽器ごとに100以上あるため、スクロールで探すのは大変。
 // 開いたらすぐ絞り込みの入力欄に文字を打てるようにし、
 // 上下キーとEnterだけで選べるようにしている。
 import { useEffect, useRef, useState } from "react";
-import { INSTRUMENT_LABEL, type Instrument, type TeMaster } from "../types";
+
+/** 一覧に出す1件 */
+export interface PickerEntry {
+  /** 一覧の中で一意なキー(マスタの内部ID) */
+  uid: string;
+  /** 曲データから参照するID。これを選んだ結果として返す */
+  id: string;
+  /** 表示する名前 */
+  label: string;
+  /** 名前の右に小さく添える文字(「8拍」など) */
+  note: string;
+}
 
 interface Props {
-  instrument: Instrument;
-  /** その楽器の手組の一覧(マスタの並び順のまま) */
-  entries: TeMaster;
-  /** その手組を置けない理由。置けるならnull */
-  errorOf: (teId: string) => string | null;
-  onPick: (teId: string) => void;
+  /** 一覧の見出し(「小鼓の手組を選ぶ」など) */
+  title: string;
+  entries: PickerEntry[];
+  /** それを置けない理由。置けるならnull */
+  errorOf: (id: string) => string | null;
+  onPick: (id: string) => void;
   onClose: () => void;
   /** 押した場所(この近くに出す) */
   x: number;
@@ -35,8 +46,8 @@ function normalize(text: string): string {
     );
 }
 
-export function TePicker({
-  instrument,
+export function MasterPicker({
+  title,
   entries,
   errorOf,
   onPick,
@@ -55,9 +66,7 @@ export function TePicker({
     q === ""
       ? entries
       : entries.filter(
-          (def) =>
-            normalize(def.label).includes(q) ||
-            normalize(def.te_id).includes(q),
+          (e) => normalize(e.label).includes(q) || normalize(e.id).includes(q),
         );
   // 絞り込みで件数が減ったときに、選択位置が外に出ないようにする
   const activeIndex = Math.min(active, Math.max(0, shown.length - 1));
@@ -78,9 +87,9 @@ export function TePicker({
     }
     if (e.key === "Enter") {
       e.preventDefault();
-      const def = shown[activeIndex];
+      const entry = shown[activeIndex];
       // 置けないものはEnterでも置かない(理由は各行に出ている)
-      if (def && errorOf(def.te_id) === null) onPick(def.te_id);
+      if (entry && errorOf(entry.id) === null) onPick(entry.id);
     }
   }
 
@@ -99,7 +108,7 @@ export function TePicker({
         onKeyDown={handleKeyDown}
       >
         <div className="te-picker-title">
-          {INSTRUMENT_LABEL[instrument]}の手組を選ぶ
+          {title}
           <span className="te-picker-count">
             {shown.length}/{entries.length}
           </span>
@@ -116,11 +125,11 @@ export function TePicker({
           }}
         />
         <div className="te-picker-list" ref={listRef}>
-          {shown.map((def, i) => {
-            const error = errorOf(def.te_id);
+          {shown.map((entry, i) => {
+            const error = errorOf(entry.id);
             return (
               <button
-                key={def.uid}
+                key={entry.uid}
                 type="button"
                 className={
                   "te-picker-item" + (i === activeIndex ? " active" : "")
@@ -128,12 +137,10 @@ export function TePicker({
                 disabled={error !== null}
                 title={error ?? undefined}
                 onMouseEnter={() => setActive(i)}
-                onClick={() => onPick(def.te_id)}
+                onClick={() => onPick(entry.id)}
               >
-                <span className="te-name">{def.label}</span>
-                <span className="te-length">
-                  {error ?? `${def.internal_pattern.length}拍`}
-                </span>
+                <span className="te-name">{entry.label}</span>
+                <span className="te-length">{error ?? entry.note}</span>
               </button>
             );
           })}
