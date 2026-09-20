@@ -240,15 +240,6 @@ function ShogaAdjust({
         {circle ? "の○" : text === "" ? "(空)" : `「${text}」`}
       </span>
 
-      <label className="shoga-adjust-check" title="文字の代わりに○を書きます">
-        <input
-          type="checkbox"
-          checked={circle}
-          onChange={(e) => onPatch({ circle: e.target.checked })}
-        />
-        <span>○にする</span>
-      </label>
-
       <AdjustNumber
         label="字間"
         value={char?.spacing ?? 1}
@@ -307,6 +298,15 @@ function ShogaAdjust({
           onChange={(e) => onPatch({ small: e.target.checked })}
         />
         <span>小文字</span>
+      </label>
+
+      <label className="shoga-adjust-check" title="文字の代わりに○を書きます">
+        <input
+          type="checkbox"
+          checked={circle}
+          onChange={(e) => onPatch({ circle: e.target.checked })}
+        />
+        <span>○にする</span>
       </label>
 
       <button

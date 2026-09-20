@@ -8,8 +8,8 @@ import { VerticalText } from "./VerticalText";
 import { PAPER_COLOR } from "./paper";
 
 /** ○の、文字の大きさに対する半径の比。1文字分の枠に収まる大きさ */
-const CIRCLE_RADIUS_RATIO = 0.4;
-const CIRCLE_STROKE_WIDTH = 1.3;
+const CIRCLE_RADIUS_RATIO = 0.25;
+const CIRCLE_STROKE_WIDTH = 0.5;
 
 interface Props {
   char: ShogaChar;
