@@ -12,7 +12,7 @@ import type { SongData } from "../types";
 import type { SongAction } from "../state/songReducer";
 import { createEmptySong } from "../data/newSong";
 import { sampleSong } from "../data/sampleSong";
-import { saveSongAsJson } from "../logic/exportSong";
+import { saveSongAsJson, songFileName } from "../logic/exportSong";
 import { parseSongJson } from "../logic/importSong";
 
 interface Props {
@@ -80,7 +80,7 @@ export function ScoreToolbar({ song, dispatch }: Props) {
         type="button"
         className="toolbar-button"
         onClick={() => saveSongAsJson(song)}
-        title="作った手付のデータ(クサリ列・手組・謡)をJSONファイルとして保存します"
+        title={`作った手付のデータ(クサリ列・手組・謡)を「${songFileName(song)}」として保存します`}
       >
         JSONで保存
       </button>

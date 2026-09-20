@@ -4,9 +4,22 @@
 // 参照データなので含めない(曲データは te_id で参照するだけ)。
 import type { SongData } from "../types";
 
+/** ファイル名の末尾。タイトルがあればその後ろに付ける */
+const FILE_SUFFIX = "手付";
+
 /** ファイル名に使えない文字を落とす */
 function safeFileName(name: string): string {
-  return name.replace(/[\\/:*?"<>|]/g, "_") || "tetsuke";
+  return name.replace(/[\\/:*?"<>|]/g, "_");
+}
+
+/**
+ * 保存するときのファイル名。
+ * タイトルがあれば「{タイトル}手付.json」、無ければ「手付.json」。
+ * 前後の空白は落とす。
+ */
+export function songFileName(song: SongData): string {
+  const title = safeFileName((song.title ?? "").trim()).trim();
+  return `${title}${FILE_SUFFIX}.json`;
 }
 
 /** 曲データをJSONの文字列にする */
@@ -31,5 +44,5 @@ export function downloadJson(content: string, filename: string): void {
 
 /** 曲データをJSONファイルとして保存する */
 export function saveSongAsJson(song: SongData): void {
-  downloadJson(songToJson(song), `${safeFileName(song.song_id)}.json`);
+  downloadJson(songToJson(song), songFileName(song));
 }
