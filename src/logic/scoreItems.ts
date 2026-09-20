@@ -39,12 +39,6 @@ export interface ShogaCell {
   char: ShogaChar;
 }
 
-/** クサリ枠のヘッダー行に表示する唱歌のまとまりの名前 */
-export interface ShogaLabel {
-  key: string;
-  text: string;
-}
-
 /** 掛け声または手の1つ。描画先のクサリと位置は解決済み */
 export interface TeRenderItem {
   key: string;
@@ -86,7 +80,6 @@ export interface ScoreItems {
   utaiByKusari: Map<number, UtaiCell[]>;
   /** 唱歌の列の中身。謡を選んでいる曲では空になる */
   shogaByKusari: Map<number, ShogaCell[]>;
-  shogaLabelsByKusari: Map<number, ShogaLabel[]>;
   /** 楽器ごとの列の中身 */
   byInstrument: Record<Instrument, InstrumentItems>;
 }
@@ -126,14 +119,16 @@ function buildUtaiItems(song: SongData): Map<number, UtaiCell[]> {
  * 唱歌トラックをクサリごとの描画アイテムに展開する。
  * 唱歌はクサリの頭を起点に置かれ、クサリの拍数より長ければ
  * 手組と同じく続きが次のクサリの枠に乗る。
+ *
+ * 手組と違い、まとまりの名前は手付には出さない(唱歌は文字そのものが
+ * 手付に並ぶので、名前まで出すと重なって読みにくい)。
  */
 function buildShogaItems(
   song: SongData,
   shogaMaster: ShogaMaster,
   globalStarts: number[],
-): { cells: Map<number, ShogaCell[]>; labels: Map<number, ShogaLabel[]> } {
+): Map<number, ShogaCell[]> {
   const cells = new Map<number, ShogaCell[]>();
-  const labels = new Map<number, ShogaLabel[]>();
 
   (song.tracks.shoga?.instances ?? []).forEach((si, instanceIndex) => {
     const def = findShoga(shogaMaster, si.shoga_id);
@@ -142,12 +137,6 @@ function buildShogaItems(
       si.kusari_index,
       globalStarts,
     );
-
-    // まとまりの名前は、始まるクサリの枠に表示する(手組名と同じ扱い)
-    pushTo(labels, si.kusari_index, {
-      key: `shoga-label-${instanceIndex}`,
-      text: def.label,
-    });
 
     def.chars.forEach((char, i) => {
       const ref = globalPosToBeatRef(
@@ -164,7 +153,7 @@ function buildShogaItems(
     });
   });
 
-  return { cells, labels };
+  return cells;
 }
 
 /**
@@ -323,16 +312,14 @@ export function buildScoreItems(
 
   // 謡と唱歌は同じ列に書くので、選んでいるほうだけを展開する。
   // 選んでいない側の中身は曲データには残っている
-  const shoga =
-    textTrackOf(song) === "shoga"
-      ? buildShogaItems(song, masters.shoga, globalStarts)
-      : { cells: new Map(), labels: new Map() };
+  const textTrack = textTrackOf(song);
 
   return {
-    utaiByKusari:
-      textTrackOf(song) === "utai" ? buildUtaiItems(song) : new Map(),
-    shogaByKusari: shoga.cells,
-    shogaLabelsByKusari: shoga.labels,
+    utaiByKusari: textTrack === "utai" ? buildUtaiItems(song) : new Map(),
+    shogaByKusari:
+      textTrack === "shoga"
+        ? buildShogaItems(song, masters.shoga, globalStarts)
+        : new Map(),
     byInstrument,
   };
 }

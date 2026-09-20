@@ -27,7 +27,6 @@ import {
   type InstrumentItems,
   type ScoreItems,
   type ShogaCell,
-  type ShogaLabel,
   type TeLabel,
   type UtaiCell,
 } from "../logic/scoreItems";
@@ -276,18 +275,11 @@ function UnusedBeatsMark({ slot }: { slot: SlotLayout }) {
   );
 }
 
-/** ヘッダー行に並べる名前1つ分 */
-interface HeaderLabel {
-  key: string;
-  text: string;
-  color: string;
-}
-
 /**
- * 名前の行(8拍の領域の上の専用の行)。手組名と唱歌の名前で共通。
+ * 手組名の行(8拍の領域の上の専用の行)。色は楽器ごとに決まる。
  * 日本語なので文字を回転させず、1文字ずつ上から縦に積む。
  */
-function HeaderLabels({ labels, cx }: { labels: HeaderLabel[]; cx: number }) {
+function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
   const band = HEADER_ROW_HEIGHT / Math.max(1, labels.length);
   return (
     <>
@@ -310,7 +302,7 @@ function HeaderLabels({ labels, cx }: { labels: HeaderLabel[]; cx: number }) {
                 fontSize={LABEL_FONT_SIZE}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill={label.color}
+                fill={INSTRUMENT_COLOR[label.instrument]}
               >
                 {ch}
               </text>
@@ -319,20 +311,6 @@ function HeaderLabels({ labels, cx }: { labels: HeaderLabel[]; cx: number }) {
         );
       })}
     </>
-  );
-}
-
-/** 手組名。色は楽器ごとに決まる */
-function TeLabels({ labels, cx }: { labels: TeLabel[]; cx: number }) {
-  return (
-    <HeaderLabels
-      cx={cx}
-      labels={labels.map((label) => ({
-        key: label.key,
-        text: label.text,
-        color: INSTRUMENT_COLOR[label.instrument],
-      }))}
-    />
   );
 }
 
@@ -434,14 +412,12 @@ function KusariSlot({
   kusariIndex,
   utai,
   shoga,
-  shogaLabels,
   byInstrument,
 }: {
   slot: SlotLayout;
   kusariIndex: number;
   utai: UtaiCell[];
   shoga: ShogaCell[];
-  shogaLabels: ShogaLabel[];
   byInstrument: Record<Instrument, InstrumentItems>;
 }) {
   const utaiCx = slot.utaiColX + UTAI_COL_WIDTH / 2;
@@ -462,11 +438,8 @@ function KusariSlot({
         />
       ))}
 
-      {/* 唱歌。謡と同じ列に、同じ大きさで書く */}
-      <HeaderLabels
-        cx={utaiCx}
-        labels={shogaLabels.map((label) => ({ ...label, color: INK_COLOR }))}
-      />
+      {/* 唱歌。謡と同じ列に、同じ大きさで書く。
+          手組と違い、まとまりの名前はヘッダー行には出さない */}
       <ShogaColumn cells={shoga} cx={utaiCx} />
 
       {SCORE_INSTRUMENTS.map((instrument, j) => (
@@ -519,7 +492,6 @@ function ScorePage({
               kusariIndex={slot.kusariIndex}
               utai={items.utaiByKusari.get(slot.kusariIndex) ?? []}
               shoga={items.shogaByKusari.get(slot.kusariIndex) ?? []}
-              shogaLabels={items.shogaLabelsByKusari.get(slot.kusariIndex) ?? []}
               byInstrument={items.byInstrument}
             />
           ),
