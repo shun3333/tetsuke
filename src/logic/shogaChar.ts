@@ -5,7 +5,7 @@
 import type { ShogaChar } from "../types";
 
 /** 「小文字」にしたときの縮め方。拗音の小書き文字と同じ比率 */
-export const SHOGA_SMALL_SCALE = 0.68;
+export const SHOGA_SMALL_SCALE = 0.85;
 
 /** 縦幅の倍率で動かせる範囲。極端な値で読めなくならないようにする */
 export const SHOGA_HEIGHT_MIN = 0.3;
