@@ -35,7 +35,7 @@ import {
 } from "../logic/position";
 import { findTe } from "../logic/tePattern";
 import { findShoga } from "../logic/shogaChar";
-import type { SongAction } from "../state/songReducer";
+import { KUSARI_INSERT_MAX, type SongAction } from "../state/songReducer";
 import { INSTRUMENT_COLOR } from "../data/instruments";
 import { MasterPicker, type PickerEntry } from "./MasterPicker";
 
@@ -255,6 +255,15 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
   const teMaster = masters.te;
   const textTrack = textTrackOf(song);
   const utaiInputRefs = useRef(new Map<string, HTMLInputElement>());
+  // 末尾にまとめて足すときの種別と数
+  const [addType, setAddType] = useState<KusariType>("honji");
+  const [addCount, setAddCount] = useState("1");
+  /** 数として読めない・範囲外のときは足せないようにする */
+  const addCountValue = (() => {
+    const n = Number(addCount);
+    if (addCount.trim() === "" || !Number.isInteger(n)) return null;
+    return n >= 1 && n <= KUSARI_INSERT_MAX ? n : null;
+  })();
   /** 手組の一覧を出す位置(クリックしたグローバル拍と画面座標) */
   const [picker, setPicker] = useState<PickerState | null>(null);
 
@@ -714,19 +723,46 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
       </div>
 
       {song.kusari_sequence.map((_, i) => renderKusari(i))}
-      <button
-        type="button"
-        className="kusari-add"
-        onClick={() =>
-          dispatch({
-            type: "INSERT_KUSARI",
-            atIndex: song.kusari_sequence.length,
-            kusariType: "honji",
-          })
-        }
-      >
-        + クサリ追加
-      </button>
+
+      {/* 末尾にまとめて足す。種別と数をここで決める */}
+      <div className="kusari-add-bar">
+        <select
+          value={addType}
+          title="足すクサリの種別"
+          onChange={(e) => setAddType(e.target.value as KusariType)}
+        >
+          {KUSARI_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {KUSARI_LABEL[t]}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={1}
+          max={KUSARI_INSERT_MAX}
+          value={addCount}
+          title={`まとめて足す数(1〜${KUSARI_INSERT_MAX})`}
+          onChange={(e) => setAddCount(e.target.value)}
+        />
+        <span className="hint">つ</span>
+        <button
+          type="button"
+          className="kusari-add"
+          disabled={addCountValue === null}
+          onClick={() =>
+            addCountValue !== null &&
+            dispatch({
+              type: "INSERT_KUSARI",
+              atIndex: song.kusari_sequence.length,
+              kusariType: addType,
+              count: addCountValue,
+            })
+          }
+        >
+          + クサリ追加
+        </button>
+      </div>
 
       {picker && (
         <MasterPicker

@@ -21,7 +21,13 @@ import { findShoga } from "../logic/shogaChar";
 // 収まらなくなったものを落とすために、長さの分かるマスタ一式を受け取る。
 export type SongAction =
   | { type: "LOAD_SONG"; song: SongData }
-  | { type: "INSERT_KUSARI"; atIndex: number; kusariType: KusariType }
+  /** count を省くと1つだけ足す */
+  | {
+      type: "INSERT_KUSARI";
+      atIndex: number;
+      kusariType: KusariType;
+      count?: number;
+    }
   | { type: "REMOVE_KUSARI"; index: number; masters: Masters }
   | { type: "MOVE_KUSARI"; from: number; to: number; masters: Masters }
   | {
@@ -42,6 +48,15 @@ export type SongAction =
       value: string | null;
     };
 
+/** まとめて足せるクサリの数の上限。打ち間違いで極端に増えないようにする */
+export const KUSARI_INSERT_MAX = 64;
+
+/** まとめて足す数を、扱える範囲に収める */
+function clampInsertCount(count: number | undefined): number {
+  if (count === undefined || !Number.isFinite(count)) return 1;
+  return Math.min(KUSARI_INSERT_MAX, Math.max(1, Math.floor(count)));
+}
+
 function reindexKusari(sequence: SongData["kusari_sequence"]) {
   return sequence.map((k, i) => ({ ...k, index: i }));
 }
@@ -51,6 +66,7 @@ function shiftKusariIndex(
   kusariIndex: number,
   removedIndex: number | null,
   insertedAtIndex: number | null,
+  insertedCount: number,
 ): number | null {
   let i = kusariIndex;
   if (removedIndex !== null) {
@@ -58,7 +74,7 @@ function shiftKusariIndex(
     if (i > removedIndex) i -= 1;
   }
   if (insertedAtIndex !== null && i >= insertedAtIndex) {
-    i += 1;
+    i += insertedCount;
   }
   return i;
 }
@@ -81,16 +97,17 @@ export function songReducer(state: SongData, action: SongAction): SongData {
 
     case "INSERT_KUSARI": {
       const { atIndex, kusariType } = action;
+      const count = clampInsertCount(action.count);
+      const added = Array.from({ length: count }, () => ({
+        index: 0,
+        type: kusariType,
+      }));
       const nextSeq = reindexKusari([
         ...state.kusari_sequence.slice(0, atIndex),
-        { index: 0, type: kusariType },
+        ...added,
         ...state.kusari_sequence.slice(atIndex),
       ]);
-      return remapRefs(
-        { ...state, kusari_sequence: nextSeq },
-        null,
-        atIndex,
-      );
+      return remapRefs({ ...state, kusari_sequence: nextSeq }, null, atIndex, count);
     }
 
     case "REMOVE_KUSARI": {
@@ -313,9 +330,10 @@ function remapRefs(
   state: SongData,
   removedIndex: number | null,
   insertedAtIndex: number | null,
+  insertedCount = 1,
 ): SongData {
   return remapAllRefs(state, (kusariIndex) =>
-    shiftKusariIndex(kusariIndex, removedIndex, insertedAtIndex),
+    shiftKusariIndex(kusariIndex, removedIndex, insertedAtIndex, insertedCount),
   );
 }
 

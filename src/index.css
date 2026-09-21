@@ -187,9 +187,35 @@ section.editor-pane,
   font-size: 13px;
 }
 
-.kusari-add:hover {
+.kusari-add:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.kusari-add:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 末尾にまとめてクサリを足すところ(種別と数を選ぶ) */
+.kusari-add-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kusari-add-bar select,
+.kusari-add-bar input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.kusari-add-bar input {
+  width: 62px;
 }
 
 /* タイムライングリッド。クサリ1つにつき表が1つで、下に積んでいく */
