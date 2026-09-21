@@ -1011,6 +1011,14 @@ table.timeline-grid {
   overflow-x: auto;
 }
 
+/* 8拍ずつ折り返した表を縦に積む */
+.te-timeline-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
 /* 手・掛け声・補助線をまとめてずらすボタン */
 .te-timeline-shift {
   display: flex;

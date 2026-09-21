@@ -29,9 +29,30 @@ function slotsOf(length: number): number[] {
   return Array.from({ length: length * 2 + 1 }, (_, i) => i);
 }
 
+/** 1行に並べる拍の数。本地1クサリと同じ8拍で折り返す */
+const BEATS_PER_ROW = 8;
+const SLOTS_PER_ROW = BEATS_PER_ROW * 2;
+
+/**
+ * 枠を8拍ずつの行に分ける。
+ * どの行も「N拍の表」で終わるように切るので、1行目だけ頭の
+ * 「0拍の表」が増えて1枠多くなる。
+ */
+function rowsOf(slots: number[]): number[][] {
+  const lastSlot = slots[slots.length - 1];
+  const rowCount = Math.max(1, Math.ceil(lastSlot / SLOTS_PER_ROW));
+  return Array.from({ length: rowCount }, (_, r) =>
+    slots.slice(
+      r === 0 ? 0 : r * SLOTS_PER_ROW + 1,
+      Math.min(slots.length, (r + 1) * SLOTS_PER_ROW + 1),
+    ),
+  );
+}
+
 export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
   const slots = slotsOf(pattern.length);
   const lastSlot = slots[slots.length - 1];
+  const rows = rowsOf(slots);
 
   const kakegoeAt = new Map(pattern.kakegoe.map((k) => [k.rel_pos, k]));
   const hitAt = new Map(pattern.hits.map((h) => [h.rel_pos, h]));
@@ -67,33 +88,15 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
     });
   }
 
-  return (
-    <div className="te-timeline-wrap">
-      <div className="te-timeline-shift">
-        <span>手・掛け声・補助線をまとめてずらす</span>
-        <button
-          type="button"
-          className="chip-remove"
-          title="半拍左へずらす"
-          onClick={() => onChange(shiftPattern(pattern, -1))}
-        >
-          ← 半拍
-        </button>
-        <button
-          type="button"
-          className="chip-remove"
-          title="半拍右へずらす"
-          onClick={() => onChange(shiftPattern(pattern, 1))}
-        >
-          半拍 →
-        </button>
-      </div>
-      <table className="te-timeline">
+  /** 8拍ずつの1行分の表 */
+  function renderRow(rowSlots: number[]) {
+    return (
+      <table key={rowSlots[0]} className="te-timeline">
         <thead>
           <tr>
             <th className="row-label"></th>
             {/* 拍数。表の枠にだけ数字を出す */}
-            {slots.map((slot) => (
+            {rowSlots.map((slot) => (
               <th
                 key={slot}
                 className={"te-timeline-beat" + (slot % 2 === 0 ? " omote" : "")}
@@ -106,7 +109,7 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
         <tbody>
           <tr>
             <th className="row-label">手</th>
-            {slots.map((slot) => (
+            {rowSlots.map((slot) => (
               <td key={slot} className="te-timeline-cell">
                 <select
                   className="te-timeline-select"
@@ -125,7 +128,7 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
           </tr>
           <tr>
             <th className="row-label">打ち方</th>
-            {slots.map((slot) => {
+            {rowSlots.map((slot) => {
               const hit = hitAt.get(slot);
               return (
                 <td key={slot} className="te-timeline-cell">
@@ -151,7 +154,7 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
           </tr>
           <tr>
             <th className="row-label">掛け声</th>
-            {slots.map((slot) => (
+            {rowSlots.map((slot) => (
               <td key={slot} className="te-timeline-cell">
                 <input
                   className="te-timeline-input"
@@ -163,6 +166,33 @@ export function TeGumiTimeline({ pattern, teNames, onChange }: Props) {
           </tr>
         </tbody>
       </table>
+    );
+  }
+
+  return (
+    <div className="te-timeline-wrap">
+      <div className="te-timeline-shift">
+        <span>手・掛け声・補助線をまとめてずらす</span>
+        <button
+          type="button"
+          className="chip-remove"
+          title="半拍左へずらす"
+          onClick={() => onChange(shiftPattern(pattern, -1))}
+        >
+          ← 半拍
+        </button>
+        <button
+          type="button"
+          className="chip-remove"
+          title="半拍右へずらす"
+          onClick={() => onChange(shiftPattern(pattern, 1))}
+        >
+          半拍 →
+        </button>
+      </div>
+      {/* 1クサリ分(8拍)ごとに折り返す。長い手組でも横に伸びず、
+          手付に並ぶときの切れ目とも揃う */}
+      <div className="te-timeline-rows">{rows.map(renderRow)}</div>
       <p className="te-timeline-note hint">
         打ち方は {TIMING_SIGN.slightly_early} が{" "}
         {TIMING_LABEL.slightly_early}、{TIMING_SIGN.on} が {TIMING_LABEL.on}、
