@@ -28,6 +28,7 @@ import {
 import {
   computeGlobalStarts,
   globalBeatToKusariBeat,
+  globalPosToBeatRef,
   shogaInstanceStartGlobalPos,
   teInstanceStartGlobalPos,
   totalBeats,
@@ -93,61 +94,148 @@ interface Placed {
   label: string;
   /** 何拍分か(名札の横に小さく添える) */
   length: number;
-}
-
-/** 名札を、置かれたクサリごとにまとめる */
-function groupByKusari(
-  items: { kusariIndex: number; entry: Placed }[],
-): Map<number, Placed[]> {
-  const placed = new Map<number, Placed[]>();
-  for (const { kusariIndex, entry } of items) {
-    const list = placed.get(kusariIndex);
-    if (list) list.push(entry);
-    else placed.set(kusariIndex, [entry]);
-  }
-  return placed;
+  /** 置いたクサリ(続きの名札で「どこから続いているか」を出すのに使う) */
+  fromKusari: number;
+  /** 前のクサリから続いているぶんか。ここに置いたものではない */
+  continued: boolean;
 }
 
 /**
- * 配置済みの手組を、置かれたクサリごとにまとめる。
+ * まとまり1つ分の名札を、届くクサリすべてに入れる。
+ *
+ * 手組・唱歌はクサリの拍数より長いと次のクサリにも渡る。置いたクサリ
+ * だけに名札を出すと、続きの側を見ているときに何が乗っているのか
+ * 分からないので、渡った先にも「続き」として出す。
+ */
+function pushSpan(
+  placed: Map<number, Placed[]>,
+  entry: Omit<Placed, "continued">,
+  lastKusari: number,
+): void {
+  for (let k = entry.fromKusari; k <= lastKusari; k++) {
+    const item: Placed = { ...entry, continued: k !== entry.fromKusari };
+    const list = placed.get(k);
+    if (list) list.push(item);
+    else placed.set(k, [item]);
+  }
+}
+
+/**
+ * そのまとまりの終わりが乗るクサリ。
+ * 曲の終わりをはみ出している場合は、置いたクサリのままにしておく。
+ */
+function lastKusariOf(
+  song: SongData,
+  globalStarts: number[],
+  endGlobalPos: number,
+  fromKusari: number,
+): number {
+  const ref = globalPosToBeatRef(
+    endGlobalPos,
+    song.kusari_sequence,
+    globalStarts,
+  );
+  return ref === null ? fromKusari : Math.max(fromKusari, ref.kusari_index);
+}
+
+/**
+ * 配置済みの手組を、届くクサリごとにまとめる。
  * どの拍を占めるかは画面では扱わないので、名前と長さだけを持つ。
  */
 function buildPlacedTe(
   song: SongData,
   instrument: Instrument,
   teMaster: TeMaster,
+  globalStarts: number[],
 ): Map<number, Placed[]> {
-  const items: { kusariIndex: number; entry: Placed }[] = [];
+  const placed = new Map<number, Placed[]>();
   (song.tracks[instrument]?.te_instances ?? []).forEach((ti, idx) => {
     const def = findTe(teMaster, ti.te_id);
-    if (!def) return;
-    items.push({
-      kusariIndex: ti.kusari_index,
-      entry: {
+    if (!def || !song.kusari_sequence[ti.kusari_index]) return;
+    const length = def.internal_pattern.length;
+    // 手組はクサリの1拍前が起点。そこから長さのぶんだけ先に届く
+    const end =
+      teInstanceStartGlobalPos(ti.kusari_index, globalStarts) + length;
+    pushSpan(
+      placed,
+      {
         instanceIndex: idx,
         label: def.label,
-        length: def.internal_pattern.length,
+        length,
+        fromKusari: ti.kusari_index,
       },
-    });
+      lastKusariOf(song, globalStarts, end, ti.kusari_index),
+    );
   });
-  return groupByKusari(items);
+  return placed;
 }
 
-/** 配置済みの唱歌を、置かれたクサリごとにまとめる */
+/** 配置済みの唱歌を、届くクサリごとにまとめる */
 function buildPlacedShoga(
   song: SongData,
   shogaMaster: ShogaMaster,
+  globalStarts: number[],
 ): Map<number, Placed[]> {
-  const items: { kusariIndex: number; entry: Placed }[] = [];
+  const placed = new Map<number, Placed[]>();
   (song.tracks.shoga?.instances ?? []).forEach((si, idx) => {
     const def = findShoga(shogaMaster, si.shoga_id);
-    if (!def) return;
-    items.push({
-      kusariIndex: si.kusari_index,
-      entry: { instanceIndex: idx, label: def.label, length: def.length },
-    });
+    if (!def || !song.kusari_sequence[si.kusari_index]) return;
+    // 唱歌はクサリの頭が起点。最後の文字は「長さ」拍目の表に来る
+    const end =
+      shogaInstanceStartGlobalPos(si.kusari_index, globalStarts) +
+      def.length -
+      1;
+    pushSpan(
+      placed,
+      {
+        instanceIndex: idx,
+        label: def.label,
+        length: def.length,
+        fromKusari: si.kusari_index,
+      },
+      lastKusariOf(song, globalStarts, end, si.kusari_index),
+    );
   });
-  return groupByKusari(items);
+  return placed;
+}
+
+/**
+ * 置いたまとまり1つ分の名札。
+ * 前のクサリから続いているものは、そこに置いたわけではないので
+ * 枠線だけにして区別し、外すボタンも出さない(置いたクサリで外す)。
+ */
+function PlacedChip({
+  item,
+  onRemove,
+}: {
+  item: Placed;
+  onRemove: () => void;
+}) {
+  if (item.continued) {
+    return (
+      <span
+        className="te-chip continued"
+        title={`${item.fromKusari + 1}つ目のクサリに置いた「${item.label}」(${item.length}拍)の続きです`}
+      >
+        <span className="te-chip-name">{item.label}</span>
+        <span className="te-chip-length">つづき</span>
+      </span>
+    );
+  }
+  return (
+    <span className="te-chip">
+      <span className="te-chip-name">{item.label}</span>
+      <span className="te-chip-length">{item.length}拍</span>
+      <button
+        type="button"
+        className="te-chip-remove"
+        title={`「${item.label}」を外す`}
+        onClick={onRemove}
+      >
+        ×
+      </button>
+    </span>
+  );
 }
 
 /** 入力済みの謡の文字を、半拍枠のkeyで引けるようにする */
@@ -193,13 +281,13 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
   const placedTe = useMemo(() => {
     const map = {} as Record<Instrument, Map<number, Placed[]>>;
     for (const inst of INSTRUMENTS) {
-      map[inst] = buildPlacedTe(song, inst, teMaster[inst]);
+      map[inst] = buildPlacedTe(song, inst, teMaster[inst], globalStarts);
     }
     return map;
-  }, [song, teMaster]);
+  }, [song, teMaster, globalStarts]);
   const placedShoga = useMemo(
-    () => buildPlacedShoga(song, masters.shoga),
-    [song, masters.shoga],
+    () => buildPlacedShoga(song, masters.shoga, globalStarts),
+    [song, masters.shoga, globalStarts],
   );
   const utaiValues = useMemo(() => buildUtaiValues(song), [song]);
 
@@ -471,24 +559,17 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
                       }
                     >
                       {placed.map((te) => (
-                        <span key={te.instanceIndex} className="te-chip">
-                          <span className="te-chip-name">{te.label}</span>
-                          <span className="te-chip-length">{te.length}拍</span>
-                          <button
-                            type="button"
-                            className="te-chip-remove"
-                            title={`「${te.label}」を外す`}
-                            onClick={() =>
-                              dispatch({
-                                type: "REMOVE_TE_INSTANCE",
-                                instrument,
-                                instanceIndex: te.instanceIndex,
-                              })
-                            }
-                          >
-                            ×
-                          </button>
-                        </span>
+                        <PlacedChip
+                          key={te.instanceIndex}
+                          item={te}
+                          onRemove={() =>
+                            dispatch({
+                              type: "REMOVE_TE_INSTANCE",
+                              instrument,
+                              instanceIndex: te.instanceIndex,
+                            })
+                          }
+                        />
                       ))}
                       {/* 既に置いてあるかどうかに関わらず、いつでも足せる */}
                       <button
@@ -556,23 +637,16 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
                   {/* 唱歌は手組と同じく、マスタのまとまりをクサリに置く */}
                   <div className="te-chips shoga-chips">
                     {(placedShoga.get(kusariIndex) ?? []).map((item) => (
-                      <span key={item.instanceIndex} className="te-chip">
-                        <span className="te-chip-name">{item.label}</span>
-                        <span className="te-chip-length">{item.length}拍</span>
-                        <button
-                          type="button"
-                          className="te-chip-remove"
-                          title={`「${item.label}」を外す`}
-                          onClick={() =>
-                            dispatch({
-                              type: "REMOVE_SHOGA_INSTANCE",
-                              instanceIndex: item.instanceIndex,
-                            })
-                          }
-                        >
-                          ×
-                        </button>
-                      </span>
+                      <PlacedChip
+                        key={item.instanceIndex}
+                        item={item}
+                        onRemove={() =>
+                          dispatch({
+                            type: "REMOVE_SHOGA_INSTANCE",
+                            instanceIndex: item.instanceIndex,
+                          })
+                        }
+                      />
                     ))}
                     <button
                       type="button"

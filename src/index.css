@@ -352,6 +352,15 @@ table.timeline-grid {
   white-space: nowrap;
 }
 
+/* 前のクサリから続いているぶんの名札。そこに置いたものではないので、
+   塗らずに枠線だけにして区別する */
+.te-chip.continued {
+  background: transparent;
+  color: var(--te-color, var(--te-box-stroke));
+  border: 1px dashed currentColor;
+  padding: 1px 8px;
+}
+
 .te-chip-length {
   font-size: 10px;
   font-weight: 400;
