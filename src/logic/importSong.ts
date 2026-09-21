@@ -10,6 +10,7 @@ import {
   type Instrument,
   type KusariEntry,
   type KusariType,
+  type MemoEntry,
   type ShogaInstance,
   type SongData,
   type TeInstance,
@@ -125,6 +126,19 @@ function readTextTrack(value: unknown): TextTrackKind | undefined {
   return value as TextTrackKind;
 }
 
+/** 手付に挟む覚え書き。無くてもよい(古いデータには入っていない) */
+function readMemos(value: unknown): MemoEntry[] | undefined {
+  if (value === undefined) return undefined;
+  return readArray(value, "memos").map((entry, i) => {
+    const at = `memos[${i}]`;
+    if (!isRecord(entry)) throw new Error(`${at} がオブジェクトではありません`);
+    return {
+      before_kusari: readInteger(entry.before_kusari, `${at}.before_kusari`),
+      text: readString(entry.text, `${at}.text`),
+    };
+  });
+}
+
 function readTracks(value: unknown): SongData["tracks"] {
   if (!isRecord(value)) throw new Error("tracks がオブジェクトではありません");
 
@@ -162,6 +176,7 @@ export function parseSongJson(text: string): ImportResult {
       title: raw.title === undefined ? undefined : readString(raw.title, "title"),
       kusari_sequence: readKusariSequence(raw.kusari_sequence),
       text_track: readTextTrack(raw.text_track),
+      memos: readMemos(raw.memos),
       tracks: readTracks(raw.tracks),
     };
   });

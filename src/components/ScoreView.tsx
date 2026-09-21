@@ -46,6 +46,8 @@ import {
   PAGE_NUMBER_FONT_SIZE,
   SHOGA_CHAR_HEIGHT,
   SHOGA_FONT_SIZE,
+  MEMO_CHAR_HEIGHT,
+  MEMO_FONT_SIZE,
   TITLE_CHAR_HEIGHT,
   TITLE_FONT_SIZE,
   UTAI_CHAR_HEIGHT,
@@ -127,10 +129,12 @@ const GRID_BOTTOM = offsetY(ROWS_PER_PAGE - 1) + BOTTOM_PAD;
 
 /**
  * 1つの枠の中身。
- * 曲名は1列目(一番右)の枠を丸ごと使う。クサリの入らない枠は空白。
+ * 曲名とメモは、クサリと同じ幅の枠を丸ごと使って縦書きで書く。
+ * クサリの入らない枠は空白。
  */
 type SlotContent =
-  | { kind: "title" }
+  | { kind: "title"; text: string }
+  | { kind: "memo"; text: string }
   | { kind: "kusari"; index: number }
   | { kind: "empty" };
 
@@ -201,12 +205,12 @@ function PageGrid({
         />
       ))}
       {/* 列の縦罫線(謡列の左端・謡と小鼓の境目)。手組名の行も含めて通す。
-          曲名の枠は中を区切らないので、枠の左端だけ引く */}
+          曲名・メモの枠は中を区切らないので、枠の左端だけ引く */}
       {slots.map((slot, i) => (
         <g key={i}>
-          {(slot.content.kind === "title"
-            ? [slot.utaiColX]
-            : [slot.utaiColX, ...slot.teColX]
+          {(slot.content.kind === "kusari" || slot.content.kind === "empty"
+            ? [slot.utaiColX, ...slot.teColX]
+            : [slot.utaiColX]
           ).map((x, j) => (
             <line
               key={j}
@@ -431,20 +435,37 @@ function ShogaColumn({ cells, cx }: { cells: ShogaCell[]; cx: number }) {
 }
 
 /**
- * 曲名の列。手付の1列目(一番右)の枠を丸ごと使い、
+ * 曲名・メモの列。クサリと同じ幅の枠を丸ごと使い、
  * 2拍目の線のあたりから縦書きで書き下ろす。
+ * 長くて枠に収まらないときは、行間を詰めて収める。
  */
-function TitleColumn({ slot, title }: { slot: SlotLayout; title: string }) {
-  const chars = countCharUnits(title);
+function TextColumn({
+  slot,
+  text,
+  fontSize,
+  charHeight,
+}: {
+  slot: SlotLayout;
+  text: string;
+  fontSize: number;
+  charHeight: number;
+}) {
+  const chars = countCharUnits(text);
+  const top = offsetY(TITLE_START_OFFSET);
+  const step =
+    chars > 1
+      ? Math.min(charHeight, (GRID_BOTTOM - top) / (chars - 1))
+      : charHeight;
   return (
     <VerticalText
       cx={slot.utaiColX + SLOT_WIDTH / 2}
       // 1音目が書き出しの拍の線に来るよう、全体の中心をずらす
-      cy={offsetY(TITLE_START_OFFSET) + ((chars - 1) * TITLE_CHAR_HEIGHT) / 2}
-      text={title}
+      cy={top + ((chars - 1) * step) / 2}
+      text={text}
       color={INK_COLOR}
-      fontSize={TITLE_FONT_SIZE}
-      charHeight={TITLE_CHAR_HEIGHT}
+      fontSize={fontSize}
+      charHeight={charHeight}
+      step={step}
     />
   );
 }
@@ -501,7 +522,6 @@ interface ScorePageProps {
   kusariSequence: KusariEntry[];
   items: ScoreItems;
   slotContents: SlotContent[];
-  title: string;
   pageNumber: number;
 }
 
@@ -509,7 +529,6 @@ function ScorePage({
   kusariSequence,
   items,
   slotContents,
-  title,
   pageNumber,
 }: ScorePageProps) {
   const { slots, width, height, axisX, left } = useMemo(
@@ -530,21 +549,43 @@ function ScorePage({
         <PageGrid slots={slots} left={left} axisX={axisX} />
         <BeatAxis axisX={axisX} />
         {slots.map((slot, i) => {
-          if (slot.content.kind === "title") {
-            return <TitleColumn key="title" slot={slot} title={title} />;
+          switch (slot.content.kind) {
+            case "empty":
+              return null;
+            case "title":
+              return (
+                <TextColumn
+                  key={i}
+                  slot={slot}
+                  text={slot.content.text}
+                  fontSize={TITLE_FONT_SIZE}
+                  charHeight={TITLE_CHAR_HEIGHT}
+                />
+              );
+            case "memo":
+              return (
+                <TextColumn
+                  key={i}
+                  slot={slot}
+                  text={slot.content.text}
+                  fontSize={MEMO_FONT_SIZE}
+                  charHeight={MEMO_CHAR_HEIGHT}
+                />
+              );
+            case "kusari": {
+              const kusariIndex = slot.content.index;
+              return (
+                <KusariSlot
+                  key={i}
+                  slot={slot}
+                  kusariIndex={kusariIndex}
+                  utai={items.utaiByKusari.get(kusariIndex) ?? []}
+                  shoga={items.shogaByKusari.get(kusariIndex) ?? []}
+                  byInstrument={items.byInstrument}
+                />
+              );
+            }
           }
-          if (slot.content.kind === "empty") return null;
-          const kusariIndex = slot.content.index;
-          return (
-            <KusariSlot
-              key={i}
-              slot={slot}
-              kusariIndex={kusariIndex}
-              utai={items.utaiByKusari.get(kusariIndex) ?? []}
-              shoga={items.shogaByKusari.get(kusariIndex) ?? []}
-              byInstrument={items.byInstrument}
-            />
-          );
         })}
         <PageNumber width={width} height={height} pageNumber={pageNumber} />
       </svg>
@@ -558,32 +599,47 @@ export function ScoreView({ song, masters }: Props) {
     return buildScoreItems(song, masters, globalStarts);
   }, [song, masters]);
 
-  const title = (song.title ?? "").trim();
-
   /**
-   * クサリをページごとに分ける。足りない枠は空白で埋める。
-   * 曲名があるときは、1ページ目の1列目(一番右)を曲名に使うので、
-   * そのページに入るクサリが1つ減る。
+   * 枠を右から左へ並べる順に一列にする。
+   * 曲名は先頭に1枠、メモは指定されたクサリの手前に1枠ずつ入る。
+   * 中身の無い曲名・メモは枠を取らない。
    */
-  const pages = useMemo(() => {
-    const total = song.kusari_sequence.length;
-    const firstPageSlots = KUSARI_PER_PAGE - (title === "" ? 0 : 1);
-    const result: SlotContent[][] = [];
+  const slotStream = useMemo(() => {
+    const stream: SlotContent[] = [];
+    const title = (song.title ?? "").trim();
+    if (title !== "") stream.push({ kind: "title", text: title });
 
-    let next = 0;
-    // 最後のクサリを置き終わるまでページを作る(0クサリでも1ページは出す)
-    do {
-      const isFirst = result.length === 0;
-      const kusariSlots = isFirst ? firstPageSlots : KUSARI_PER_PAGE;
-      const slots: SlotContent[] = isFirst && title !== "" ? [{ kind: "title" }] : [];
-      for (let i = 0; i < kusariSlots; i++, next++) {
-        slots.push(next < total ? { kind: "kusari", index: next } : { kind: "empty" });
+    const memos = song.memos ?? [];
+    const pushMemosAt = (position: number) => {
+      for (const memo of memos) {
+        const text = memo.text.trim();
+        if (memo.before_kusari === position && text !== "") {
+          stream.push({ kind: "memo", text });
+        }
       }
-      result.push(slots);
-    } while (next < total);
+    };
 
-    return result;
-  }, [song.kusari_sequence.length, title]);
+    song.kusari_sequence.forEach((_, index) => {
+      pushMemosAt(index);
+      stream.push({ kind: "kusari", index });
+    });
+    pushMemosAt(song.kusari_sequence.length);
+    return stream;
+  }, [song.title, song.memos, song.kusari_sequence]);
+
+  /** ページごとに分ける。足りない枠は空白で埋める */
+  const pages = useMemo(() => {
+    const pageCount = Math.max(
+      1,
+      Math.ceil(slotStream.length / KUSARI_PER_PAGE),
+    );
+    return Array.from({ length: pageCount }, (_, p) =>
+      Array.from<unknown, SlotContent>(
+        { length: KUSARI_PER_PAGE },
+        (_, i) => slotStream[p * KUSARI_PER_PAGE + i] ?? { kind: "empty" },
+      ),
+    );
+  }, [slotStream]);
 
   return (
     <div className="score-pages">
@@ -593,7 +649,6 @@ export function ScoreView({ song, masters }: Props) {
           kusariSequence={song.kusari_sequence}
           items={items}
           slotContents={slotContents}
-          title={title}
           pageNumber={i + 1}
         />
       ))}

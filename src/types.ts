@@ -313,6 +313,19 @@ export const TEXT_TRACK_LABEL: Record<TextTrackKind, string> = {
   shoga: "唱歌(笛)",
 };
 
+/**
+ * 手付に挟む覚え書き。
+ * クサリと同じ幅の列を1つ使い、曲名と同じように縦書きで書く。
+ *
+ * 拍を持たないので、クサリ列そのものには入れず、
+ * 「どのクサリの手前に入れるか」だけを持つ。
+ * before_kusari がクサリの数と同じなら、一番最後に入る。
+ */
+export interface MemoEntry {
+  before_kusari: number;
+  text: string;
+}
+
 /** 曲データ(手付本体) */
 export interface SongData {
   song_id: string;
@@ -327,6 +340,8 @@ export interface SongData {
    * 選んでいない側の中身は消さずに残すので、切り替えても戻せる。
    */
   text_track?: TextTrackKind;
+  /** 手付に挟む覚え書き。並び順が、同じ位置に複数あるときの順になる */
+  memos?: MemoEntry[];
   tracks: {
     /** 楽器ごとの手組トラック */
     otsuzumi?: TeTrack;

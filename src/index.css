@@ -272,6 +272,32 @@ section.editor-pane,
   gap: 4px;
 }
 
+/* 手付に挟む覚え書き1つ分。クサリとクサリの間に置く */
+.memo-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.memo-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.memo-block input {
+  flex: 1;
+  min-width: 0;
+  width: 320px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 13px;
+  padding: 4px 8px;
+}
+
 /* クサリ1つ分(操作バー + 表) */
 .kusari-block {
   display: flex;

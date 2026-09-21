@@ -42,6 +42,9 @@ export type SongAction =
   | { type: "REMOVE_SHOGA_INSTANCE"; instanceIndex: number }
   | { type: "SET_TEXT_TRACK"; textTrack: TextTrackKind }
   | { type: "SET_TITLE"; title: string }
+  | { type: "ADD_MEMO"; beforeKusari: number }
+  | { type: "SET_MEMO"; index: number; text: string }
+  | { type: "REMOVE_MEMO"; index: number }
   | {
       type: "SET_UTAI_CHAR";
       beatRef: BeatRef;
@@ -139,8 +142,9 @@ export function songReducer(state: SongData, action: SongAction): SongData {
         { ...state, kusari_sequence: reindexKusari(nextSeq) },
         (kusariIndex) => movedTo.get(kusariIndex) ?? null,
       );
-      // 並び順が変わると曲の終わりをはみ出す手組・唱歌が出ることがある
-      return dropUnfittable(moved, action.masters);
+      // 並び順が変わると曲の終わりをはみ出す手組・唱歌が出ることがある。
+      // メモはクサリに紐づかないので、位置はそのままにしておく
+      return dropUnfittable(clampMemos(moved), action.masters);
     }
 
     case "SET_KUSARI_TYPE": {
@@ -230,6 +234,29 @@ export function songReducer(state: SongData, action: SongAction): SongData {
 
     case "SET_TITLE":
       return { ...state, title: action.title };
+
+    case "ADD_MEMO":
+      return {
+        ...state,
+        memos: [
+          ...(state.memos ?? []),
+          { before_kusari: action.beforeKusari, text: "" },
+        ],
+      };
+
+    case "SET_MEMO":
+      return {
+        ...state,
+        memos: (state.memos ?? []).map((m, i) =>
+          i === action.index ? { ...m, text: action.text } : m,
+        ),
+      };
+
+    case "REMOVE_MEMO":
+      return {
+        ...state,
+        memos: (state.memos ?? []).filter((_, i) => i !== action.index),
+      };
 
     case "SET_TEXT_TRACK":
       // 書かないほうの中身は消さずに残す(戻したときにそのまま使える)
@@ -332,9 +359,52 @@ function remapRefs(
   insertedAtIndex: number | null,
   insertedCount = 1,
 ): SongData {
-  return remapAllRefs(state, (kusariIndex) =>
+  const shifted = remapAllRefs(state, (kusariIndex) =>
     shiftKusariIndex(kusariIndex, removedIndex, insertedAtIndex, insertedCount),
   );
+  return clampMemos(
+    shiftMemos(shifted, removedIndex, insertedAtIndex, insertedCount),
+  );
+}
+
+/**
+ * クサリの挿入・削除に合わせて、メモの入る位置を動かす。
+ * メモは手前のクサリにくっついていると考えるので、挿し込んだ位置と
+ * 同じところにあるメモは、挿し込んだクサリの手前に残す。
+ */
+function shiftMemos(
+  state: SongData,
+  removedIndex: number | null,
+  insertedAtIndex: number | null,
+  insertedCount: number,
+): SongData {
+  if (!state.memos?.length) return state;
+  return {
+    ...state,
+    memos: state.memos.map((m) => {
+      let pos = m.before_kusari;
+      if (removedIndex !== null && pos > removedIndex) pos -= 1;
+      if (insertedAtIndex !== null && pos > insertedAtIndex) pos += insertedCount;
+      return pos === m.before_kusari ? m : { ...m, before_kusari: pos };
+    }),
+  };
+}
+
+/**
+ * メモの位置を、クサリの数に収める。
+ * 並べ替えのようにクサリの対応が付けられない操作の後に通す。
+ */
+function clampMemos(state: SongData): SongData {
+  if (!state.memos?.length) return state;
+  const max = state.kusari_sequence.length;
+  let changed = false;
+  const memos = state.memos.map((m) => {
+    const pos = Math.min(max, Math.max(0, m.before_kusari));
+    if (pos === m.before_kusari) return m;
+    changed = true;
+    return { ...m, before_kusari: pos };
+  });
+  return changed ? { ...state, memos } : state;
 }
 
 /**

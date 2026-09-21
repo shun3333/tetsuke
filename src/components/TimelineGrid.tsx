@@ -511,6 +511,16 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
         <button
           type="button"
           className="chip-remove"
+          title="このクサリの前にメモを入れる"
+          onClick={() =>
+            dispatch({ type: "ADD_MEMO", beforeKusari: kusariIndex })
+          }
+        >
+          メモ
+        </button>
+        <button
+          type="button"
+          className="chip-remove"
           title="このクサリを削除"
           disabled={song.kusari_sequence.length <= 1}
           onClick={() =>
@@ -520,6 +530,36 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
           ×
         </button>
       </div>
+    );
+  }
+
+  /**
+   * その位置に入るメモ。手付では、ここに挟まれた順に1列ずつ出る。
+   * 中身が空のメモは手付には出ないが、書きかけのまま残せるよう
+   * 編集欄には出しておく。
+   */
+  function renderMemos(beforeKusari: number) {
+    return (song.memos ?? []).map((memo, index) =>
+      memo.before_kusari !== beforeKusari ? null : (
+        <div key={index} className="memo-block">
+          <span className="memo-label">メモ</span>
+          <input
+            value={memo.text}
+            placeholder="手付に1列だけ入る覚え書き(空にすると出しません)"
+            onChange={(e) =>
+              dispatch({ type: "SET_MEMO", index, text: e.target.value })
+            }
+          />
+          <button
+            type="button"
+            className="chip-remove"
+            title="このメモを削除"
+            onClick={() => dispatch({ type: "REMOVE_MEMO", index })}
+          >
+            ×
+          </button>
+        </div>
+      ),
     );
   }
 
@@ -534,6 +574,7 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
 
     return (
       <div key={kusariIndex} className="kusari-block">
+        {renderMemos(kusariIndex)}
         {renderKusariControls(kusariIndex)}
         <table className="timeline-grid">
           <thead>
@@ -723,6 +764,8 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
       </div>
 
       {song.kusari_sequence.map((_, i) => renderKusari(i))}
+      {/* 一番最後に入れたメモ */}
+      {renderMemos(song.kusari_sequence.length)}
 
       {/* 末尾にまとめて足す。種別と数をここで決める */}
       <div className="kusari-add-bar">
@@ -761,6 +804,19 @@ export function TimelineGrid({ song, masters, dispatch }: Props) {
           }
         >
           + クサリ追加
+        </button>
+        <button
+          type="button"
+          className="kusari-add"
+          title="一番最後にメモを入れる"
+          onClick={() =>
+            dispatch({
+              type: "ADD_MEMO",
+              beforeKusari: song.kusari_sequence.length,
+            })
+          }
+        >
+          + メモ追加
         </button>
       </div>
 

@@ -31,6 +31,10 @@ export const PAGE_NUMBER_FONT_SIZE = 10;
 export const TITLE_FONT_SIZE = 22;
 export const TITLE_CHAR_HEIGHT = 24;
 
+/** 手付に挟む覚え書き。本文なので、曲名より小さく謡と同じくらいにする */
+export const MEMO_FONT_SIZE = UTAI_FONT_SIZE;
+export const MEMO_CHAR_HEIGHT = 18;
+
 /** クサリ枠のヘッダー行に入れる名前(手組名・唱歌の名前) */
 export const LABEL_FONT_SIZE = 9;
 /** 名前を縦書きにしたときの1文字あたりの高さ */
