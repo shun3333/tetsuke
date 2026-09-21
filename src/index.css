@@ -994,6 +994,28 @@ table.timeline-grid {
   min-width: 62px;
 }
 
+/* 詳細欄の下に並べる操作(コピー・削除) */
+.master-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.master-copy {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.master-copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .master-remove {
   border: 1px solid var(--border);
   background: transparent;

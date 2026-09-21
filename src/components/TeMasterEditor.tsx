@@ -100,6 +100,25 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
     setSelected(added.uid);
   }
 
+  /**
+   * 選んでいる手組を丸ごと写して、すぐ下に入れる。
+   * 似た手組を作るときに、一から入れ直さずに済むようにするため。
+   * IDは曲データが手組を指すためのものなので、元と同じにはせず付け直す。
+   */
+  function copyTe() {
+    if (!current) return;
+    const added: TeMasterEntry = {
+      ...structuredClone(current),
+      uid: newUid(),
+      te_id: nextTeId(entries),
+      label: `${current.label}のコピー`,
+    };
+    const next = [...entries];
+    next.splice(currentAt + 1, 0, added);
+    replaceEntries(next);
+    setSelected(added.uid);
+  }
+
   /** 一覧の中で手組をその位置へ動かす。選択は内部IDで追いかける */
   function moveTeTo(uid: string, to: number) {
     const from = indexOf(uid);
@@ -282,13 +301,23 @@ export function TeMasterEditor({ teMaster, onChange }: Props) {
               )}
             />
 
-            <button
-              type="button"
-              className="master-remove"
-              onClick={() => removeTe(current.uid)}
-            >
-              この手組を削除
-            </button>
+            <div className="master-actions">
+              <button
+                type="button"
+                className="master-copy"
+                title="この手組を丸ごと写して、すぐ下に足します"
+                onClick={copyTe}
+              >
+                この手組をコピー
+              </button>
+              <button
+                type="button"
+                className="master-remove"
+                onClick={() => removeTe(current.uid)}
+              >
+                この手組を削除
+              </button>
+            </div>
           </div>
         )}
 
