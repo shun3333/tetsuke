@@ -36,6 +36,9 @@ interface Props {
 /** 1拍あたりの入力欄の数(裏・表) */
 const SLOTS_PER_BEAT = 2;
 
+/** 1行に並べる拍の数。本地1クサリと同じ8拍で折り返す */
+const BEATS_PER_ROW = 8;
+
 /** 調整の入力欄の刻み。細かく合わせられるよう小さめにする */
 const ADJUST_STEP = 0.1;
 
@@ -50,6 +53,11 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const charAt = new Map(chars.map((c) => [c.beat, c]));
   const beats = Array.from({ length }, (_, i) => i + 1);
+  // 長いまとまりは1クサリ分(8拍)ずつ折り返して並べる
+  const rows = Array.from(
+    { length: Math.ceil(beats.length / BEATS_PER_ROW) },
+    (_, i) => beats.slice(i * BEATS_PER_ROW, (i + 1) * BEATS_PER_ROW),
+  );
 
   /** 枠に収まらない位置のものは、ここでは編集できない */
   const lastBeat = length * SLOTS_PER_BEAT;
@@ -132,14 +140,18 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
     }
   }
 
-  return (
-    <div className="shoga-timeline-wrap">
-      <table className="timeline-grid shoga-timeline">
+  /** 8拍ずつの1行分の表 */
+  function renderRow(rowBeats: number[]) {
+    return (
+      <table
+        key={rowBeats[0]}
+        className="timeline-grid shoga-timeline"
+      >
         <thead>
           <tr>
             <th className="row-label"></th>
             {/* 拍数。数字は「表」の入力欄(セルの右半分)の真上に置く */}
-            {beats.map((beat) => (
+            {rowBeats.map((beat) => (
               <th key={beat} className="beat-header">
                 <span className="beat-header-omote">{beat}</span>
               </th>
@@ -149,7 +161,7 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
         <tbody>
           <tr>
             <th className="row-label">唱歌</th>
-            {beats.map((beat) => {
+            {rowBeats.map((beat) => {
               // 表(=横線の上)は 2b、その半拍前の裏は 2b-1
               const omote = beat * SLOTS_PER_BEAT;
               return (
@@ -186,6 +198,14 @@ export function ShogaTimeline({ length, chars, onChange }: Props) {
           </tr>
         </tbody>
       </table>
+    );
+  }
+
+  return (
+    <div className="shoga-timeline-wrap">
+      {/* 1クサリ分(8拍)ごとに折り返す。長いまとまりでも横に伸びず、
+          手付に並ぶときの切れ目とも揃う */}
+      <div className="shoga-timeline-rows">{rows.map(renderRow)}</div>
       <p className="te-timeline-note hint">
         1拍につき枠が2つで、左が裏・右が表。一番左の枠は0拍の裏です。
       </p>

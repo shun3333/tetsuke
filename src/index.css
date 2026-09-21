@@ -1098,6 +1098,14 @@ table.te-timeline {
 
 /* 唱歌編集用のタイムライン。作りは手付編集画面の謡の行と同じだが、
    マスタ編集画面に収まるよう、1拍の幅は狭くしてある */
+/* 8拍ずつ折り返した表を縦に積む */
+.shoga-timeline-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
 .shoga-timeline-wrap {
   overflow-x: auto;
 }
