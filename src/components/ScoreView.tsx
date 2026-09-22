@@ -489,7 +489,8 @@ function KusariSlot({
     <g>
       {slot.beatCount < ROWS_PER_PAGE && <UnusedBeatsMark slot={slot} />}
 
-      {/* 謡(表は横線の上、裏は線と線の間)。唱歌を選んだ曲では空になる */}
+      {/* 謡(表は横線の上、裏は線と線の間)。唱歌を選んだ曲では空になる。
+          「ホン」のように「ン」で終わる音を縮めて書くのは謡だけ */}
       {utai.map((cell, i) => (
         <VerticalText
           key={i}
@@ -499,6 +500,7 @@ function KusariSlot({
           color={INK_COLOR}
           fontSize={UTAI_FONT_SIZE}
           charHeight={UTAI_CHAR_HEIGHT}
+          attachN
         />
       ))}
 

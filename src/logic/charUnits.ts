@@ -1,8 +1,11 @@
 // 縦書きの文字列を「1音 = 1マス」に分ける。
 //
-// 謡も唱歌も、拗音や「ン」は前の文字とまとめて1音として書くため、
-// 文字数と縦に並ぶ数は一致しない。描くところと数えるところで
-// 同じ分け方をするよう、ここにまとめてある。
+// 拗音は前の文字とまとめて1音として書くため、文字数と縦に並ぶ数は
+// 一致しない。描くところと数えるところで同じ分け方をするよう、
+// ここにまとめてある。
+//
+// 「ン」を前の音にくっつけるのは謡だけの書き方なので、
+// attachN を付けたときだけそう分ける(掛け声・唱歌などは1文字として扱う)。
 
 /** 拗音・促音などの小書き文字。直前の文字と合わせて1音になる */
 const SMALL_KANA = new Set([
@@ -25,16 +28,16 @@ export interface CharUnit {
 /**
  * 文字列を「1音 = 1マス」の単位に分ける。
  * - 拗音などの小書き文字は直前の文字と合わせて1音として扱う
- * - 直前の音にくっつく「ン」も同じ1音に含める
+ * - attachN を付けたときは、直前の音にくっつく「ン」も同じ1音に含める
  */
-export function toCharUnits(text: string): CharUnit[] {
+export function toCharUnits(text: string, attachN = false): CharUnit[] {
   const units: CharUnit[] = [];
   for (const ch of Array.from(text)) {
     const prev = units[units.length - 1];
     // 「ン」を取り込んだ後の音には、それ以上ぶら下げない
     if (prev && !prev.n && SMALL_KANA.has(ch)) {
       prev.small += ch;
-    } else if (prev && !prev.n && N_CHARS.has(ch)) {
+    } else if (attachN && prev && !prev.n && N_CHARS.has(ch)) {
       prev.n = ch;
     } else {
       units.push({ base: ch, small: "", n: "" });
@@ -45,8 +48,9 @@ export function toCharUnits(text: string): CharUnit[] {
 
 /**
  * 縦に並ぶ音の数。
- * 拗音や「ン」は前の音にくっつくので、文字数とは一致しないことがある。
+ * 拗音(と、謡の「ン」)は前の音にくっつくので、
+ * 文字数とは一致しないことがある。
  */
-export function countCharUnits(text: string): number {
-  return toCharUnits(text).length;
+export function countCharUnits(text: string, attachN = false): number {
+  return toCharUnits(text, attachN).length;
 }

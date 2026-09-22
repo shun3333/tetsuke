@@ -1,6 +1,9 @@
-// 縦書きの短い文字列(謡・掛け声)の描画。
-// 謡は通常1文字1音だが、拗音や「ン」がつくと複数文字で1音になるため、
+// 縦書きの短い文字列(謡・掛け声・唱歌など)の描画。
+// 通常は1文字1音だが、拗音がつくと複数文字で1音になるため、
 // 「1音 = 1マス」に分けてから描く。
+//
+// 「ン」を前の音にくっつけて縮めて書くのは謡だけの書き方なので、
+// attachN を付けたときだけそうする。
 import { PAPER_COLOR } from "./paper";
 import { toCharUnits } from "../../logic/charUnits";
 
@@ -45,13 +48,18 @@ interface Props {
    * 唱歌では文字の大きさを変えずに間隔だけ詰められるよう、別に渡せるようにしてある。
    */
   step?: number;
+  /**
+   * 「ホン」のように「ン」で終わる音を、1音の枠に縮めて収めるか。
+   * 謡の書き方なので、謡の列だけで付ける。
+   */
+  attachN?: boolean;
 }
 
 /**
  * 縦書きの短い文字列。1音ずつ縦に積み、全体が(cx, cy)を中心に来るようにする。
  * - 長音符(ー)はグリフのままだと横棒になってしまうので、縦の棒として描く
  * - 拗音などの小書き文字は、独立した1マスにせず親文字の右下に小さく添える
- * - 前の音にくっつく「ン」は、親文字と小さくして1音の枠に縦に収める
+ * - attachN のときは、前の音にくっつく「ン」を親文字と小さくして1音に収める
  */
 export function VerticalText({
   cx,
@@ -61,8 +69,9 @@ export function VerticalText({
   fontSize,
   charHeight,
   step = charHeight,
+  attachN = false,
 }: Props) {
-  const units = toCharUnits(text);
+  const units = toCharUnits(text, attachN);
   const firstY = cy - ((units.length - 1) * step) / 2;
   return (
     <g>
