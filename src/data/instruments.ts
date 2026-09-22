@@ -16,10 +16,11 @@ export const kotsuzumiTeGlyphs: TeGlyphMaster = {
   ta: { te: "ta", label: "タ", shape: "open_triangle" },
 };
 
-/** 大鼓の手マスタ。大鼓の手はこの2種類のみ。 */
+/** 大鼓の手マスタ。 */
 export const otsuzumiTeGlyphs: TeGlyphMaster = {
   chon: { te: "chon", label: "チョン", shape: "open_triangle" },
   don: { te: "don", label: "ドン", shape: "filled_small_circle" },
+  hajiki: { te: "hajiki", label: "ハジキ・ホド", shape: "filled_triangle" },
 };
 
 /** 楽器ごとの手マスタ */

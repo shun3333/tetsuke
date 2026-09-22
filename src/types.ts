@@ -67,7 +67,9 @@ export type TeShape =
   /** 中埋めの小さめの丸 */
   | "filled_small_circle"
   /** 中抜きの三角 */
-  | "open_triangle";
+  | "open_triangle"
+  /** 中埋めの三角 */
+  | "filled_triangle";
 
 /** 手マスタの1エントリ。手のIDと、その表示内容(図形)を対応づける。 */
 export interface TeGlyph {

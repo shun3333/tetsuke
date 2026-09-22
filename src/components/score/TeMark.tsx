@@ -67,14 +67,22 @@ export function TeMark({ cx, cy, shape, color, label }: Props) {
         </g>
       );
 
-    case "open_triangle": {
+    // 中抜きと中埋めは、塗りの色だけが違う。線は同じように引くので、
+    // 並べたときに外回りの大きさがそろう
+    case "open_triangle":
+    case "filled_triangle": {
       const points = [
         `${cx},${cy - RADIUS}`,
         `${cx + RADIUS},${cy + RADIUS * 0.8}`,
         `${cx - RADIUS},${cy + RADIUS * 0.8}`,
       ].join(" ");
       return (
-        <polygon points={points} fill={PAPER_COLOR} stroke={color} strokeWidth={STROKE_WIDTH}>
+        <polygon
+          points={points}
+          fill={shape === "filled_triangle" ? color : PAPER_COLOR}
+          stroke={color}
+          strokeWidth={STROKE_WIDTH}
+        >
           {title}
         </polygon>
       );
